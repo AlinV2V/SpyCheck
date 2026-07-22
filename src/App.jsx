@@ -184,6 +184,9 @@ export function App() {
           <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#00f0ff', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
             INTRUDER CHECK
           </span>
+          <span style={{ fontSize: '0.7rem', background: '#00ffff', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
+            v1.0.21
+          </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px' }}>
               ROUND {gameState.currentRound} / 3
