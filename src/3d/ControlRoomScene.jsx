@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { playClick, playLaserLock, playVoteCast } from '../services/audio';
+import { playClick, playLaserLock, playVoteCast, playTerminalPowerOn } from '../services/audio';
 
 /**
  * Helper function to compute exact 3D position and rotation for each player workstation desk monitor screen.
@@ -44,14 +44,7 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center built with Three.js.
- * Features an Advanced Live 3D Camera Calibration Pipeline Tool for real-time camera tuning!
- * 
- * @param {Object} props
- * @param {Object} [props.gameState] - State object containing game & player data
- * @param {string} [props.currentPhase='lobby'] - Current phase ('lobby', 'question', 'discussion', 'voting', 'victory')
- * @param {number} [props.activePlayerIndex=0] - Index of active player (0-5)
- * @param {Function} [props.onSelectOption] - Callback when option choice is selected (0, 1, 2, 3)
- * @param {Function} [props.onConfirmAnswer] - Callback when answer is locked in
+ * Renders ALL GAME PHASES (Questions, Discussion, Voting, Victory) directly on the 3D PC Computer Monitors!
  */
 export function ControlRoomScene({
   gameState,
@@ -59,15 +52,20 @@ export function ControlRoomScene({
   activePlayerIndex = 0,
   onSelectOption,
   onConfirmAnswer,
+  onProceedToVote,
+  onCastVote,
+  onProceedToResolution,
+  onRematch,
+  onReturnToLobby,
 }) {
   const containerRef = useRef(null);
 
-  // --- LIVE 3D CAMERA CALIBRATION PIPELINE STATE ---
+  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES ---
   const [showCalibration, setShowCalibration] = useState(false);
-  const [camDist, setCamDist] = useState(1.65); // Distance ratio from desk center (1.0 to 3.0)
-  const [camHeight, setCamHeight] = useState(2.40); // Height Y (1.0 to 4.5)
-  const [camLookOffset, setCamLookOffset] = useState(0.70); // LookAt ratio (0.0 to 1.0)
-  const [camFov, setCamFov] = useState(52); // Field of View (35 to 80)
+  const [camDist, setCamDist] = useState(1.32); // Closer 3D desk monitor view
+  const [camHeight, setCamHeight] = useState(1.85);
+  const [camLookOffset, setCamLookOffset] = useState(0.82);
+  const [camFov, setCamFov] = useState(50);
 
   // Store mutable refs for animation loop & interaction state
   const sceneStateRef = useRef({
@@ -76,12 +74,18 @@ export function ControlRoomScene({
     gameState,
     onSelectOption,
     onConfirmAnswer,
+    onProceedToVote,
+    onCastVote,
+    onProceedToResolution,
+    onRematch,
+    onReturnToLobby,
     hoveredOptionIdx: null,
     hoveredLockIn: false,
-    camDist: 1.65,
-    camHeight: 2.40,
-    camLookOffset: 0.70,
-    camFov: 52,
+    hoveredVoteIdx: null,
+    camDist: 1.32,
+    camHeight: 1.85,
+    camLookOffset: 0.82,
+    camFov: 50,
   });
 
   // Keep refs synchronized with state & props
@@ -91,11 +95,16 @@ export function ControlRoomScene({
     sceneStateRef.current.gameState = gameState;
     sceneStateRef.current.onSelectOption = onSelectOption;
     sceneStateRef.current.onConfirmAnswer = onConfirmAnswer;
+    sceneStateRef.current.onProceedToVote = onProceedToVote;
+    sceneStateRef.current.onCastVote = onCastVote;
+    sceneStateRef.current.onProceedToResolution = onProceedToResolution;
+    sceneStateRef.current.onRematch = onRematch;
+    sceneStateRef.current.onReturnToLobby = onReturnToLobby;
     sceneStateRef.current.camDist = camDist;
     sceneStateRef.current.camHeight = camHeight;
     sceneStateRef.current.camLookOffset = camLookOffset;
     sceneStateRef.current.camFov = camFov;
-  }, [currentPhase, activePlayerIndex, gameState, onSelectOption, onConfirmAnswer, camDist, camHeight, camLookOffset, camFov]);
+  }, [currentPhase, activePlayerIndex, gameState, onSelectOption, onConfirmAnswer, onProceedToVote, onCastVote, onProceedToResolution, onRematch, onReturnToLobby, camDist, camHeight, camLookOffset, camFov]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -304,7 +313,7 @@ export function ControlRoomScene({
       const pDeskGroup = new THREE.Group();
       pDeskGroup.position.set(deskX, 0, deskZ);
 
-      // Desk mesh (center at Y=0.45, top surface at Y=0.90)
+      // Desk mesh
       const deskMesh = new THREE.Mesh(deskGeo, deskMat);
       deskMesh.position.set(0, 0.45, 0);
       pDeskGroup.add(deskMesh);
@@ -315,7 +324,7 @@ export function ControlRoomScene({
       standMesh.position.set(0, 0.65, 0.1);
       pDeskGroup.add(standMesh);
 
-      // Glowing Cyber Bezel Frame around PC Monitor Workstation
+      // Glowing Cyber Bezel Frame
       const bezelMat = new THREE.MeshBasicMaterial({
         color: 0x00f3ff,
         wireframe: true,
@@ -352,7 +361,7 @@ export function ControlRoomScene({
       pDeskGroup.add(screenMesh);
       screenMeshList.push(screenMesh);
 
-      // Console status ring on ground around desk base
+      // Console status ring
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x00f3ff,
         transparent: true,
@@ -368,7 +377,6 @@ export function ControlRoomScene({
       cLight.position.set(0, 2.4, 0.5);
       pDeskGroup.add(cLight);
 
-      // Orient desk facing outward from center towards player camera seat
       pDeskGroup.lookAt(deskX * 2, 0, deskZ * 2);
 
       consoleGroup.add(pDeskGroup);
@@ -398,33 +406,18 @@ export function ControlRoomScene({
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // --- 7. HELPER TO DRAW INTERACTIVE 3D VIRTUAL PC MONITOR SCREEN TEXTURES ---
+    // --- 7. HELPER TO DRAW ALL GAME PHASES ON 3D VIRTUAL COMPUTER MONITORS ---
     const update3DScreenTextures = (state, phase, activeIdx) => {
       try {
         const players = state?.players || [];
         const questionObj = state?.currentQuestion || state?.question;
-        
-        let qText = 'SECURITY CHECK PROMPT';
-        if (questionObj) {
-          if (typeof questionObj === 'string') qText = questionObj;
-          else if (questionObj.question) qText = String(questionObj.question);
-          else if (questionObj.text) qText = String(questionObj.text);
-        }
-
-        let rawOptions = [];
-        if (questionObj && Array.isArray(questionObj.options)) rawOptions = questionObj.options;
-        else if (state && Array.isArray(state.options)) rawOptions = state.options;
-        if (rawOptions.length === 0) rawOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
-
-        const { hoveredOptionIdx, hoveredLockIn } = sceneStateRef.current;
+        const { hoveredOptionIdx, hoveredLockIn, hoveredVoteIdx } = sceneStateRef.current;
 
         screenCanvasList.forEach((canvas, idx) => {
           const ctx = canvas.getContext('2d');
           const texture = screenTextureList[idx];
           const player = players[idx];
           const isSpy = idx === state?.spyIndex;
-          const isQuestionPhase = phase === 'question';
-          const isRevealed = phase === 'discussion' || phase === 'voting' || phase === 'victory';
           const isActiveDesk = idx === activeIdx;
 
           // Clear Screen & Dark Cyber Background
@@ -438,200 +431,431 @@ export function ControlRoomScene({
           }
 
           // Screen Bezel Border Glow
-          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : isActiveDesk ? '#00f0ff' : 'rgba(0, 240, 255, 0.5)';
+          ctx.strokeStyle = isSpy && phase === 'question' ? '#ff0055' : isActiveDesk ? '#00f0ff' : 'rgba(0, 240, 255, 0.5)';
           ctx.lineWidth = 12;
           ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
 
           // --- TOP MONITOR HEADER BAR ---
-          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 240, 255, 0.22)';
+          ctx.fillStyle = isSpy && phase === 'question' ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 240, 255, 0.22)';
           ctx.fillRect(20, 20, canvas.width - 40, 65);
 
           ctx.font = 'bold 24px Orbitron, sans-serif';
-          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.fillStyle = isSpy && phase === 'question' ? '#ff0055' : '#00f0ff';
           const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
           ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 40, 62);
 
-          // System Clock / Status Top Right
+          // System Clock / Timer Top Right
           ctx.font = 'bold 20px Orbitron, sans-serif';
           const sysTimeStr = new Date().toTimeString().split(' ')[0];
-          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00ffaa';
+          ctx.fillStyle = isSpy && phase === 'question' ? '#ff0055' : '#00ffaa';
           ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 250, 62);
 
-          // --- ROLE BADGE ---
-          const badgeY = 100;
-          if (!isSpy || !isQuestionPhase) {
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
-            ctx.fillRect(40, badgeY, 620, 42);
+          // --- GAME PHASE SWITCH DRAWING ---
+          if (phase === 'discussion') {
+            // ==========================================
+            // PHASE 2: DISCUSSION / DEBRIEFING ON 3D SCREEN
+            // ==========================================
+            // Sub-header Banner
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.18)';
+            ctx.fillRect(40, 100, 1200, 42);
             ctx.strokeStyle = '#00f0ff';
             ctx.lineWidth = 2;
-            ctx.strokeRect(40, badgeY, 620, 42);
+            ctx.strokeRect(40, 100, 1200, 42);
 
             ctx.font = 'bold 18px Orbitron, sans-serif';
             ctx.fillStyle = '#00f0ff';
-            ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 56, badgeY + 28);
-          } else {
-            ctx.fillStyle = 'rgba(255, 0, 85, 0.3)';
-            ctx.fillRect(40, badgeY, 720, 42);
-            ctx.strokeStyle = '#ff0055';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(40, badgeY, 720, 42);
+            ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 128);
 
-            ctx.font = 'bold 18px Orbitron, sans-serif';
-            ctx.fillStyle = '#ff0055';
-            ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 56, badgeY + 28);
-          }
-
-          // --- QUESTION PROMPT / SPY WARNING BOX ---
-          const qBoxY = 160;
-          const qBoxH = 135;
-          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(35, 12, 24, 0.95)' : 'rgba(15, 25, 45, 0.95)';
-          ctx.fillRect(40, qBoxY, 1200, qBoxH);
-          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(40, qBoxY, 1200, qBoxH);
-
-          // Left accent indicator bar
-          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-          ctx.fillRect(40, qBoxY, 10, qBoxH);
-
-          ctx.font = 'bold 15px Orbitron, sans-serif';
-          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-          ctx.fillText('OPERATIVE_PROMPT >', 64, qBoxY + 32);
-
-          if (isSpy && isQuestionPhase) {
-            ctx.fillStyle = '#ff0055';
-            ctx.font = 'bold 22px Orbitron, sans-serif';
-            ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 64, qBoxY + 68);
-
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = '18px Rajdhani, sans-serif';
-            ctx.fillText('Decryption key absent. Analyze choices below to deduce prompt & blend in.', 64, qBoxY + 104);
-          } else {
-            ctx.fillStyle = isRevealed ? '#00ffaa' : '#ffffff';
-            ctx.font = 'bold 22px Rajdhani, sans-serif';
-
-            // Word Wrap Question Prompt Text on 3D Monitor
-            const safeQText = String(qText || '');
-            const words = safeQText.split(' ');
-            let line = '';
-            let yPos = qBoxY + 68;
-            for (let w of words) {
-              const testLine = line + w + ' ';
-              if (ctx.measureText(testLine).width > 1130) {
-                ctx.fillText(line, 64, yPos);
-                line = w + ' ';
-                yPos += 30;
-              } else {
-                line = testLine;
-              }
-            }
-            ctx.fillText(line, 64, yPos);
-          }
-
-          // --- 4 INTERACTIVE OPTION BOXES (A, B, C, D) (y: 315..610) ---
-          const optBoxes = [
-            { x: 40, y: 315, w: 585, h: 140, label: 'A' },
-            { x: 655, y: 315, w: 585, h: 140, label: 'B' },
-            { x: 40, y: 470, w: 585, h: 140, label: 'C' },
-            { x: 655, y: 470, w: 585, h: 140, label: 'D' },
-          ];
-
-          rawOptions.slice(0, 4).forEach((optTextRaw, oIdx) => {
-            const box = optBoxes[oIdx];
-            const optString = String(typeof optTextRaw === 'string' ? optTextRaw : (optTextRaw?.text || optTextRaw?.label || ''));
-            const isSelected = playerAns === optString || playerAns === oIdx || playerAns === box.label;
-            const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
-
-            // Box Fill
-            ctx.fillStyle = isSelected
-              ? 'rgba(0, 240, 255, 0.48)'
-              : isHovered
-              ? 'rgba(0, 240, 255, 0.28)'
-              : 'rgba(18, 30, 52, 0.95)';
-            ctx.fillRect(box.x, box.y, box.w, box.h);
-
-            // Box Border
-            ctx.strokeStyle = isSelected ? '#00f0ff' : isHovered ? '#ffffff' : 'rgba(0, 240, 255, 0.4)';
-            ctx.lineWidth = isSelected ? 4 : isHovered ? 3 : 2;
-            ctx.strokeRect(box.x, box.y, box.w, box.h);
-
-            // Letter Badge Box [A], [B], [C], [D]
-            ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.15)';
-            ctx.fillRect(box.x + 16, box.y + 16, 52, 52);
+            // Question Prompt Banner
+            ctx.fillStyle = 'rgba(15, 25, 45, 0.95)';
+            ctx.fillRect(40, 160, 1200, 70);
             ctx.strokeStyle = '#00f0ff';
             ctx.lineWidth = 2;
-            ctx.strokeRect(box.x + 16, box.y + 16, 52, 52);
+            ctx.strokeRect(40, 160, 1200, 70);
 
-            ctx.font = 'bold 26px Orbitron, sans-serif';
-            ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
-            ctx.fillText(box.label, box.x + 31, box.y + 51);
+            ctx.font = 'bold 14px Orbitron, sans-serif';
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillText('QUESTION PROMPT >', 56, 185);
 
-            // Key Binding Hint Tag [A]
-            ctx.font = 'bold 12px Orbitron, sans-serif';
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillText(`KEY [${box.label}]`, box.x + 20, box.y + 92);
+            ctx.font = 'bold 18px Rajdhani, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            const qTextStr = String(questionObj?.question || questionObj?.text || questionObj || 'OPERATIVE QUESTION');
+            ctx.fillText(qTextStr, 56, 212);
 
-            // Option Text Word Wrap
-            ctx.font = 'bold 20px Rajdhani, sans-serif';
-            ctx.fillStyle = isSelected ? '#ffffff' : '#f1f5f9';
+            // Operatives Submissions Log Table (y: 250..580)
+            const playerAnswers = state?.playerAnswers || {};
+            const rawOptions = questionObj?.options || state?.options || ['Option A', 'Option B', 'Option C', 'Option D'];
 
-            const optWords = optString.split(' ');
-            let optLine = '';
-            let optY = box.y + 44;
-            for (let w of optWords) {
-              const testLine = optLine + w + ' ';
-              if (ctx.measureText(testLine).width > box.w - 110) {
-                ctx.fillText(optLine, box.x + 84, optY);
-                optLine = w + ' ';
-                optY += 26;
-              } else {
-                optLine = testLine;
-              }
-            }
-            ctx.fillText(optLine, box.x + 84, optY);
+            players.forEach((p, pIdx) => {
+              const col = pIdx % 2;
+              const row = Math.floor(pIdx / 2);
+              const bx = 40 + col * 610;
+              const by = 250 + row * 115;
+              const bw = 590;
+              const bh = 100;
 
-            // Selected Pill Indicator
-            if (isSelected) {
+              const ansVal = playerAnswers[pIdx];
+              const ansText = typeof ansVal === 'number' ? rawOptions[ansVal] : (ansVal || 'SUBMITTED ANSWER');
+
+              ctx.fillStyle = 'rgba(18, 30, 52, 0.9)';
+              ctx.fillRect(bx, by, bw, bh);
+              ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(bx, by, bw, bh);
+
               ctx.fillStyle = '#00f0ff';
-              ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
-              ctx.font = 'bold 14px Orbitron, sans-serif';
-              ctx.fillStyle = '#020617';
-              ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
+              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 16, by + 36);
+
+              ctx.fillStyle = '#cbd5e1';
+              ctx.font = '16px Rajdhani, sans-serif';
+              const ansStr = String(typeof ansText === 'string' ? ansText : (ansText?.text || ansText?.label || 'Choice'));
+              ctx.fillText(`ANSWER: ${ansStr}`, bx + 16, by + 72);
+            });
+
+            // Proceed to Vote Action Button (y: 635..750)
+            const btnX = 440;
+            const btnY = 635;
+            const btnW = 400;
+            const btnH = 115;
+            const isBtnHovered = isActiveDesk && hoveredLockIn;
+
+            ctx.fillStyle = isBtnHovered ? 'rgba(0, 240, 255, 0.45)' : 'rgba(0, 240, 255, 0.25)';
+            ctx.fillRect(btnX, btnY, btnW, btnH);
+            ctx.strokeStyle = isBtnHovered ? '#ffffff' : '#00f0ff';
+            ctx.lineWidth = isBtnHovered ? 4 : 2;
+            ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+            ctx.font = 'bold 22px Orbitron, sans-serif';
+            ctx.fillStyle = '#00f0ff';
+            ctx.textAlign = 'center';
+            ctx.fillText('🗳️ PROCEED TO SECURITY VOTE', btnX + btnW / 2, btnY + 54);
+
+            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText('[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
+            ctx.textAlign = 'left';
+
+          } else if (phase === 'voting') {
+            // ==========================================
+            // PHASE 3: VOTING PHASE ON 3D SCREEN
+            // ==========================================
+            // Sub-header Banner
+            ctx.fillStyle = 'rgba(255, 170, 0, 0.2)';
+            ctx.fillRect(40, 100, 1200, 42);
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(40, 100, 1200, 42);
+
+            ctx.font = 'bold 18px Orbitron, sans-serif';
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 128);
+
+            // 6 Player Suspect Cards Grid (y: 160..600)
+            const playerVotes = state?.playerVotes || {};
+            const myVote = playerVotes[idx];
+
+            players.forEach((p, pIdx) => {
+              const col = pIdx % 3;
+              const row = Math.floor(pIdx / 3);
+              const bx = 40 + col * 405;
+              const by = 160 + row * 220;
+              const bw = 390;
+              const bh = 200;
+
+              const isSelectedTarget = myVote === pIdx;
+              const isHoveredTarget = isActiveDesk && hoveredVoteIdx === pIdx;
+
+              ctx.fillStyle = isSelectedTarget
+                ? 'rgba(255, 0, 85, 0.45)'
+                : isHoveredTarget
+                ? 'rgba(255, 170, 0, 0.35)'
+                : 'rgba(18, 30, 52, 0.95)';
+              ctx.fillRect(bx, by, bw, bh);
+
+              ctx.strokeStyle = isSelectedTarget ? '#ff0055' : isHoveredTarget ? '#ffaa00' : 'rgba(0, 240, 255, 0.35)';
+              ctx.lineWidth = isSelectedTarget || isHoveredTarget ? 4 : 2;
+              ctx.strokeRect(bx, by, bw, bh);
+
+              ctx.fillStyle = isSelectedTarget ? '#ff0055' : '#00f0ff';
+              ctx.font = 'bold 22px Orbitron, sans-serif';
+              ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 20, by + 48);
+
+              ctx.fillStyle = '#94a3b8';
+              ctx.font = '16px Rajdhani, sans-serif';
+              ctx.fillText(`STATION: 0${pIdx + 1}`, bx + 20, by + 84);
+
+              if (pIdx === idx) {
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.fillRect(bx + 20, by + 110, 140, 30);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Orbitron, sans-serif';
+                ctx.fillText('YOUR WORKSTATION', bx + 28, by + 130);
+              }
+
+              if (isSelectedTarget) {
+                ctx.fillStyle = '#ff0055';
+                ctx.fillRect(bx + bw - 140, by + 16, 124, 32);
+                ctx.font = 'bold 14px Orbitron, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('ACCUSED 🎯', bx + bw - 130, by + 38);
+              }
+            });
+
+            // Confirm Vote Button (y: 635..750)
+            const btnX = 440;
+            const btnY = 635;
+            const btnW = 400;
+            const btnH = 115;
+            const isBtnHovered = isActiveDesk && hoveredLockIn;
+            const hasVoted = myVote !== undefined;
+
+            ctx.fillStyle = hasVoted ? '#10b981' : isBtnHovered ? 'rgba(255, 170, 0, 0.45)' : 'rgba(255, 170, 0, 0.25)';
+            ctx.fillRect(btnX, btnY, btnW, btnH);
+            ctx.strokeStyle = hasVoted ? '#10b981' : isBtnHovered ? '#ffffff' : '#ffaa00';
+            ctx.lineWidth = isBtnHovered ? 4 : 2;
+            ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+            ctx.font = 'bold 22px Orbitron, sans-serif';
+            ctx.fillStyle = hasVoted ? '#ffffff' : '#ffaa00';
+            ctx.textAlign = 'center';
+            ctx.fillText(hasVoted ? '✔ VOTE TRANSMITTED' : '🚨 CAST VOTE TO EJECT', btnX + btnW / 2, btnY + 54);
+
+            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillText(hasVoted ? 'VOTE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
+            ctx.textAlign = 'left';
+
+          } else if (phase === 'victory') {
+            // ==========================================
+            // PHASE 4: VICTORY / DEBRIEFING ON 3D SCREEN
+            // ==========================================
+            const winner = state?.winner;
+            const isAgentsWon = winner === 'agents';
+
+            // Sub-header Banner
+            ctx.fillStyle = isAgentsWon ? 'rgba(0, 255, 170, 0.25)' : 'rgba(255, 0, 85, 0.25)';
+            ctx.fillRect(40, 100, 1200, 140);
+            ctx.strokeStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(40, 100, 1200, 140);
+
+            ctx.font = 'bold 36px Orbitron, sans-serif';
+            ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
+            ctx.fillText(isAgentsWon ? '🛡️ AGENTS VICTORIOUS — INTRUDER NEUTRALIZED!' : '⚠️ INTRUDER WINS — DEFENSES BREACHED!', 64, 165);
+
+            ctx.font = 'bold 20px Rajdhani, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            const spyPlayer = players[state?.spyIndex];
+            const spyNameStr = spyPlayer?.name || `Agent 0${(state?.spyIndex || 0) + 1}`;
+            ctx.fillText(`THE INTRUDER WAS: ${spyNameStr.toUpperCase()}`, 64, 210);
+
+            // Rematch / Lobby Action Buttons (y: 450..600)
+            const btn1X = 240;
+            const btn1Y = 450;
+            const btn1W = 360;
+            const btn1H = 120;
+
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+            ctx.fillRect(btn1X, btn1Y, btn1W, btn1H);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(btn1X, btn1Y, btn1W, btn1H);
+
+            ctx.font = 'bold 24px Orbitron, sans-serif';
+            ctx.fillStyle = '#00f0ff';
+            ctx.textAlign = 'center';
+            ctx.fillText('🔄 PLAY AGAIN', btn1X + btn1W / 2, btn1Y + 70);
+
+            const btn2X = 680;
+            const btn2Y = 450;
+            const btn2W = 360;
+            const btn2H = 120;
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fillRect(btn2X, btn2Y, btn2W, btn2H);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(btn2X, btn2Y, btn2W, btn2H);
+
+            ctx.font = 'bold 24px Orbitron, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('🏠 RETURN TO LOBBY', btn2X + btn2W / 2, btn2Y + 70);
+            ctx.textAlign = 'left';
+
+          } else {
+            // ==========================================
+            // DEFAULT / QUESTION PHASE ON 3D SCREEN
+            // ==========================================
+            // Role Badge
+            const badgeY = 100;
+            if (!isSpy) {
+              ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+              ctx.fillRect(40, badgeY, 620, 42);
+              ctx.strokeStyle = '#00f0ff';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(40, badgeY, 620, 42);
+
+              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.fillStyle = '#00f0ff';
+              ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 56, badgeY + 28);
+            } else {
+              ctx.fillStyle = 'rgba(255, 0, 85, 0.3)';
+              ctx.fillRect(40, badgeY, 720, 42);
+              ctx.strokeStyle = '#ff0055';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(40, badgeY, 720, 42);
+
+              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.fillStyle = '#ff0055';
+              ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 56, badgeY + 28);
             }
-          });
 
-          // --- LOCK-IN TRANSMISSION BUTTON (x: 440..840, y: 635..750) ---
-          const btnX = 440;
-          const btnY = 635;
-          const btnW = 400;
-          const btnH = 115;
+            // Question Prompt / Spy Warning Box
+            const qBoxY = 160;
+            const qBoxH = 135;
+            ctx.fillStyle = isSpy ? 'rgba(35, 12, 24, 0.95)' : 'rgba(15, 25, 45, 0.95)';
+            ctx.fillRect(40, qBoxY, 1200, qBoxH);
+            ctx.strokeStyle = isSpy ? '#ff0055' : '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(40, qBoxY, 1200, qBoxH);
 
-          const playerAns = state?.playerAnswers?.[idx];
-          const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
-          const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
+            ctx.fillStyle = isSpy ? '#ff0055' : '#00f0ff';
+            ctx.fillRect(40, qBoxY, 10, qBoxH);
 
-          ctx.fillStyle = isConfirmed
-            ? '#10b981'
-            : isBtnHovered
-            ? 'rgba(0, 240, 255, 0.45)'
-            : playerAns !== undefined
-            ? 'rgba(0, 240, 255, 0.3)'
-            : 'rgba(255, 255, 255, 0.12)';
-          ctx.fillRect(btnX, btnY, btnW, btnH);
+            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.fillStyle = isSpy ? '#ff0055' : '#00f0ff';
+            ctx.fillText('OPERATIVE_PROMPT >', 64, qBoxY + 32);
 
-          ctx.strokeStyle = isConfirmed ? '#10b981' : isBtnHovered ? '#ffffff' : '#00f0ff';
-          ctx.lineWidth = isBtnHovered ? 4 : 2;
-          ctx.strokeRect(btnX, btnY, btnW, btnH);
+            if (isSpy) {
+              ctx.fillStyle = '#ff0055';
+              ctx.font = 'bold 22px Orbitron, sans-serif';
+              ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 64, qBoxY + 68);
 
-          ctx.font = 'bold 22px Orbitron, sans-serif';
-          ctx.fillStyle = isConfirmed ? '#ffffff' : playerAns !== undefined ? '#00f0ff' : '#94a3b8';
-          ctx.textAlign = 'center';
-          ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 54);
+              ctx.fillStyle = '#cbd5e1';
+              ctx.font = '18px Rajdhani, sans-serif';
+              ctx.fillText('Decryption key absent. Analyze choices below to deduce prompt & blend in.', 64, qBoxY + 104);
+            } else {
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 22px Rajdhani, sans-serif';
 
-          ctx.font = 'bold 15px Orbitron, sans-serif';
-          ctx.fillStyle = isConfirmed ? '#e2e8f0' : '#cbd5e1';
-          ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
-          ctx.textAlign = 'left';
+              const safeQText = String(qText || '');
+              const words = safeQText.split(' ');
+              let line = '';
+              let yPos = qBoxY + 68;
+              for (let w of words) {
+                const testLine = line + w + ' ';
+                if (ctx.measureText(testLine).width > 1130) {
+                  ctx.fillText(line, 64, yPos);
+                  line = w + ' ';
+                  yPos += 30;
+                } else {
+                  line = testLine;
+                }
+              }
+              ctx.fillText(line, 64, yPos);
+            }
+
+            // 4 Interactive Option Boxes (A, B, C, D)
+            const optBoxes = [
+              { x: 40, y: 315, w: 585, h: 140, label: 'A' },
+              { x: 655, y: 315, w: 585, h: 140, label: 'B' },
+              { x: 40, y: 470, w: 585, h: 140, label: 'C' },
+              { x: 655, y: 470, w: 585, h: 140, label: 'D' },
+            ];
+
+            rawOptions.slice(0, 4).forEach((optTextRaw, oIdx) => {
+              const box = optBoxes[oIdx];
+              const optString = String(typeof optTextRaw === 'string' ? optTextRaw : (optTextRaw?.text || optTextRaw?.label || ''));
+              const playerAns = state?.playerAnswers?.[idx];
+              const isSelected = playerAns === optString || playerAns === oIdx || playerAns === box.label;
+              const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
+
+              ctx.fillStyle = isSelected
+                ? 'rgba(0, 240, 255, 0.48)'
+                : isHovered
+                ? 'rgba(0, 240, 255, 0.28)'
+                : 'rgba(18, 30, 52, 0.95)';
+              ctx.fillRect(box.x, box.y, box.w, box.h);
+
+              ctx.strokeStyle = isSelected ? '#00f0ff' : isHovered ? '#ffffff' : 'rgba(0, 240, 255, 0.4)';
+              ctx.lineWidth = isSelected ? 4 : isHovered ? 3 : 2;
+              ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+              ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.15)';
+              ctx.fillRect(box.x + 16, box.y + 16, 52, 52);
+              ctx.strokeStyle = '#00f0ff';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(box.x + 16, box.y + 16, 52, 52);
+
+              ctx.font = 'bold 26px Orbitron, sans-serif';
+              ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
+              ctx.fillText(box.label, box.x + 31, box.y + 51);
+
+              ctx.font = 'bold 12px Orbitron, sans-serif';
+              ctx.fillStyle = '#94a3b8';
+              ctx.fillText(`KEY [${box.label}]`, box.x + 20, box.y + 92);
+
+              ctx.font = 'bold 20px Rajdhani, sans-serif';
+              ctx.fillStyle = isSelected ? '#ffffff' : '#f1f5f9';
+
+              const optWords = optString.split(' ');
+              let optLine = '';
+              let optY = box.y + 44;
+              for (let w of optWords) {
+                const testLine = optLine + w + ' ';
+                if (ctx.measureText(testLine).width > box.w - 110) {
+                  ctx.fillText(optLine, box.x + 84, optY);
+                  optLine = w + ' ';
+                  optY += 26;
+                } else {
+                  optLine = testLine;
+                }
+              }
+              ctx.fillText(optLine, box.x + 84, optY);
+
+              if (isSelected) {
+                ctx.fillStyle = '#00f0ff';
+                ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
+                ctx.font = 'bold 14px Orbitron, sans-serif';
+                ctx.fillStyle = '#020617';
+                ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
+              }
+            });
+
+            // Lock-In Button
+            const btnX = 440;
+            const btnY = 635;
+            const btnW = 400;
+            const btnH = 115;
+
+            const playerAns = state?.playerAnswers?.[idx];
+            const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
+            const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
+
+            ctx.fillStyle = isConfirmed
+              ? '#10b981'
+              : isBtnHovered
+              ? 'rgba(0, 240, 255, 0.45)'
+              : playerAns !== undefined
+              ? 'rgba(0, 240, 255, 0.3)'
+              : 'rgba(255, 255, 255, 0.12)';
+            ctx.fillRect(btnX, btnY, btnW, btnH);
+
+            ctx.strokeStyle = isConfirmed ? '#10b981' : isBtnHovered ? '#ffffff' : '#00f0ff';
+            ctx.lineWidth = isBtnHovered ? 4 : 2;
+            ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+            ctx.font = 'bold 22px Orbitron, sans-serif';
+            ctx.fillStyle = isConfirmed ? '#ffffff' : playerAns !== undefined ? '#00f0ff' : '#94a3b8';
+            ctx.textAlign = 'center';
+            ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 54);
+
+            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.fillStyle = isConfirmed ? '#e2e8f0' : '#cbd5e1';
+            ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
+            ctx.textAlign = 'left';
+          }
 
           texture.needsUpdate = true;
         });
@@ -650,8 +874,6 @@ export function ControlRoomScene({
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
       const { currentPhase: phase, activePlayerIndex: activeIdx } = sceneStateRef.current;
-      if (phase !== 'question') return;
-
       const activeScreen = screenMeshList[activeIdx];
       if (!activeScreen) return;
 
@@ -665,30 +887,37 @@ export function ControlRoomScene({
 
         let foundHoverOption = null;
         let foundHoverLockIn = false;
+        let foundHoverVote = null;
 
-        // Check Lock-In Button bounds (x: 440..840, y: 635..750)
-        if (px >= 440 && px <= 840 && py >= 635 && py <= 750) {
-          foundHoverLockIn = true;
-        }
-
-        // Check 4 Option Boxes bounds
-        const optBoxes = [
-          { x: 40, y: 315, w: 585, h: 140, idx: 0 },
-          { x: 655, y: 315, w: 585, h: 140, idx: 1 },
-          { x: 40, y: 470, w: 585, h: 140, idx: 2 },
-          { x: 655, y: 470, w: 585, h: 140, idx: 3 },
-        ];
-
-        optBoxes.forEach(b => {
-          if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
-            foundHoverOption = b.idx;
+        if (phase === 'question') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) foundHoverLockIn = true;
+          const optBoxes = [
+            { x: 40, y: 315, w: 585, h: 140, idx: 0 },
+            { x: 655, y: 315, w: 585, h: 140, idx: 1 },
+            { x: 40, y: 470, w: 585, h: 140, idx: 2 },
+            { x: 655, y: 470, w: 585, h: 140, idx: 3 },
+          ];
+          optBoxes.forEach(b => {
+            if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) foundHoverOption = b.idx;
+          });
+        } else if (phase === 'discussion') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) foundHoverLockIn = true;
+        } else if (phase === 'voting') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) foundHoverLockIn = true;
+          for (let pIdx = 0; pIdx < 6; pIdx++) {
+            const col = pIdx % 3;
+            const row = Math.floor(pIdx / 3);
+            const bx = 40 + col * 405;
+            const by = 160 + row * 220;
+            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 200) foundHoverVote = pIdx;
           }
-        });
+        }
 
         sceneStateRef.current.hoveredOptionIdx = foundHoverOption;
         sceneStateRef.current.hoveredLockIn = foundHoverLockIn;
+        sceneStateRef.current.hoveredVoteIdx = foundHoverVote;
 
-        if (foundHoverOption !== null || foundHoverLockIn) {
+        if (foundHoverOption !== null || foundHoverLockIn || foundHoverVote !== null) {
           renderer.domElement.style.cursor = 'pointer';
         } else {
           renderer.domElement.style.cursor = 'default';
@@ -696,6 +925,7 @@ export function ControlRoomScene({
       } else {
         sceneStateRef.current.hoveredOptionIdx = null;
         sceneStateRef.current.hoveredLockIn = false;
+        sceneStateRef.current.hoveredVoteIdx = null;
         renderer.domElement.style.cursor = 'default';
       }
     };
@@ -705,8 +935,17 @@ export function ControlRoomScene({
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-      const { currentPhase: phase, activePlayerIndex: activeIdx, onSelectOption: selectCb, onConfirmAnswer: confirmCb, gameState: state } = sceneStateRef.current;
-      if (phase !== 'question') return;
+      const {
+        currentPhase: phase,
+        activePlayerIndex: activeIdx,
+        onSelectOption: selectCb,
+        onConfirmAnswer: confirmCb,
+        onProceedToVote: proceedVoteCb,
+        onCastVote: castVoteCb,
+        onProceedToResolution: resolveCb,
+        onRematch: rematchCb,
+        onReturnToLobby: lobbyCb,
+      } = sceneStateRef.current;
 
       const activeScreen = screenMeshList[activeIdx];
       if (!activeScreen) return;
@@ -719,55 +958,80 @@ export function ControlRoomScene({
         const px = uv.x * 1280;
         const py = (1 - uv.y) * 800;
 
-        // Click Lock-In Transmission Button
-        if (px >= 440 && px <= 840 && py >= 635 && py <= 750) {
-          playVoteCast();
-          confirmCb?.();
-          return;
-        }
-
-        // Click 4 Option Boxes
-        const optBoxes = [
-          { x: 40, y: 315, w: 585, h: 140, idx: 0 },
-          { x: 655, y: 315, w: 585, h: 140, idx: 1 },
-          { x: 40, y: 470, w: 585, h: 140, idx: 2 },
-          { x: 655, y: 470, w: 585, h: 140, idx: 3 },
-        ];
-
-        optBoxes.forEach(b => {
-          if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
-            playLaserLock();
-            selectCb?.(b.idx);
+        if (phase === 'question') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) {
+            playVoteCast();
+            confirmCb?.();
+            return;
           }
-        });
+          const optBoxes = [
+            { x: 40, y: 315, w: 585, h: 140, idx: 0 },
+            { x: 655, y: 315, w: 585, h: 140, idx: 1 },
+            { x: 40, y: 470, w: 585, h: 140, idx: 2 },
+            { x: 655, y: 470, w: 585, h: 140, idx: 3 },
+          ];
+          optBoxes.forEach(b => {
+            if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+              playLaserLock();
+              selectCb?.(b.idx);
+            }
+          });
+        } else if (phase === 'discussion') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) {
+            playTerminalPowerOn();
+            proceedVoteCb?.();
+          }
+        } else if (phase === 'voting') {
+          if (px >= 440 && px <= 840 && py >= 635 && py <= 750) {
+            playTerminalPowerOn();
+            resolveCb?.();
+            return;
+          }
+          for (let pIdx = 0; pIdx < 6; pIdx++) {
+            const col = pIdx % 3;
+            const row = Math.floor(pIdx / 3);
+            const bx = 40 + col * 405;
+            const by = 160 + row * 220;
+            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 200) {
+              playLaserLock();
+              castVoteCb?.(pIdx);
+            }
+          }
+        } else if (phase === 'victory') {
+          if (px >= 240 && px <= 600 && py >= 450 && py <= 570) {
+            rematchCb?.();
+          } else if (px >= 680 && px <= 1040 && py >= 450 && py <= 570) {
+            lobbyCb?.();
+          }
+        }
       }
     };
 
-    // Keyboard Hotkeys (A, B, C, D / 1, 2, 3, 4 / Enter / Space)
+    // Keyboard Hotkeys
     const handleKeyDown = (e) => {
-      const { currentPhase: phase, onSelectOption: selectCb, onConfirmAnswer: confirmCb } = sceneStateRef.current;
-      if (phase !== 'question') return;
+      const {
+        currentPhase: phase,
+        onSelectOption: selectCb,
+        onConfirmAnswer: confirmCb,
+        onProceedToVote: proceedVoteCb,
+        onProceedToResolution: resolveCb,
+      } = sceneStateRef.current;
+
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
 
       const code = e.code;
       const key = e.key ? e.key.toUpperCase() : '';
 
-      if (code === 'KeyA' || key === 'A' || key === '1') {
-        playLaserLock();
-        selectCb?.(0);
-      } else if (code === 'KeyB' || key === 'B' || key === '2') {
-        playLaserLock();
-        selectCb?.(1);
-      } else if (code === 'KeyC' || key === 'C' || key === '3') {
-        playLaserLock();
-        selectCb?.(2);
-      } else if (code === 'KeyD' || key === 'D' || key === '4') {
-        playLaserLock();
-        selectCb?.(3);
-      } else if (code === 'Enter' || code === 'Space' || key === 'ENTER' || key === ' ') {
-        e.preventDefault();
-        playVoteCast();
-        confirmCb?.();
+      if (phase === 'question') {
+        if (code === 'KeyA' || key === 'A' || key === '1') selectCb?.(0);
+        else if (code === 'KeyB' || key === 'B' || key === '2') selectCb?.(1);
+        else if (code === 'KeyC' || key === 'C' || key === '3') selectCb?.(2);
+        else if (code === 'KeyD' || key === 'D' || key === '4') selectCb?.(3);
+        else if (code === 'Enter' || code === 'Space' || key === 'ENTER' || key === ' ') confirmCb?.();
+      } else if (phase === 'discussion') {
+        if (code === 'Enter' || code === 'Space') proceedVoteCb?.();
+      } else if (phase === 'voting') {
+        if (code === 'Enter' || code === 'Space') resolveCb?.();
       }
     };
 
@@ -835,7 +1099,6 @@ export function ControlRoomScene({
           targetColor = cyanColor;
         }
 
-        // Pulse intensity if active
         if (i === activeIdx) {
           light.intensity = 1.5 + Math.sin(elapsedTime * 5) * 0.7;
           if (bezelMat) bezelMat.opacity = 0.7 + Math.sin(elapsedTime * 5) * 0.25;
@@ -864,50 +1127,14 @@ export function ControlRoomScene({
       const activeX = Math.cos(activeAngle) * consoleRadius;
       const activeZ = Math.sin(activeAngle) * consoleRadius;
 
-      switch (phase) {
-        case 'question': {
-          // LIVE 3D CAMERA CALIBRATION VECTOR POSITIONING
-          targetCamPos.set(activeX * distRatio, hVal, activeZ * distRatio);
-          targetLookAt.set(activeX * lookRatio, 1.45, activeZ * lookRatio);
-          break;
-        }
-        case 'discussion': {
-          // Wide dramatic shot of central holographic matrix
-          const radius = 13.5;
-          const slowOrbit = elapsedTime * 0.12;
-          targetCamPos.set(
-            Math.cos(slowOrbit) * radius,
-            3.2 + Math.sin(elapsedTime * 0.4) * 0.8,
-            Math.sin(slowOrbit) * radius
-          );
-          targetLookAt.set(0, 2.4, 0);
-          break;
-        }
-        case 'voting': {
-          // Dynamic low-angle security camera view
-          targetCamPos.set(11.5, 1.6 + Math.sin(elapsedTime * 0.5) * 0.3, 11.5);
-          targetLookAt.set(0, 2.0, 0);
-          break;
-        }
-        case 'victory': {
-          // High-energy orbiting zoom
-          const fastOrbit = elapsedTime * 0.75;
-          const r = 11.0 + Math.sin(elapsedTime * 1.5) * 2.5;
-          targetCamPos.set(
-            Math.cos(fastOrbit) * r,
-            5.5 + Math.cos(elapsedTime * 1.2) * 1.8,
-            Math.sin(fastOrbit) * r
-          );
-          targetLookAt.set(0, 2.8, 0);
-          break;
-        }
-        default: {
-          // 'lobby': Slow orbiting camera overview
-          const orbitTime = elapsedTime * 0.15;
-          targetCamPos.set(Math.cos(orbitTime) * 16, 8.5, Math.sin(orbitTime) * 16);
-          targetLookAt.set(0, 1.8, 0);
-          break;
-        }
+      if (phase === 'lobby') {
+        const orbitTime = elapsedTime * 0.15;
+        targetCamPos.set(Math.cos(orbitTime) * 16, 8.5, Math.sin(orbitTime) * 16);
+        targetLookAt.set(0, 1.8, 0);
+      } else {
+        // Gameplay Phases (question, discussion, voting, victory) sit at 3D Desk Monitor
+        targetCamPos.set(activeX * distRatio, hVal, activeZ * distRatio);
+        targetLookAt.set(activeX * lookRatio, 1.45, activeZ * lookRatio);
       }
 
       // Smooth lerp camera movement
@@ -916,7 +1143,7 @@ export function ControlRoomScene({
       camera.lookAt(currentLookAt);
 
       // Smoothly update Field of View (FOV)
-      const targetFov = phase === 'question' ? fovVal : 55;
+      const targetFov = phase === 'lobby' ? 55 : fovVal;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
@@ -1082,7 +1309,7 @@ export function ControlRoomScene({
             {/* Preset Buttons */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <button
-                onClick={() => { setCamDist(1.65); setCamHeight(2.40); setCamLookOffset(0.70); setCamFov(52); }}
+                onClick={() => { setCamDist(1.32); setCamHeight(1.85); setCamLookOffset(0.82); setCamFov(50); }}
                 style={{
                   background: 'rgba(0, 240, 255, 0.15)',
                   border: '1px solid #00f0ff',
@@ -1094,10 +1321,10 @@ export function ControlRoomScene({
                   cursor: 'pointer'
                 }}
               >
-                🎯 MEDIUM DESK
+                🎯 CLOSE-UP MONITOR
               </button>
               <button
-                onClick={() => { setCamDist(2.20); setCamHeight(3.40); setCamLookOffset(0.20); setCamFov(55); }}
+                onClick={() => { setCamDist(1.80); setCamHeight(2.80); setCamLookOffset(0.50); setCamFov(55); }}
                 style={{
                   background: 'rgba(255, 170, 0, 0.15)',
                   border: '1px solid #ffaa00',
@@ -1109,7 +1336,7 @@ export function ControlRoomScene({
                   cursor: 'pointer'
                 }}
               >
-                🌐 WIDE ROOM
+                🌐 ROOM VIEW
               </button>
             </div>
           </div>

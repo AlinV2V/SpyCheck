@@ -1,283 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Shield, Radio } from 'lucide-react';
+import React, { useState } from 'react';
 import ControlRoomScene from './3d/ControlRoomScene';
 import Lobby from './components/Lobby';
-import QuestionHUD from './components/QuestionHUD';
-import ComputerScreenTerminal from './components/ComputerScreenTerminal';
-import DiscussionPhase from './components/DiscussionPhase';
-import VotingPhase from './components/VotingPhase';
-import VictoryModal from './components/VictoryModal';
-import { createRoomState } from './services/roomState';
 import { getRandomQuestions } from './data/questionBank';
-import { selectBotAnswer } from './services/botAI';
-import { setMuted, isMuted, playClick, playTimerTick } from './services/audio';
+import { playClick, playTerminalPowerOn, setMuted } from './services/audio';
+import { Shield, Radio, Volume2, VolumeX } from 'lucide-react';
 import './index.css';
 
-export default function App() {
+export function App() {
   const [gameState, setGameState] = useState(null);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
-  const [questionPool, setQuestionPool] = useState([]);
-  const [audioMuted, setAudioMuted] = useState(isMuted());
+  const [audioMuted, setAudioMuted] = useState(false);
 
-  // Load default questions pool on mount
-  useEffect(() => {
-    const questions = getRandomQuestions(10);
-    setQuestionPool(questions);
-  }, []);
-
-  // Universal Phase Timer Tick Effect
-  useEffect(() => {
-    let interval = null;
-    if (gameState && gameState.timer > 0 && ['question', 'discussion'].includes(gameState.currentPhase)) {
-      interval = setInterval(() => {
-        setGameState(prev => {
-          if (!prev) return null;
-          const nextTimer = prev.timer - 1;
-
-          if (nextTimer <= 5 && nextTimer > 0) {
-            playTimerTick(nextTimer <= 3);
-          }
-
-          if (nextTimer <= 0) {
-            // Timer expired auto-advance
-            if (prev.currentPhase === 'question') {
-              return autoAdvanceQuestionPhase(prev);
-            } else if (prev.currentPhase === 'discussion') {
-              return { ...prev, currentPhase: 'voting', timer: 0 };
-            }
-          }
-          return { ...prev, timer: nextTimer };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [gameState]);
-
-  // Auto fill unsubmitted answers when question timer runs out
-  const autoAdvanceQuestionPhase = (prevState) => {
-    const updatedAnswers = { ...prevState.playerAnswers };
-    prevState.players.forEach((_p, idx) => {
-      if (!updatedAnswers[idx]) {
-        updatedAnswers[idx] = prevState.currentQuestion.options[0];
-      }
-    });
-    return {
-      ...prevState,
-      playerAnswers: updatedAnswers,
-      currentPhase: 'discussion',
-      timer: prevState.timerSeconds || 45,
-    };
+  const toggleMute = () => {
+    const next = !audioMuted;
+    setAudioMuted(next);
+    setMuted(next);
   };
 
-  // Start new game session from Lobby settings
   const handleStartGame = (config) => {
-    const questions = getRandomQuestions(5, config.players);
-    const firstQ = questions[0];
+    playTerminalPowerOn();
+    const qList = getRandomQuestions(3);
+    const randomQuestion = qList[0];
+    const spyIdx = Math.floor(Math.random() * config.playerCount);
 
-    // Randomly assign Intruder / Spy role
-    const spyIdx = Math.floor(Math.random() * config.players.length);
+    const players = Array.from({ length: config.playerCount }, (_, i) => ({
+      id: `p${i + 1}`,
+      name: i === 0 ? 'Agent Alpha' : `Agent 0${i + 1}`,
+      isAI: i > 0 && config.mode === 'solo_ai',
+      isReady: true,
+      hasAnswered: false,
+    }));
 
-    const initialState = createRoomState({
+    setGameState({
       mode: config.mode,
-      players: config.players,
-      timerSeconds: config.timerSeconds,
-      speechEnabled: config.speechEnabled,
-      loliColliderEnabled: config.loliColliderEnabled,
-      currentQuestion: firstQ,
+      players,
       spyIndex: spyIdx,
-      currentPhase: 'question',
+      currentQuestion: randomQuestion,
+      questionPool: qList,
       currentRound: 1,
+      currentPhase: 'question',
+      timerSeconds: 45,
+      playerAnswers: {},
+      playerVotes: {},
     });
-
-    setQuestionPool(questions);
-    setGameState(initialState);
     setActivePlayerIndex(0);
+  };
 
-    // Auto-select AI bot answers if in solo AI mode
-    if (config.mode === 'solo_ai') {
-      setTimeout(() => {
-        config.players.forEach((p, idx) => {
-          if (idx !== 0 && p.isBot) {
-            const botChoice = selectBotAnswer({
-              bot: p.botPersona,
-              question: firstQ,
-              options: firstQ.options,
-              isSpy: idx === spyIdx,
-            });
-            setGameState(prev => ({
-              ...prev,
-              playerAnswers: {
-                ...prev.playerAnswers,
-                [idx]: botChoice
-              }
-            }));
+  const handleSelectOption = (optionIndex) => {
+    if (!gameState || gameState.currentPhase !== 'question') return;
+    setGameState(prev => {
+      const answers = { ...(prev.playerAnswers || {}) };
+      answers[activePlayerIndex] = optionIndex;
+      return { ...prev, playerAnswers: answers };
+    });
+  };
+
+  const handleConfirmAnswer = () => {
+    if (!gameState || gameState.currentPhase !== 'question') return;
+    playClick();
+
+    const totalPlayers = gameState.players.length;
+    const nextIdx = activePlayerIndex + 1;
+
+    if (nextIdx < totalPlayers && !gameState.players[nextIdx].isAI) {
+      setActivePlayerIndex(nextIdx);
+    } else {
+      playTerminalPowerOn();
+      setGameState(prev => {
+        const answers = { ...(prev.playerAnswers || {}) };
+        prev.players.forEach((p, idx) => {
+          if (p.isAI && answers[idx] === undefined) {
+            answers[idx] = Math.floor(Math.random() * 4);
           }
         });
-      }, 500);
+        return {
+          ...prev,
+          playerAnswers: answers,
+          isAnswerConfirmed: true,
+          currentPhase: 'discussion',
+          timerSeconds: 45,
+        };
+      });
+      setActivePlayerIndex(0);
     }
   };
 
-  // Option selection for active player
-  const handleSelectOption = (option) => {
-    if (!gameState) return;
-    setGameState(prev => ({
-      ...prev,
-      playerAnswers: {
-        ...prev.playerAnswers,
-        [activePlayerIndex]: option,
-      }
-    }));
-  };
-
-  // Confirm answer for current active player
-  const handleConfirmAnswer = (confirmedOptionIndex) => {
-    playClick();
-    if (!gameState) return;
-
-    const currentAnswer = confirmedOptionIndex ?? gameState.playerAnswers?.[activePlayerIndex];
-    if (currentAnswer === undefined || currentAnswer === null) {
-      return;
-    }
-
-    const updatedAnswers = {
-      ...gameState.playerAnswers,
-      [activePlayerIndex]: currentAnswer
-    };
-
-    // If Pass & Play mode and not last human player, pass turn to next player
-    if (gameState.mode === 'pass_play' && activePlayerIndex < gameState.players.length - 1) {
-      setGameState(prev => ({ ...prev, playerAnswers: updatedAnswers }));
-      setActivePlayerIndex(prev => prev + 1);
-      return;
-    }
-
-    // Proceed to discussion phase
-    setGameState(prev => ({
-      ...prev,
-      playerAnswers: updatedAnswers,
-      currentPhase: 'discussion',
-      timer: prev.timerSeconds || 45,
-    }));
-  };
-
-  // Proceed to voting phase
   const handleProceedToVote = () => {
-    playClick();
+    if (!gameState) return;
+    playTerminalPowerOn();
     setGameState(prev => ({
       ...prev,
       currentPhase: 'voting',
+      timerSeconds: 30,
     }));
   };
 
-  // Handle voting resolution and victory condition checks
-  const handleProceedToResolution = ({ accusedIndex, isSpyCaught }) => {
-    if (!gameState) return;
-
-    const roundData = {
-      round: gameState.currentRound,
-      question: gameState.currentQuestion,
-      spyChoice: gameState.playerAnswers[gameState.spyIndex],
-      accusedIndex,
-      isSpyCaught,
-    };
-
-    const newHistory = [...(gameState.roundHistory || []), roundData];
-
-    // Win Check logic:
-    // 1. If Intruder is caught -> Agents Win!
-    // 2. If Round 3 finished and Intruder survived -> Intruder / Spy Wins!
-    if (isSpyCaught) {
-      setGameState(prev => ({
-        ...prev,
-        winner: 'agents',
-        currentPhase: 'victory',
-        roundHistory: newHistory,
-      }));
-    } else if (gameState.currentRound >= 3) {
-      setGameState(prev => ({
-        ...prev,
-        winner: 'spy',
-        currentPhase: 'victory',
-        roundHistory: newHistory,
-      }));
-    } else {
-      // Advance to Next Round!
-      const nextRound = gameState.currentRound + 1;
-      const nextQ = questionPool[nextRound - 1] || getRandomQuestions(1)[0];
-
-      setGameState(prev => ({
-        ...prev,
-        currentRound: nextRound,
-        currentPhase: 'question',
-        currentQuestion: nextQ,
-        playerAnswers: {},
-        playerVotes: {},
-        timer: prev.timerSeconds || 45,
-        roundHistory: newHistory,
-      }));
-      setActivePlayerIndex(0);
-
-      // Auto generate bot answers for next round in solo AI mode
-      if (gameState.mode === 'solo_ai') {
-        setTimeout(() => {
-          gameState.players.forEach((p, idx) => {
-            if (idx !== 0 && p.isBot) {
-              const botChoice = selectBotAnswer({
-                bot: p.botPersona,
-                question: nextQ,
-                options: nextQ.options,
-                isSpy: idx === gameState.spyIndex,
-              });
-              setGameState(curr => ({
-                ...curr,
-                playerAnswers: { ...curr.playerAnswers, [idx]: botChoice }
-              }));
-            }
-          });
-        }, 500);
-      }
-    }
+  const handleCastVote = (targetPlayerIndex) => {
+    if (!gameState || gameState.currentPhase !== 'voting') return;
+    playClick();
+    setGameState(prev => {
+      const votes = { ...(prev.playerVotes || {}) };
+      votes[activePlayerIndex] = targetPlayerIndex;
+      return { ...prev, playerVotes: votes };
+    });
   };
 
-  // Rematch with same player configuration
+  const handleProceedToResolution = () => {
+    if (!gameState) return;
+    playTerminalPowerOn();
+    setGameState(prev => {
+      const votes = prev.playerVotes || {};
+      const voteCounts = {};
+      Object.values(votes).forEach(target => {
+        voteCounts[target] = (voteCounts[target] || 0) + 1;
+      });
+
+      let maxVotes = 0;
+      let accusedIdx = null;
+      Object.entries(voteCounts).forEach(([idx, count]) => {
+        if (count > maxVotes) {
+          maxVotes = count;
+          accusedIdx = parseInt(idx, 10);
+        }
+      });
+
+      const isSpyCaught = accusedIdx === prev.spyIndex;
+      const winner = isSpyCaught ? 'agents' : 'spy';
+
+      return {
+        ...prev,
+        accusedPlayerIndex: accusedIdx,
+        winner,
+        currentPhase: 'victory',
+      };
+    });
+  };
+
   const handleRematch = () => {
     if (!gameState) return;
     handleStartGame({
       mode: gameState.mode,
-      players: gameState.players,
-      timerSeconds: gameState.timerSeconds,
-      speechEnabled: gameState.speechEnabled,
-      loliColliderEnabled: gameState.loliColliderEnabled,
+      playerCount: gameState.players.length,
     });
   };
 
-  // Return to main lobby
   const handleReturnToLobby = () => {
     setGameState(null);
+    setActivePlayerIndex(0);
   };
-
-  // Toggle global audio mute state
-  const toggleMute = () => {
-    const nextMuted = !audioMuted;
-    setAudioMuted(nextMuted);
-    setMuted(nextMuted);
-  };
-
-  const activePlayer = gameState?.players ? {
-    ...gameState.players[activePlayerIndex],
-    isSpy: activePlayerIndex === gameState.spyIndex,
-    selectedOption: gameState.playerAnswers?.[activePlayerIndex]
-  } : null;
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', background: '#0a0d14' }}>
-      {/* 3D Command Room Background Scene */}
+      {/* 3D Command Room Background Scene & Virtual Computer Monitors */}
       <ControlRoomScene
         gameState={gameState}
         currentPhase={gameState?.winner ? 'victory' : (gameState?.currentPhase || 'lobby')}
         activePlayerIndex={activePlayerIndex}
         onSelectOption={handleSelectOption}
         onConfirmAnswer={handleConfirmAnswer}
+        onProceedToVote={handleProceedToVote}
+        onCastVote={handleCastVote}
+        onProceedToResolution={handleProceedToResolution}
+        onRematch={handleRematch}
+        onReturnToLobby={handleReturnToLobby}
       />
 
       {/* Global Top HUD Header Bar */}
@@ -334,7 +219,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Viewport Shell */}
+      {/* Main Viewport Shell — Gameplay UI occurs 100% on the 3D Virtual Computer Monitor inside ControlRoomScene */}
       <main style={{
         position: 'absolute',
         top: '65px',
@@ -342,33 +227,16 @@ export default function App() {
         width: '100%',
         height: 'calc(100vh - 65px)',
         zIndex: 10,
-        overflowY: 'auto',
-        padding: '20px'
+        pointerEvents: 'none',
       }}>
         {!gameState ? (
-          <Lobby onStartGame={handleStartGame} />
-        ) : gameState.winner ? (
-          <VictoryModal
-            gameState={gameState}
-            onRematch={handleRematch}
-            onReturnToLobby={handleReturnToLobby}
-          />
-        ) : gameState.currentPhase === 'question' ? (
-          /* ZERO 2D HTML menu overlay! The player sits in their chair and plays 100% on the 3D PC Computer Monitor on the desk! */
-          null
-        ) : gameState.currentPhase === 'discussion' ? (
-          <DiscussionPhase
-            gameState={gameState}
-            onProceedToVote={handleProceedToVote}
-          />
-        ) : gameState.currentPhase === 'voting' ? (
-          <VotingPhase
-            gameState={gameState}
-            onCastVote={() => {}}
-            onProceedToResolution={handleProceedToResolution}
-          />
+          <div style={{ pointerEvents: 'auto' }}>
+            <Lobby onStartGame={handleStartGame} />
+          </div>
         ) : null}
       </main>
     </div>
   );
 }
+
+export default App;
