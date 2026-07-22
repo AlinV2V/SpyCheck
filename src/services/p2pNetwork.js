@@ -1,70 +1,89 @@
-/**
- * P2P Local Broadcast Network Layer using BroadcastChannel API.
- * Enables seamless multi-tab/multi-window local synchronization for SpyCheck.
- */
+import { createRoom, joinRoom, onRoomPlayersChanged, onGameStart, launchGame, leaveRoom } from './firebase';
 
 export class P2PNetwork {
   constructor() {
-    this.channel = null;
     this.roomCode = null;
     this.playerId = null;
+    this.isHost = false;
     this.listeners = new Set();
     this.actionHandlers = new Map();
-    this.isHost = false;
+    this._unsubPlayers = null;
+    this._unsubGame = null;
+    this._myPlayerData = null;
   }
 
-  /**
-   * Connect to a specific room channel
-   * @param {string} roomCode - The room code identifier
-   * @param {string} playerId - The player's unique identifier
-   * @param {boolean} isHost - Whether this player instance is host
-   */
-  connect(roomCode, playerId, isHost = false) {
-    if (this.channel) {
-      this.disconnect();
-    }
+  async connect(roomCode, playerId, isHost = false, playerData = {}) {
+    this.disconnect();
 
     this.roomCode = roomCode;
     this.playerId = playerId;
     this.isHost = isHost;
+    this._myPlayerData = playerData;
 
-    const channelName = `spycheck_room_${roomCode}`;
-
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-      this.channel = new BroadcastChannel(channelName);
-      this.channel.onmessage = (event) => this.handleIncomingMessage(event.data);
-    } else {
-      console.warn('BroadcastChannel API not supported in this environment.');
+    if (isHost) {
+      const result = await createRoom({
+        name: playerData.name || 'Host',
+        avatar: playerData.avatar || '/avatars/cat.jpg',
+        color: playerData.color || '#3b82f6',
+      });
+      this.roomCode = result.roomCode;
+      this.playerId = result.playerId;
     }
 
-    // Broadcast join event across tabs
-    this.sendAction('PLAYER_JOINED', { playerId, isHost });
+    this._unsubPlayers = onRoomPlayersChanged(this.roomCode, (players) => {
+      this.notifyListeners({
+        type: 'STATE_UPDATE',
+        senderId: this.playerId,
+        payload: { roomPlayers: players },
+        timestamp: Date.now()
+      });
+    });
+
+    this._unsubGame = onGameStart(this.roomCode, (config) => {
+      this.notifyListeners({
+        type: 'GAME_START',
+        senderId: 'host',
+        payload: config,
+        timestamp: Date.now()
+      });
+    });
   }
 
-  /**
-   * Handle incoming network messages from BroadcastChannel
-   */
-  handleIncomingMessage(data) {
-    if (!data || typeof data !== 'object') return;
+  async joinAsGuest(roomCode, playerData = {}) {
+    this.disconnect();
+    this.roomCode = roomCode;
+    this.isHost = false;
+    this._myPlayerData = playerData;
 
-    const { type, senderId, payload, timestamp } = data;
+    const result = await joinRoom(roomCode, {
+      name: playerData.name || 'Operator',
+      avatar: playerData.avatar || '/avatars/cat.jpg',
+      color: playerData.color || '#3b82f6',
+    });
 
-    // Trigger general event listeners
-    this.notifyListeners({ type, senderId, payload, timestamp });
+    this.playerId = result.playerId;
 
-    // Trigger specific action handlers
-    if (this.actionHandlers.has(type)) {
-      const handlers = this.actionHandlers.get(type);
-      handlers.forEach(handler => handler(payload, senderId));
-    }
+    this._unsubPlayers = onRoomPlayersChanged(this.roomCode, (players) => {
+      this.notifyListeners({
+        type: 'STATE_UPDATE',
+        senderId: this.playerId,
+        payload: { roomPlayers: players },
+        timestamp: Date.now()
+      });
+    });
+
+    this._unsubGame = onGameStart(this.roomCode, (config) => {
+      this.notifyListeners({
+        type: 'GAME_START',
+        senderId: 'host',
+        payload: config,
+        timestamp: Date.now()
+      });
+    });
   }
 
-  /**
-   * Broadcast current room state across network channel
-   * @param {Object} roomState - The complete room state
-   */
   broadcastState(roomState) {
-    this.postMessage({
+    this.notifyListeners({
       type: 'STATE_UPDATE',
       senderId: this.playerId,
       payload: roomState,
@@ -72,91 +91,62 @@ export class P2PNetwork {
     });
   }
 
-  /**
-   * Send a specific player action across the network
-   * @param {string} actionType - Action type string (e.g. 'SUBMIT_ANSWER', 'CAST_VOTE')
-   * @param {Object} payload - Action payload data
-   */
-  sendAction(actionType, payload = {}) {
-    this.postMessage({
+  async sendAction(actionType, payload = {}) {
+    if (actionType === 'GAME_START' && this.isHost) {
+      await launchGame(this.roomCode, payload);
+    }
+    this.notifyListeners({
       type: actionType,
       senderId: this.playerId,
-      payload: payload,
+      payload,
       timestamp: Date.now()
     });
   }
 
-  /**
-   * Low level message posting
-   */
   postMessage(message) {
-    if (this.channel) {
-      try {
-        this.channel.postMessage(message);
-      } catch (err) {
-        console.error('Failed to post message on BroadcastChannel:', err);
-      }
+    this.notifyListeners(message);
+    if (this.actionHandlers.has(message.type)) {
+      const handlers = this.actionHandlers.get(message.type);
+      handlers.forEach(handler => handler(message.payload, message.senderId));
     }
   }
 
-  /**
-   * Subscribe to all network events
-   * @param {Function} listener callback receiving { type, senderId, payload, timestamp }
-   * @returns {Function} unsubscribe function
-   */
   subscribe(listener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
-  /**
-   * Register handler for a specific action type
-   * @param {string} actionType
-   * @param {Function} handler (payload, senderId) => void
-   * @returns {Function} unsubscribe function
-   */
   on(actionType, handler) {
     if (!this.actionHandlers.has(actionType)) {
       this.actionHandlers.set(actionType, new Set());
     }
     this.actionHandlers.get(actionType).add(handler);
-
     return () => {
       const handlers = this.actionHandlers.get(actionType);
-      if (handlers) {
-        handlers.delete(handler);
-      }
+      if (handlers) handlers.delete(handler);
     };
   }
 
-  /**
-   * Notify generic subscribers
-   */
   notifyListeners(data) {
     this.listeners.forEach(listener => {
-      try {
-        listener(data);
-      } catch (err) {
+      try { listener(data); } catch (err) {
         console.error('Error in network event listener:', err);
       }
     });
   }
 
-  /**
-   * Disconnect and clean up channel resources
-   */
   disconnect() {
-    if (this.channel) {
-      this.sendAction('PLAYER_LEFT', { playerId: this.playerId });
-      this.channel.close();
-      this.channel = null;
+    if (this._unsubPlayers) { this._unsubPlayers(); this._unsubPlayers = null; }
+    if (this._unsubGame) { this._unsubGame(); this._unsubGame = null; }
+    if (this.roomCode && this.playerId) {
+      leaveRoom(this.roomCode, this.playerId);
     }
     this.roomCode = null;
     this.playerId = null;
+    this.isHost = false;
     this.listeners.clear();
     this.actionHandlers.clear();
   }
 }
 
-// Singleton instance export alongside class
 export const p2pNetwork = new P2PNetwork();

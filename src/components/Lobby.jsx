@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Mic, MicOff, Users, Cpu, Shield, Play, Copy, Check, UserPlus, LogIn, Sliders, RefreshCw, UserCheck, Monitor, Wifi, Power, Maximize2, Minimize2, X, Terminal, Clock, Search } from 'lucide-react';
 import { BOT_PERSONALITIES } from '../services/botAI';
-import { generateRoomCode } from '../services/roomState';
 import { p2pNetwork } from '../services/p2pNetwork';
 import { initAudio, playClick, setMuted, isMuted } from '../services/audio';
 
@@ -85,28 +84,6 @@ export default function Lobby({ onStartGame }) {
 
   useEffect(() => {
     if (viewState === 'room' && roomCode) {
-      const myId = `user_${Math.random().toString(36).substring(2, 7)}`;
-      p2pNetwork.connect(roomCode, myId, isHost);
-
-      const unsubJoin = p2pNetwork.on('PLAYER_JOINED', (payload) => {
-        if (isHost) {
-          setRoomPlayers(prev => {
-            if (prev.some(p => p.id === payload.playerId)) return prev;
-            const updated = [...prev, {
-              id: payload.playerId,
-              name: payload.name || `Operator ${prev.length + 1}`,
-              avatar: payload.avatar || '/avatars/cat.jpg',
-              color: payload.color || '#3b82f6',
-              isBot: false,
-              isHost: false,
-              isReady: true
-            }];
-            p2pNetwork.broadcastState({ roomPlayers: updated, mode, timerSeconds });
-            return updated;
-          });
-        }
-      });
-
       const unsubState = p2pNetwork.on('STATE_UPDATE', (payload) => {
         if (payload?.roomPlayers) {
           setRoomPlayers(payload.roomPlayers);
@@ -118,37 +95,49 @@ export default function Lobby({ onStartGame }) {
       });
 
       return () => {
-        unsubJoin();
         unsubState();
         unsubStart();
+        p2pNetwork.disconnect();
       };
     }
-  }, [viewState, roomCode, isHost]);
+  }, [viewState, roomCode]);
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     initAudio();
     playClick();
-    const newCode = generateRoomCode();
-    setRoomCode(newCode);
     setIsHost(true);
     setMode('multiplayer');
 
-    const hostPlayer = {
-      id: 'p_host',
+    const playerData = {
       name: playerName || 'Host Operator',
       avatar: selectedAvatar,
       color: selectedColor,
-      isBot: false,
-      isHost: true,
-      isReady: true
     };
 
-    setRoomPlayers([hostPlayer]);
-    setViewState('room');
-    window.history.pushState({}, '', `?room=${newCode}`);
+    try {
+      await p2pNetwork.connect('', '', true, playerData);
+      const newCode = p2pNetwork.roomCode;
+      setRoomCode(newCode);
+
+      const hostPlayer = {
+        id: p2pNetwork.playerId,
+        name: playerName || 'Host Operator',
+        avatar: selectedAvatar,
+        color: selectedColor,
+        isBot: false,
+        isHost: true,
+        isReady: true
+      };
+
+      setRoomPlayers([hostPlayer]);
+      setViewState('room');
+      window.history.pushState({}, '', `?room=${newCode}`);
+    } catch (err) {
+      console.error('Failed to create room:', err);
+    }
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     initAudio();
     playClick();
     if (!roomCode || roomCode.length < 3) return;
@@ -158,22 +147,32 @@ export default function Lobby({ onStartGame }) {
     setIsHost(false);
     setMode('multiplayer');
 
-    const myPlayer = {
-      id: `p_${Math.random().toString(36).substring(2, 7)}`,
+    const playerData = {
       name: playerName || 'Operator',
       avatar: selectedAvatar,
       color: selectedColor,
-      isBot: false,
-      isHost: false,
-      isReady: true
     };
 
-    setRoomPlayers(prev => [...prev, myPlayer]);
-    setViewState('room');
+    try {
+      await p2pNetwork.joinAsGuest(cleanCode, playerData);
 
-    p2pNetwork.connect(cleanCode, myPlayer.id, false);
-    p2pNetwork.sendAction('PLAYER_JOINED', myPlayer);
-    window.history.pushState({}, '', `?room=${cleanCode}`);
+      const myPlayer = {
+        id: p2pNetwork.playerId,
+        name: playerName || 'Operator',
+        avatar: selectedAvatar,
+        color: selectedColor,
+        isBot: false,
+        isHost: false,
+        isReady: true
+      };
+
+      setRoomPlayers(prev => [...prev, myPlayer]);
+      setViewState('room');
+      window.history.pushState({}, '', `?room=${cleanCode}`);
+    } catch (err) {
+      console.error('Failed to join room:', err);
+      alert('Room not found. Check the code and try again.');
+    }
   };
 
   const handleStartSoloAI = () => {
@@ -211,7 +210,7 @@ export default function Lobby({ onStartGame }) {
     });
   };
 
-  const handleLaunchRoomGame = () => {
+  const handleLaunchRoomGame = async () => {
     initAudio();
     playClick();
 
@@ -240,7 +239,7 @@ export default function Lobby({ onStartGame }) {
       roomCode
     };
 
-    p2pNetwork.sendAction('GAME_START', config);
+    await p2pNetwork.sendAction('GAME_START', config);
     onStartGame(config);
   };
 
