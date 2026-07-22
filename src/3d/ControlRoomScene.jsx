@@ -836,7 +836,7 @@ export function ControlRoomScene({
               ctx.fillText(line, 68, yPos);
             }
 
-            // 4 Interactive Option Boxes (A, B, C, D) — Solid Ultra-High Contrast (#0a1c33)
+            // 4 Interactive Option Boxes (A, B, C, D) — Solid Ultra-High Contrast Arcade Cards
             const optBoxes = [
               { x: 40, y: 318, w: 585, h: 145, label: 'A' },
               { x: 655, y: 318, w: 585, h: 145, label: 'B' },
@@ -854,58 +854,62 @@ export function ControlRoomScene({
               ctx.fillStyle = isSelected
                 ? '#00ffff'
                 : isHovered
-                ? '#0f3a66'
-                : '#0a1c33';
+                ? '#134074'
+                : '#0b2545';
               ctx.fillRect(box.x, box.y, box.w, box.h);
 
-              ctx.strokeStyle = isSelected ? '#00ffff' : isHovered ? '#ffffff' : '#00ffff';
-              ctx.lineWidth = isSelected || isHovered ? 5 : 3;
+              ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#00ffff';
+              ctx.lineWidth = isSelected ? 6 : isHovered ? 5 : 4;
               ctx.strokeRect(box.x, box.y, box.w, box.h);
 
-              // Solid Key Badge [A] [B] [C] [D]
+              // Massive Solid Key Badge Box [A] [B] [C] [D]
               ctx.fillStyle = isSelected ? '#020617' : '#00ffff';
-              ctx.fillRect(box.x + 16, box.y + 16, 56, 56);
+              ctx.fillRect(box.x + 14, box.y + 14, 64, 64);
+              ctx.strokeStyle = isSelected ? '#00ffff' : '#020617';
+              ctx.lineWidth = 3;
+              ctx.strokeRect(box.x + 14, box.y + 14, 64, 64);
 
-              ctx.font = 'bold 32px "Orbitron", "Segoe UI", Arial, sans-serif';
+              ctx.font = 'bold 38px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#00ffff' : '#020617';
-              ctx.fillText(box.label, box.x + 32, box.y + 56);
+              ctx.fillText(box.label, box.x + 32, box.y + 60);
 
-              ctx.font = 'bold 14px "Orbitron", "Segoe UI", Arial, sans-serif';
+              ctx.font = 'bold 15px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#020617' : '#00ffff';
-              ctx.fillText(`KEY [${box.label}]`, box.x + 18, box.y + 98);
+              ctx.fillText(`KEY [${box.label}]`, box.x + 16, box.y + 104);
 
-              ctx.font = 'bold 24px "Rajdhani", "Segoe UI", Arial, sans-serif';
+              // Massive Chonky White Option Text (28px Arial)
+              ctx.font = 'bold 28px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#020617' : '#ffffff';
 
               const optWords = optString.split(' ');
               let optLine = '';
-              let optY = box.y + 48;
+              let optY = box.y + 50;
               for (let w of optWords) {
                 const testLine = optLine + w + ' ';
-                if (ctx.measureText(testLine).width > box.w - 110) {
-                  ctx.fillText(optLine, box.x + 88, optY);
+                if (ctx.measureText(testLine).width > box.w - 115) {
+                  ctx.fillText(optLine, box.x + 94, optY);
                   optLine = w + ' ';
-                  optY += 30;
+                  optY += 34;
                 } else {
                   optLine = testLine;
                 }
               }
-              ctx.fillText(optLine, box.x + 88, optY);
+              ctx.fillText(optLine, box.x + 94, optY);
 
               if (isSelected) {
                 ctx.fillStyle = '#020617';
-                ctx.fillRect(box.x + box.w - 148, box.y + 16, 134, 38);
-                ctx.font = 'bold 15px "Orbitron", "Segoe UI", Arial, sans-serif';
+                ctx.fillRect(box.x + box.w - 152, box.y + 14, 138, 42);
+                ctx.font = 'bold 16px Arial, sans-serif';
                 ctx.fillStyle = '#00ffff';
-                ctx.fillText('SELECTED ✓', box.x + box.w - 136, box.y + 41);
+                ctx.fillText('SELECTED ✓', box.x + box.w - 140, box.y + 41);
               }
             });
 
-            // Lock-In Answer Button
-            const btnX = 400;
+            // Lock-In Answer Button (Massive Solid High-Contrast Button)
+            const btnX = 360;
             const btnY = 635;
-            const btnW = 480;
-            const btnH = 125;
+            const btnW = 560;
+            const btnH = 130;
 
             const playerAns = state?.playerAnswers?.[idx];
             const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
@@ -914,24 +918,24 @@ export function ControlRoomScene({
             ctx.fillStyle = isConfirmed
               ? '#10b981'
               : isBtnHovered
-              ? '#00ffff'
+              ? '#ffffff'
               : playerAns !== undefined
-              ? '#0c3a66'
-              : '#1e293b';
+              ? '#00ffff'
+              : '#0b3558';
             ctx.fillRect(btnX, btnY, btnW, btnH);
 
             ctx.strokeStyle = isConfirmed ? '#10b981' : '#00ffff';
             ctx.lineWidth = 5;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 26px "Orbitron", "Segoe UI", Arial, sans-serif';
-            ctx.fillStyle = isConfirmed ? '#ffffff' : isBtnHovered ? '#020617' : playerAns !== undefined ? '#ffcc00' : '#ffffff';
+            ctx.font = 'bold 30px Arial, sans-serif';
+            ctx.fillStyle = isConfirmed ? '#ffffff' : isBtnHovered ? '#020617' : playerAns !== undefined ? '#020617' : '#ffffff';
             ctx.textAlign = 'center';
-            ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 54);
+            ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 58);
 
-            ctx.font = 'bold 18px "Orbitron", "Segoe UI", Arial, sans-serif';
-            ctx.fillStyle = isConfirmed ? '#ffffff' : isBtnHovered ? '#020617' : '#ffffff';
-            ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 92);
+            ctx.font = 'bold 18px Arial, sans-serif';
+            ctx.fillStyle = isConfirmed ? '#ffffff' : isBtnHovered ? '#020617' : playerAns !== undefined ? '#020617' : '#ffffff';
+            ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 98);
             ctx.textAlign = 'left';
           }
 

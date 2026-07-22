@@ -3,7 +3,7 @@ import ControlRoomScene from './3d/ControlRoomScene';
 import Lobby from './components/Lobby';
 import { getRandomQuestions } from './data/questionBank';
 import { playClick, playTerminalPowerOn, setMuted } from './services/audio';
-import { Shield, Radio, Volume2, VolumeX } from 'lucide-react';
+import { Shield, Radio, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import './index.css';
 
 export function App() {
@@ -15,6 +15,27 @@ export function App() {
     const next = !audioMuted;
     setAudioMuted(next);
     setMuted(next);
+  };
+
+  // Explicit Purge Cache & Hard Reload Handler
+  const handlePurgeCache = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(r => r.unregister());
+        });
+      }
+    } catch (err) {
+      console.warn('Purge error:', err);
+    }
+    window.location.reload(true);
   };
 
   const handleStartGame = (config) => {
@@ -185,7 +206,7 @@ export function App() {
             INTRUDER CHECK
           </span>
           <span style={{ fontSize: '0.7rem', background: '#00ffff', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.22
+            v1.0.23
           </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px' }}>
@@ -195,6 +216,30 @@ export function App() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Explicit Manual Cache Purge Button */}
+          <button
+            onClick={handlePurgeCache}
+            title="Purge Browser Cache & Hard Reload"
+            style={{
+              background: 'rgba(255, 0, 85, 0.2)',
+              border: '1px solid #ff0055',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#ff0055',
+              fontFamily: 'Orbitron, sans-serif',
+              fontSize: '11px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(255, 0, 85, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <RefreshCw size={14} /> PURGE CACHE & RELOAD
+          </button>
+
           {gameState && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'Rajdhani' }}>
               <Radio color="#00ffaa" size={16} /> MODE: {gameState.mode.toUpperCase()}
