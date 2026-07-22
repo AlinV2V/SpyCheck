@@ -243,8 +243,8 @@ export function App() {
           <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#00ffaa', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
             INTRUDER CHECK
           </span>
-          <span style={{ fontSize: '0.7rem', background: '#00ffaa', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.29
+          <span style={{ fontSize: '0.7rem', background: '#00ff66', color: '#000000', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
+            v1.0.30
           </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px', background: 'rgba(0,255,170,0.15)', border: '1px solid #00ffaa', color: '#00ffaa' }}>
