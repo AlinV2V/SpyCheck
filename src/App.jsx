@@ -354,19 +354,8 @@ export default function App() {
             onReturnToLobby={handleReturnToLobby}
           />
         ) : gameState.currentPhase === 'question' ? (
-          <ComputerScreenTerminal
-            activePlayer={activePlayer}
-            activePlayerIndex={activePlayerIndex}
-            onSelectOption={handleSelectOption}
-            onConfirmAnswer={handleConfirmAnswer}
-          >
-            <QuestionHUD
-              gameState={gameState}
-              activePlayer={activePlayer}
-              onSelectOption={handleSelectOption}
-              onConfirmAnswer={handleConfirmAnswer}
-            />
-          </ComputerScreenTerminal>
+          /* ZERO 2D HTML menu overlay! The player sits in their chair and plays 100% on the 3D PC Computer Monitor on the desk! */
+          null
         ) : gameState.currentPhase === 'discussion' ? (
           <DiscussionPhase
             gameState={gameState}

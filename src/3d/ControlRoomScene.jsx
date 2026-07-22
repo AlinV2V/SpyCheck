@@ -44,8 +44,7 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center built with Three.js.
- * Renders fully interactive 3D PC/Laptop Computer Monitors for each workstation desk!
- * Players play and view the game choices DIRECTLY ON THE 3D VIRTUAL COMPUTER SCREEN MESH!
+ * Players sit directly at their 3D workstation desk and play on the 3D VIRTUAL COMPUTER MONITOR!
  * 
  * @param {Object} props
  * @param {Object} [props.gameState] - State object containing game & player data
@@ -260,7 +259,7 @@ export function ControlRoomScene({
 
     scene.add(holoGroup);
 
-    // --- 5. 6 PLAYER WORKSTATIONS WITH INTERACTIVE 3D VIRTUAL COMPUTER MONITORS ---
+    // --- 5. 6 PLAYER WORKSTATIONS WITH 3D COMPUTER MONITORS ---
     const consoleCount = 6;
     const consoleRadius = 7.5;
     const consoleGroup = new THREE.Group();
@@ -268,6 +267,8 @@ export function ControlRoomScene({
     const consoleLightMeshList = [];
     const consoleBezelMaterials = [];
 
+    const screenCanvasList = [];
+    const screenTextureList = [];
     const screenMeshList = [];
 
     const deskGeo = new THREE.BoxGeometry(2.2, 0.9, 1.4);
@@ -277,16 +278,7 @@ export function ControlRoomScene({
       metalness: 0.7,
     });
 
-    const monitorFrameGeo = new THREE.BoxGeometry(1.6, 1.0, 0.08);
-    const monitorFrameMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      roughness: 0.2,
-      metalness: 0.9,
-    });
-
-    // Glowing Cyber Bezel Geometry framing the monitor
     const cyberBezelGeo = new THREE.BoxGeometry(1.64, 1.04, 0.04);
-
     const screenGeo = new THREE.PlaneGeometry(1.52, 0.92);
     const ringStatusGeo = new THREE.TorusGeometry(1.4, 0.06, 16, 32);
 
@@ -313,7 +305,7 @@ export function ControlRoomScene({
         color: 0x00f3ff,
         wireframe: true,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.7,
       });
       const bezelMesh = new THREE.Mesh(cyberBezelGeo, bezelMat);
       bezelMesh.position.set(0, 1.38, 0.09);
@@ -321,11 +313,20 @@ export function ControlRoomScene({
       pDeskGroup.add(bezelMesh);
       consoleBezelMaterials.push(bezelMat);
 
-      // Simple glowing screen surface (no canvas texture - UI is handled by 2D HTML overlay)
+      // High-Definition HTML5 Canvas Texture for 3D PC Monitor Screen (1024 x 640)
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 640;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+
+      screenCanvasList.push(canvas);
+      screenTextureList.push(texture);
+
       const screenMat = new THREE.MeshBasicMaterial({
-        color: 0x00f3ff,
+        map: texture,
         transparent: true,
-        opacity: 0.15,
         side: THREE.DoubleSide,
       });
 
@@ -349,7 +350,7 @@ export function ControlRoomScene({
 
       // Point light per console
       const cLight = new THREE.PointLight(0x00f3ff, 0.8, 4);
-      cLight.position.set(0, 1.38, 0.2);
+      cLight.position.set(0, 2.0, 0.4);
       pDeskGroup.add(cLight);
 
       // Orient desk facing outward from center towards player camera seat
@@ -382,8 +383,352 @@ export function ControlRoomScene({
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // --- 7. KEYBOARD SHORTCUTS (A, B, C, D / 1, 2, 3, 4 / Enter / Space) ---
-    // Interaction with choices happens via 2D HTML overlay; keyboard shortcuts also work from the 3D scene
+    // --- 7. HELPER TO DRAW INTERACTIVE 3D VIRTUAL PC MONITOR SCREEN TEXTURES ---
+    const update3DScreenTextures = (state, phase, activeIdx) => {
+      try {
+        const players = state?.players || [];
+        const questionObj = state?.currentQuestion || state?.question;
+        
+        let qText = 'SECURITY CHECK PROMPT';
+        if (questionObj) {
+          if (typeof questionObj === 'string') qText = questionObj;
+          else if (questionObj.question) qText = String(questionObj.question);
+          else if (questionObj.text) qText = String(questionObj.text);
+        }
+
+        let rawOptions = [];
+        if (questionObj && Array.isArray(questionObj.options)) rawOptions = questionObj.options;
+        else if (state && Array.isArray(state.options)) rawOptions = state.options;
+        if (rawOptions.length === 0) rawOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+
+        const { hoveredOptionIdx, hoveredLockIn } = sceneStateRef.current;
+
+        screenCanvasList.forEach((canvas, idx) => {
+          const ctx = canvas.getContext('2d');
+          const texture = screenTextureList[idx];
+          const player = players[idx];
+          const isSpy = idx === state?.spyIndex;
+          const isQuestionPhase = phase === 'question';
+          const isRevealed = phase === 'discussion' || phase === 'voting' || phase === 'victory';
+          const isActiveDesk = idx === activeIdx;
+
+          // Clear Screen & Dark Cyber Background
+          ctx.fillStyle = '#090f1d';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Grid scanline texture
+          ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+          for (let y = 0; y < canvas.height; y += 8) {
+            ctx.fillRect(0, y, canvas.width, 4);
+          }
+
+          // Screen Bezel Border Glow
+          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : isActiveDesk ? '#00f0ff' : 'rgba(0, 240, 255, 0.5)';
+          ctx.lineWidth = 10;
+          ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
+
+          // --- TOP MONITOR HEADER BAR ---
+          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 240, 255, 0.22)';
+          ctx.fillRect(12, 12, canvas.width - 24, 60);
+
+          ctx.font = 'bold 24px Orbitron, sans-serif';
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
+          ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 26, 50);
+
+          // System Clock / Status Top Right
+          ctx.font = 'bold 20px Orbitron, sans-serif';
+          const sysTimeStr = new Date().toTimeString().split(' ')[0];
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00ffaa';
+          ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 230, 50);
+
+          // --- ROLE BADGE ---
+          const badgeY = 88;
+          if (!isSpy || !isQuestionPhase) {
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+            ctx.fillRect(26, badgeY, 560, 36);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(26, badgeY, 560, 36);
+
+            ctx.font = 'bold 16px Orbitron, sans-serif';
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 40, badgeY + 24);
+          } else {
+            ctx.fillStyle = 'rgba(255, 0, 85, 0.3)';
+            ctx.fillRect(26, badgeY, 640, 36);
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(26, badgeY, 640, 36);
+
+            ctx.font = 'bold 16px Orbitron, sans-serif';
+            ctx.fillStyle = '#ff0055';
+            ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 40, badgeY + 24);
+          }
+
+          // --- QUESTION PROMPT / SPY WARNING BOX ---
+          const qBoxY = 140;
+          const qBoxH = 110;
+          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(35, 12, 24, 0.95)' : 'rgba(15, 25, 45, 0.95)';
+          ctx.fillRect(26, qBoxY, 580, qBoxH);
+          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(26, qBoxY, 580, qBoxH);
+
+          // Left accent indicator bar
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.fillRect(26, qBoxY, 8, qBoxH);
+
+          ctx.font = 'bold 14px Orbitron, sans-serif';
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.fillText('OPERATIVE_PROMPT >', 44, qBoxY + 28);
+
+          if (isSpy && isQuestionPhase) {
+            ctx.fillStyle = '#ff0055';
+            ctx.font = 'bold 20px Orbitron, sans-serif';
+            ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 44, qBoxY + 60);
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '16px Rajdhani, sans-serif';
+            ctx.fillText('Decryption key absent. Analyze choices below to deduce prompt & blend in.', 44, qBoxY + 88);
+          } else {
+            ctx.fillStyle = isRevealed ? '#00ffaa' : '#ffffff';
+            ctx.font = 'bold 18px Rajdhani, sans-serif';
+
+            // Word Wrap Question Prompt Text on 3D Monitor
+            const safeQText = String(qText || '');
+            const words = safeQText.split(' ');
+            let line = '';
+            let yPos = qBoxY + 58;
+            for (let w of words) {
+              const testLine = line + w + ' ';
+              if (ctx.measureText(testLine).width > 530) {
+                ctx.fillText(line, 44, yPos);
+                line = w + ' ';
+                yPos += 24;
+              } else {
+                line = testLine;
+              }
+            }
+            ctx.fillText(line, 44, yPos);
+          }
+
+          // --- LOCK-IN TRANSMISSION BUTTON (x: 630..995, y: 140..250) ---
+          const btnX = 630;
+          const btnY = 140;
+          const btnW = 368;
+          const btnH = 110;
+
+          const playerAns = state?.playerAnswers?.[idx];
+          const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
+          const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
+
+          ctx.fillStyle = isConfirmed
+            ? '#10b981'
+            : isBtnHovered
+            ? 'rgba(0, 240, 255, 0.45)'
+            : playerAns !== undefined
+            ? 'rgba(0, 240, 255, 0.3)'
+            : 'rgba(255, 255, 255, 0.12)';
+          ctx.fillRect(btnX, btnY, btnW, btnH);
+
+          ctx.strokeStyle = isConfirmed ? '#10b981' : isBtnHovered ? '#ffffff' : '#00f0ff';
+          ctx.lineWidth = isBtnHovered ? 4 : 2;
+          ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+          ctx.font = 'bold 22px Orbitron, sans-serif';
+          ctx.fillStyle = isConfirmed ? '#ffffff' : playerAns !== undefined ? '#00f0ff' : '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 52);
+
+          ctx.font = 'bold 15px Orbitron, sans-serif';
+          ctx.fillStyle = isConfirmed ? '#e2e8f0' : '#cbd5e1';
+          ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 84);
+          ctx.textAlign = 'left';
+
+          // --- 4 INTERACTIVE OPTION BOXES (A, B, C, D) ---
+          const optBoxes = [
+            { x: 26, y: 270, w: 470, h: 160, label: 'A' },
+            { x: 524, y: 270, w: 471, h: 160, label: 'B' },
+            { x: 26, y: 450, w: 470, h: 160, label: 'C' },
+            { x: 524, y: 450, w: 471, h: 160, label: 'D' },
+          ];
+
+          rawOptions.slice(0, 4).forEach((optTextRaw, oIdx) => {
+            const box = optBoxes[oIdx];
+            const optString = String(typeof optTextRaw === 'string' ? optTextRaw : (optTextRaw?.text || optTextRaw?.label || ''));
+            const isSelected = playerAns === optString || playerAns === oIdx || playerAns === box.label;
+            const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
+
+            // Box Fill
+            ctx.fillStyle = isSelected
+              ? 'rgba(0, 240, 255, 0.48)'
+              : isHovered
+              ? 'rgba(0, 240, 255, 0.28)'
+              : 'rgba(18, 30, 52, 0.95)';
+            ctx.fillRect(box.x, box.y, box.w, box.h);
+
+            // Box Border
+            ctx.strokeStyle = isSelected ? '#00f0ff' : isHovered ? '#ffffff' : 'rgba(0, 240, 255, 0.4)';
+            ctx.lineWidth = isSelected ? 4 : isHovered ? 3 : 2;
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+            // Letter Badge Box [A], [B], [C], [D]
+            ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.15)';
+            ctx.fillRect(box.x + 16, box.y + 16, 56, 56);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(box.x + 16, box.y + 16, 56, 56);
+
+            ctx.font = 'bold 28px Orbitron, sans-serif';
+            ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
+            ctx.fillText(box.label, box.x + 32, box.y + 54);
+
+            // Key Binding Hint Tag [A]
+            ctx.font = 'bold 12px Orbitron, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(`KEY [${box.label}]`, box.x + 22, box.y + 96);
+
+            // Option Text Word Wrap
+            ctx.font = 'bold 22px Rajdhani, sans-serif';
+            ctx.fillStyle = isSelected ? '#ffffff' : '#f1f5f9';
+
+            const optWords = optString.split(' ');
+            let optLine = '';
+            let optY = box.y + 44;
+            for (let w of optWords) {
+              const testLine = optLine + w + ' ';
+              if (ctx.measureText(testLine).width > box.w - 100) {
+                ctx.fillText(optLine, box.x + 90, optY);
+                optLine = w + ' ';
+                optY += 28;
+              } else {
+                optLine = testLine;
+              }
+            }
+            ctx.fillText(optLine, box.x + 90, optY);
+
+            // Selected Pill Indicator
+            if (isSelected) {
+              ctx.fillStyle = '#00f0ff';
+              ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
+              ctx.font = 'bold 14px Orbitron, sans-serif';
+              ctx.fillStyle = '#020617';
+              ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
+            }
+          });
+
+          texture.needsUpdate = true;
+        });
+      } catch (err) {
+        console.error('Error updating 3D screen textures:', err);
+      }
+    };
+
+    // --- 8. THREE.JS RAYCASTER & CLICK LISTENER FOR 3D VIRTUAL COMPUTER MONITORS ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const handlePointerMove = (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      const { currentPhase: phase, activePlayerIndex: activeIdx } = sceneStateRef.current;
+      if (phase !== 'question') return;
+
+      const activeScreen = screenMeshList[activeIdx];
+      if (!activeScreen) return;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(activeScreen);
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        const uv = intersects[0].uv;
+        const px = uv.x * 1024;
+        const py = (1 - uv.y) * 640;
+
+        let foundHoverOption = null;
+        let foundHoverLockIn = false;
+
+        // Check Lock-In Button bounds (x: 630..998, y: 140..250)
+        if (px >= 630 && px <= 998 && py >= 140 && py <= 250) {
+          foundHoverLockIn = true;
+        }
+
+        // Check 4 Option Boxes bounds
+        const optBoxes = [
+          { x: 26, y: 270, w: 470, h: 160, idx: 0 },
+          { x: 524, y: 270, w: 471, h: 160, idx: 1 },
+          { x: 26, y: 450, w: 470, h: 160, idx: 2 },
+          { x: 524, y: 450, w: 471, h: 160, idx: 3 },
+        ];
+
+        optBoxes.forEach(b => {
+          if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+            foundHoverOption = b.idx;
+          }
+        });
+
+        sceneStateRef.current.hoveredOptionIdx = foundHoverOption;
+        sceneStateRef.current.hoveredLockIn = foundHoverLockIn;
+
+        if (foundHoverOption !== null || foundHoverLockIn) {
+          renderer.domElement.style.cursor = 'pointer';
+        } else {
+          renderer.domElement.style.cursor = 'default';
+        }
+      } else {
+        sceneStateRef.current.hoveredOptionIdx = null;
+        sceneStateRef.current.hoveredLockIn = false;
+        renderer.domElement.style.cursor = 'default';
+      }
+    };
+
+    const handlePointerDown = (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      const { currentPhase: phase, activePlayerIndex: activeIdx, onSelectOption: selectCb, onConfirmAnswer: confirmCb, gameState: state } = sceneStateRef.current;
+      if (phase !== 'question') return;
+
+      const activeScreen = screenMeshList[activeIdx];
+      if (!activeScreen) return;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObject(activeScreen);
+
+      if (intersects.length > 0 && intersects[0].uv) {
+        const uv = intersects[0].uv;
+        const px = uv.x * 1024;
+        const py = (1 - uv.y) * 640;
+
+        // Click Lock-In Transmission Button
+        if (px >= 630 && px <= 998 && py >= 140 && py <= 250) {
+          playVoteCast();
+          confirmCb?.();
+          return;
+        }
+
+        // Click 4 Option Boxes
+        const optBoxes = [
+          { x: 26, y: 270, w: 470, h: 160, idx: 0 },
+          { x: 524, y: 270, w: 471, h: 160, idx: 1 },
+          { x: 26, y: 450, w: 470, h: 160, idx: 2 },
+          { x: 524, y: 450, w: 471, h: 160, idx: 3 },
+        ];
+
+        optBoxes.forEach(b => {
+          if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+            playLaserLock();
+            selectCb?.(b.idx);
+          }
+        });
+      }
+    };
+
+    // Keyboard Hotkeys (A, B, C, D / 1, 2, 3, 4 / Enter / Space)
     const handleKeyDown = (e) => {
       const { currentPhase: phase, onSelectOption: selectCb, onConfirmAnswer: confirmCb } = sceneStateRef.current;
       if (phase !== 'question') return;
@@ -411,6 +756,8 @@ export function ControlRoomScene({
       }
     };
 
+    renderer.domElement.addEventListener('pointermove', handlePointerMove);
+    renderer.domElement.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('keydown', handleKeyDown);
 
     // --- 9. ANIMATION LOOP & CAMERA CHOREOGRAPHY ---
@@ -431,8 +778,8 @@ export function ControlRoomScene({
       const elapsedTime = clock.getElapsedTime();
       const { currentPhase: phase, activePlayerIndex: activeIdx, gameState: state } = sceneStateRef.current;
 
-      // Update interactive 3D PC monitor screens
-      // Screen textures removed - 2D HTML overlay handles gameplay UI
+      // Update interactive 3D PC monitor screen textures
+      update3DScreenTextures(state, phase, activeIdx);
 
       // Rotate central hologram core and rings
       holoCore.rotation.x = elapsedTime * 0.4;
@@ -504,10 +851,9 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // Seated in player chair at workstation looking at PC monitor screen with room hologram visible
-          const chairDist = 1.35;
-          targetCamPos.set(activeX * chairDist, 2.20, activeZ * chairDist);
-          targetLookAt.set(0, 1.80, 0);
+          // TRUE SEATED DESK POV: Camera sits in workstation chair at eye-level facing 3D PC monitor
+          targetCamPos.set(activeX * 1.06, 1.38, activeZ * 1.06);
+          targetLookAt.set(activeX, 1.38, activeZ);
           break;
         }
         case 'discussion': {
@@ -554,8 +900,8 @@ export function ControlRoomScene({
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Smoothly update Field of View (FOV) for seated PC monitor view (52)
-      const targetFov = phase === 'question' ? 52 : 55;
+      // Smoothly update Field of View (FOV) for seated PC monitor view (44)
+      const targetFov = phase === 'question' ? 44 : 55;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
