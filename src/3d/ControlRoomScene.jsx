@@ -851,9 +851,10 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // TRUE SEATED DESK POV: Camera sits in workstation chair at eye-level facing 3D PC monitor
-          targetCamPos.set(activeX * 1.06, 1.38, activeZ * 1.06);
-          targetLookAt.set(activeX, 1.38, activeZ);
+          // PERFECT SEATED DESK POV: Camera 6 units back from workstation desk facing PC monitor & full 3D room
+          const chairDist = 1.80;
+          targetCamPos.set(activeX * chairDist, 2.80, activeZ * chairDist);
+          targetLookAt.set(activeX, 1.20, activeZ);
           break;
         }
         case 'discussion': {
@@ -900,8 +901,8 @@ export function ControlRoomScene({
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Smoothly update Field of View (FOV) for seated PC monitor view (44)
-      const targetFov = phase === 'question' ? 44 : 55;
+      // Smoothly update Field of View (FOV) for room overview (55)
+      const targetFov = 55;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
