@@ -130,12 +130,23 @@ export default function App() {
   };
 
   // Confirm answer for current active player
-  const handleConfirmAnswer = () => {
+  const handleConfirmAnswer = (confirmedOptionIndex) => {
     playClick();
     if (!gameState) return;
 
+    const currentAnswer = confirmedOptionIndex ?? gameState.playerAnswers?.[activePlayerIndex];
+    if (currentAnswer === undefined || currentAnswer === null) {
+      return;
+    }
+
+    const updatedAnswers = {
+      ...gameState.playerAnswers,
+      [activePlayerIndex]: currentAnswer
+    };
+
     // If Pass & Play mode and not last human player, pass turn to next player
     if (gameState.mode === 'pass_play' && activePlayerIndex < gameState.players.length - 1) {
+      setGameState(prev => ({ ...prev, playerAnswers: updatedAnswers }));
       setActivePlayerIndex(prev => prev + 1);
       return;
     }
@@ -143,6 +154,7 @@ export default function App() {
     // Proceed to discussion phase
     setGameState(prev => ({
       ...prev,
+      playerAnswers: updatedAnswers,
       currentPhase: 'discussion',
       timer: prev.timerSeconds || 45,
     }));
@@ -251,6 +263,12 @@ export default function App() {
     setMuted(nextMuted);
   };
 
+  const activePlayer = gameState?.players ? {
+    ...gameState.players[activePlayerIndex],
+    isSpy: activePlayerIndex === gameState.spyIndex,
+    selectedOption: gameState.playerAnswers?.[activePlayerIndex]
+  } : null;
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', background: '#0a0d14' }}>
       {/* 3D Command Room Background Scene */}
@@ -335,19 +353,14 @@ export default function App() {
           />
         ) : gameState.currentPhase === 'question' ? (
           <ComputerScreenTerminal
-            activePlayer={{
-              ...gameState.players[activePlayerIndex],
-              isSpy: activePlayerIndex === gameState.spyIndex
-            }}
+            activePlayer={activePlayer}
             activePlayerIndex={activePlayerIndex}
-            currentPhase={gameState.currentPhase}
+            onSelectOption={handleSelectOption}
+            onConfirmAnswer={handleConfirmAnswer}
           >
             <QuestionHUD
               gameState={gameState}
-              activePlayer={{
-                ...gameState.players[activePlayerIndex],
-                isSpy: activePlayerIndex === gameState.spyIndex
-              }}
+              activePlayer={activePlayer}
               onSelectOption={handleSelectOption}
               onConfirmAnswer={handleConfirmAnswer}
             />

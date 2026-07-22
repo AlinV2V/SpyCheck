@@ -571,9 +571,10 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
       switch (phase) {
         case 'question': {
-          // Eye-level view directly in front of active player workstation monitor
-          targetCamPos.set(activeX * 0.72, 1.48, activeZ * 0.72);
-          targetLookAt.set(activeX, 1.38, activeZ);
+          // Seated directly in player chair outside desk, looking directly at the front of the 3D PC monitor
+          const chairDist = 1.20;
+          targetCamPos.set(activeX * chairDist, 1.38, activeZ * chairDist);
+          targetLookAt.set(activeX, 1.35, activeZ);
           break;
         }
         case 'discussion': {
