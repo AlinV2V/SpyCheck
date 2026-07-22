@@ -306,22 +306,16 @@ export function ControlRoomScene({
 
       // PC Monitor Stand
       const standGeo = new THREE.CylinderGeometry(0.08, 0.12, 0.4, 16);
-      const standMesh = new THREE.Mesh(standGeo, monitorFrameMat);
+      const standMesh = new THREE.Mesh(standGeo, deskMat);
       standMesh.position.set(0, 0.65, 0.1);
       pDeskGroup.add(standMesh);
 
-      // PC Monitor Outer Frame
-      const frameMesh = new THREE.Mesh(monitorFrameGeo, monitorFrameMat);
-      frameMesh.position.set(0, 1.38, 0.1);
-      frameMesh.rotation.x = -Math.PI / 16;
-      pDeskGroup.add(frameMesh);
-
-      // Glowing Cyber Bezel Frame around PC Monitor
+      // Glowing Cyber Bezel Frame around PC Monitor Workstation
       const bezelMat = new THREE.MeshBasicMaterial({
         color: 0x00f3ff,
         wireframe: true,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.6,
       });
       const bezelMesh = new THREE.Mesh(cyberBezelGeo, bezelMat);
       bezelMesh.position.set(0, 1.38, 0.09);
@@ -866,10 +860,10 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // Seated in player chair aiming directly at 3D PC monitor screen center
-          const chairDist = 1.18;
-          targetCamPos.set(activeX * chairDist, 1.45, activeZ * chairDist);
-          targetLookAt.set(activeX, 1.38, activeZ);
+          // Seated in player chair at workstation looking at PC monitor screen with room hologram visible
+          const chairDist = 1.35;
+          targetCamPos.set(activeX * chairDist, 2.20, activeZ * chairDist);
+          targetLookAt.set(0, 1.80, 0);
           break;
         }
         case 'discussion': {

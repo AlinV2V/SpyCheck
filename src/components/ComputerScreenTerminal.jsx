@@ -58,15 +58,19 @@ export function ComputerScreenTerminal({
         .pc-terminal-outer {
           position: relative;
           width: 100%;
-          max-width: 1040px;
+          max-width: 860px;
           margin: 0 auto;
-          padding: 12px;
-          background: transparent;
-          border: none;
-          box-shadow: none;
+          padding: 16px;
+          background: rgba(10, 16, 28, 0.88);
+          border: 2px solid rgba(0, 240, 255, 0.4);
+          border-radius: 16px;
+          box-shadow: 
+            0 0 40px rgba(0, 240, 255, 0.25),
+            0 20px 50px rgba(0, 0, 0, 0.85);
           font-family: 'Rajdhani', 'Orbitron', sans-serif;
           box-sizing: border-box;
           overflow: hidden;
+          backdrop-filter: blur(8px);
         }
 
         /* Monitor Bezel Header */

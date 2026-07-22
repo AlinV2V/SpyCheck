@@ -354,8 +354,19 @@ export default function App() {
             onReturnToLobby={handleReturnToLobby}
           />
         ) : gameState.currentPhase === 'question' ? (
-          /* Zero 2D HTML cards overlaying room! Gameplay occurs 100% on the 3D VIRTUAL COMPUTER MONITOR MESH inside Three.js */
-          null
+          <ComputerScreenTerminal
+            activePlayer={activePlayer}
+            activePlayerIndex={activePlayerIndex}
+            onSelectOption={handleSelectOption}
+            onConfirmAnswer={handleConfirmAnswer}
+          >
+            <QuestionHUD
+              gameState={gameState}
+              activePlayer={activePlayer}
+              onSelectOption={handleSelectOption}
+              onConfirmAnswer={handleConfirmAnswer}
+            />
+          </ComputerScreenTerminal>
         ) : gameState.currentPhase === 'discussion' ? (
           <DiscussionPhase
             gameState={gameState}
