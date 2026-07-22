@@ -3,6 +3,7 @@ import { Volume2, VolumeX, Shield, Radio } from 'lucide-react';
 import ControlRoomScene from './3d/ControlRoomScene';
 import Lobby from './components/Lobby';
 import QuestionHUD from './components/QuestionHUD';
+import ComputerScreenTerminal from './components/ComputerScreenTerminal';
 import DiscussionPhase from './components/DiscussionPhase';
 import VotingPhase from './components/VotingPhase';
 import VictoryModal from './components/VictoryModal';
@@ -333,15 +334,24 @@ export default function App() {
             onReturnToLobby={handleReturnToLobby}
           />
         ) : gameState.currentPhase === 'question' ? (
-          <QuestionHUD
-            gameState={gameState}
+          <ComputerScreenTerminal
             activePlayer={{
               ...gameState.players[activePlayerIndex],
               isSpy: activePlayerIndex === gameState.spyIndex
             }}
-            onSelectOption={handleSelectOption}
-            onConfirmAnswer={handleConfirmAnswer}
-          />
+            activePlayerIndex={activePlayerIndex}
+            currentPhase={gameState.currentPhase}
+          >
+            <QuestionHUD
+              gameState={gameState}
+              activePlayer={{
+                ...gameState.players[activePlayerIndex],
+                isSpy: activePlayerIndex === gameState.spyIndex
+              }}
+              onSelectOption={handleSelectOption}
+              onConfirmAnswer={handleConfirmAnswer}
+            />
+          </ComputerScreenTerminal>
         ) : gameState.currentPhase === 'discussion' ? (
           <DiscussionPhase
             gameState={gameState}

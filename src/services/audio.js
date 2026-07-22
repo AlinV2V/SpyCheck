@@ -442,6 +442,224 @@ export const playDefeat = () => {
   });
 };
 
+/**
+ * Play low CRT monitor power-on hum and pitch sweep sound.
+ * Triggered when camera zooms into PC monitor screen or terminal initializes.
+ */
+export const playTerminalPowerOn = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // 1. Initial High-voltage relay click/snap
+  const relayClick = ctx.createOscillator();
+  const relayGain = ctx.createGain();
+  relayClick.type = 'triangle';
+  relayClick.frequency.setValueAtTime(2400, now);
+  relayClick.frequency.exponentialRampToValueAtTime(120, now + 0.015);
+  relayGain.gain.setValueAtTime(0.2, now);
+  relayGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+  relayClick.connect(relayGain);
+  relayGain.connect(ctx.destination);
+  relayClick.start(now);
+  relayClick.stop(now + 0.015);
+
+  // 2. CRT Hum (low frequency 60 Hz hum with 120 Hz harmonic)
+  const humOsc1 = ctx.createOscillator();
+  const humOsc2 = ctx.createOscillator();
+  const humGain = ctx.createGain();
+  const humFilter = ctx.createBiquadFilter();
+
+  humOsc1.type = 'sawtooth';
+  humOsc1.frequency.setValueAtTime(60, now);
+
+  humOsc2.type = 'sine';
+  humOsc2.frequency.setValueAtTime(120, now);
+
+  humFilter.type = 'lowpass';
+  humFilter.frequency.setValueAtTime(250, now);
+
+  humGain.gain.setValueAtTime(0.001, now);
+  humGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
+  humGain.gain.setValueAtTime(0.18, now + 0.5);
+  humGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+  humOsc1.connect(humFilter);
+  humOsc2.connect(humFilter);
+  humFilter.connect(humGain);
+  humGain.connect(ctx.destination);
+
+  humOsc1.start(now);
+  humOsc2.start(now);
+  humOsc1.stop(now + 0.85);
+  humOsc2.stop(now + 0.85);
+
+  // 3. CRT Cathode Frequency Sweep (rising pitch sweep as beam powers on and camera zooms in)
+  const sweepOsc = ctx.createOscillator();
+  const sweepGain = ctx.createGain();
+  const sweepFilter = ctx.createBiquadFilter();
+
+  sweepOsc.type = 'sine';
+  sweepOsc.frequency.setValueAtTime(110, now + 0.02);
+  sweepOsc.frequency.exponentialRampToValueAtTime(2200, now + 0.55);
+
+  sweepFilter.type = 'bandpass';
+  sweepFilter.frequency.setValueAtTime(300, now + 0.02);
+  sweepFilter.frequency.exponentialRampToValueAtTime(2200, now + 0.55);
+  sweepFilter.Q.setValueAtTime(4, now);
+
+  sweepGain.gain.setValueAtTime(0, now + 0.02);
+  sweepGain.gain.linearRampToValueAtTime(0.15, now + 0.15);
+  sweepGain.gain.setValueAtTime(0.15, now + 0.4);
+  sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+  sweepOsc.connect(sweepFilter);
+  sweepFilter.connect(sweepGain);
+  sweepGain.connect(ctx.destination);
+
+  sweepOsc.start(now + 0.02);
+  sweepOsc.stop(now + 0.65);
+};
+
+/**
+ * Play crisp mechanical keyboard switch click sound when typing or selecting options (A/B/C/D).
+ */
+export const playKeypress = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  
+  // Slight pitch variation for realistic non-repetitive key clicks
+  const pitchVar = 0.94 + Math.random() * 0.12;
+
+  // 1. High-frequency switch click / spring snap transient
+  const snapOsc = ctx.createOscillator();
+  const snapGain = ctx.createGain();
+  snapOsc.type = 'triangle';
+  snapOsc.frequency.setValueAtTime(3200 * pitchVar, now);
+  snapOsc.frequency.exponentialRampToValueAtTime(800 * pitchVar, now + 0.012);
+
+  snapGain.gain.setValueAtTime(0.18, now);
+  snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+  snapOsc.connect(snapGain);
+  snapGain.connect(ctx.destination);
+  snapOsc.start(now);
+  snapOsc.stop(now + 0.015);
+
+  // 2. High-pass noise burst (plastic keycap contact noise)
+  const noiseSource = ctx.createBufferSource();
+  noiseSource.buffer = createNoiseBuffer(ctx, 0.015);
+
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'highpass';
+  noiseFilter.frequency.setValueAtTime(2800 * pitchVar, now);
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.14, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+  noiseSource.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+
+  noiseSource.start(now);
+  noiseSource.stop(now + 0.015);
+
+  // 3. Mechanical switch body bottom-out thock (low-mid resonance)
+  const thockOsc = ctx.createOscillator();
+  const thockGain = ctx.createGain();
+  thockOsc.type = 'sine';
+  thockOsc.frequency.setValueAtTime(420 * pitchVar, now);
+  thockOsc.frequency.exponentialRampToValueAtTime(120 * pitchVar, now + 0.025);
+
+  thockGain.gain.setValueAtTime(0.12, now);
+  thockGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+  thockOsc.connect(thockGain);
+  thockGain.connect(ctx.destination);
+  thockOsc.start(now);
+  thockOsc.stop(now + 0.025);
+};
+
+/**
+ * Play sci-fi data packet send burst sound when locking in an answer.
+ */
+export const playTransmissionSent = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // 1. Rapid digital data packet chirp sequence (4 fast micro-blips)
+  const blipFreqs = [1046.50, 1567.98, 2093.00, 2793.83];
+  blipFreqs.forEach((freq, i) => {
+    const blipOsc = ctx.createOscillator();
+    const blipGain = ctx.createGain();
+    const blipTime = now + i * 0.025;
+
+    blipOsc.type = 'square';
+    blipOsc.frequency.setValueAtTime(freq, blipTime);
+    blipOsc.frequency.exponentialRampToValueAtTime(freq * 1.2, blipTime + 0.02);
+
+    blipGain.gain.setValueAtTime(0, blipTime);
+    blipGain.gain.setValueAtTime(0.12, blipTime);
+    blipGain.gain.exponentialRampToValueAtTime(0.001, blipTime + 0.02);
+
+    blipOsc.connect(blipGain);
+    blipGain.connect(ctx.destination);
+
+    blipOsc.start(blipTime);
+    blipOsc.stop(blipTime + 0.02);
+  });
+
+  // 2. Sci-fi transmission beam / telemetry filter sweep
+  const beamOsc = ctx.createOscillator();
+  const beamGain = ctx.createGain();
+  const beamFilter = ctx.createBiquadFilter();
+
+  const sweepStartTime = now + 0.06;
+  beamOsc.type = 'sawtooth';
+  beamOsc.frequency.setValueAtTime(440, sweepStartTime);
+  beamOsc.frequency.exponentialRampToValueAtTime(3200, sweepStartTime + 0.22);
+
+  beamFilter.type = 'bandpass';
+  beamFilter.frequency.setValueAtTime(800, sweepStartTime);
+  beamFilter.frequency.exponentialRampToValueAtTime(4000, sweepStartTime + 0.22);
+  beamFilter.Q.setValueAtTime(6, sweepStartTime);
+
+  beamGain.gain.setValueAtTime(0, sweepStartTime);
+  beamGain.gain.linearRampToValueAtTime(0.2, sweepStartTime + 0.05);
+  beamGain.gain.exponentialRampToValueAtTime(0.001, sweepStartTime + 0.25);
+
+  beamOsc.connect(beamFilter);
+  beamFilter.connect(beamGain);
+  beamGain.connect(ctx.destination);
+
+  beamOsc.start(sweepStartTime);
+  beamOsc.stop(sweepStartTime + 0.25);
+
+  // 3. Low-frequency confirmation lock thump
+  const subOsc = ctx.createOscillator();
+  const subGain = ctx.createGain();
+
+  subOsc.type = 'sine';
+  subOsc.frequency.setValueAtTime(180, now);
+  subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.18);
+
+  subGain.gain.setValueAtTime(0.25, now);
+  subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+  subOsc.connect(subGain);
+  subGain.connect(ctx.destination);
+
+  subOsc.start(now);
+  subOsc.stop(now + 0.18);
+};
+
 export default {
   initAudio,
   setMuted,
@@ -453,5 +671,8 @@ export default {
   playVoteCast,
   playRevealSting,
   playVictory,
-  playDefeat
+  playDefeat,
+  playTerminalPowerOn,
+  playKeypress,
+  playTransmissionSent
 };

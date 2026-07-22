@@ -2,6 +2,44 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 /**
+ * Helper function to compute exact 3D position and rotation for each player workstation desk monitor screen.
+ * 
+ * @param {number} playerIndex - Index of player desk (0-5)
+ * @param {number} [consoleCount=6] - Total number of console desks
+ * @param {number} [radius=7.5] - Radial distance of desks from room center
+ * @returns {Object} Transform data containing position [x, y, z] and rotation [rotX, rotY, rotZ]
+ */
+export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius = 7.5) {
+  const validIdx = Math.max(0, Math.min(consoleCount - 1, playerIndex || 0));
+  const angle = (validIdx / consoleCount) * Math.PI * 2 + Math.PI / 6;
+  const deskX = Math.cos(angle) * radius;
+  const deskZ = Math.sin(angle) * radius;
+  const rotY = Math.atan2(deskX, deskZ);
+  const rotX = -Math.PI / 16;
+  const rotZ = 0;
+
+  // Screen center position in 3D world space
+  const localOffsetZ = 0.056;
+  const x = deskX + localOffsetZ * Math.sin(rotY);
+  const y = 1.38;
+  const z = deskZ + localOffsetZ * Math.cos(rotY);
+
+  return {
+    position: [x, y, z],
+    rotation: [rotX, rotY, rotZ],
+    x,
+    y,
+    z,
+    rotX,
+    rotY,
+    rotZ,
+    angle,
+    deskX,
+    deskZ,
+  };
+}
+
+/**
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center background built with Three.js.
@@ -206,12 +244,13 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
     scene.add(holoGroup);
 
-    // --- 5. 6 PLAYER WORKSTATIONS WITH DYNAMIC DUAL-SIDE 3D PC MONITORS ---
+    // --- 5. 6 PLAYER WORKSTATIONS WITH DYNAMIC DUAL-SIDE 3D PC MONITORS & CYBER BEZELS ---
     const consoleCount = 6;
     const consoleRadius = 7.5;
     const consoleGroup = new THREE.Group();
     const consoleStatusRings = [];
     const consoleLightMeshList = [];
+    const consoleBezelMaterials = [];
 
     const screenCanvasList = [];
     const screenTextureList = [];
@@ -230,19 +269,22 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       metalness: 0.9,
     });
 
+    // Glowing Cyber Bezel Geometry framing the monitor
+    const cyberBezelGeo = new THREE.BoxGeometry(1.64, 1.04, 0.04);
+
     const screenGeo = new THREE.PlaneGeometry(1.52, 0.92);
     const ringStatusGeo = new THREE.TorusGeometry(1.4, 0.06, 16, 32);
 
     for (let i = 0; i < consoleCount; i++) {
-      const angle = (i / consoleCount) * Math.PI * 2 + Math.PI / 6;
-      const x = Math.cos(angle) * consoleRadius;
-      const z = Math.sin(angle) * consoleRadius;
+      const transform = getDeskScreenTransform(i, consoleCount, consoleRadius);
+      const { deskX, deskZ } = transform;
 
       const pDeskGroup = new THREE.Group();
-      pDeskGroup.position.set(x, 0.45, z);
+      pDeskGroup.position.set(deskX, 0, deskZ);
 
-      // Desk mesh
+      // Desk mesh (center at Y=0.45, top surface at Y=0.90)
       const deskMesh = new THREE.Mesh(deskGeo, deskMat);
+      deskMesh.position.set(0, 0.45, 0);
       pDeskGroup.add(deskMesh);
 
       // PC Monitor Stand
@@ -253,9 +295,22 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
       // PC Monitor Outer Frame
       const frameMesh = new THREE.Mesh(monitorFrameGeo, monitorFrameMat);
-      frameMesh.position.set(0, 1.15, 0.1);
+      frameMesh.position.set(0, 1.38, 0.1);
       frameMesh.rotation.x = -Math.PI / 16;
       pDeskGroup.add(frameMesh);
+
+      // Glowing Cyber Bezel Frame around PC Monitor
+      const bezelMat = new THREE.MeshBasicMaterial({
+        color: 0x00f3ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.8,
+      });
+      const bezelMesh = new THREE.Mesh(cyberBezelGeo, bezelMat);
+      bezelMesh.position.set(0, 1.38, 0.09);
+      bezelMesh.rotation.x = -Math.PI / 16;
+      pDeskGroup.add(bezelMesh);
+      consoleBezelMaterials.push(bezelMat);
 
       // Dynamic HTML5 Canvas Texture for 3D PC Monitor Screen
       const canvas = document.createElement('canvas');
@@ -274,7 +329,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       });
 
       const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-      screenMesh.position.set(0, 1.15, 0.056);
+      screenMesh.position.set(0, 1.38, 0.056);
       screenMesh.rotation.x = -Math.PI / 16;
       pDeskGroup.add(screenMesh);
 
@@ -286,16 +341,16 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       });
       const ringMesh = new THREE.Mesh(ringStatusGeo, ringMat);
       ringMesh.rotation.x = Math.PI / 2;
-      ringMesh.position.set(0, -0.44, 0);
+      ringMesh.position.set(0, 0.01, 0);
       pDeskGroup.add(ringMesh);
 
       // Point light per console
       const cLight = new THREE.PointLight(0x00f3ff, 0.8, 4);
-      cLight.position.set(0, 1.2, 0);
+      cLight.position.set(0, 1.38, 0.2);
       pDeskGroup.add(cLight);
 
       // Orient desk facing outward from center towards player camera
-      pDeskGroup.lookAt(x * 2, 0.45, z * 2);
+      pDeskGroup.lookAt(deskX * 2, 0, deskZ * 2);
 
       consoleGroup.add(pDeskGroup);
       consoleStatusRings.push(ringMat);
@@ -470,6 +525,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       for (let i = 0; i < consoleCount; i++) {
         const ringMat = consoleStatusRings[i];
         const light = consoleLightMeshList[i];
+        const bezelMat = consoleBezelMaterials[i];
         let targetColor = cyanColor;
 
         const player = state?.players?.[i];
@@ -487,11 +543,14 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
         // Pulse intensity if active
         if (i === activeIdx) {
           light.intensity = 1.5 + Math.sin(elapsedTime * 5) * 0.7;
+          if (bezelMat) bezelMat.opacity = 0.7 + Math.sin(elapsedTime * 5) * 0.25;
         } else {
           light.intensity = 0.6;
+          if (bezelMat) bezelMat.opacity = 0.4;
         }
 
         ringMat.color.lerp(targetColor, 0.08);
+        if (bezelMat) bezelMat.color.lerp(targetColor, 0.08);
         light.color.copy(ringMat.color);
       }
 
@@ -512,10 +571,9 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
       switch (phase) {
         case 'question': {
-          // Focused view looking directly at active player workstation monitor
-          const deskDist = 1.28;
-          targetCamPos.set(activeX * deskDist, 2.6, activeZ * deskDist);
-          targetLookAt.set(activeX, 1.4, activeZ);
+          // Eye-level view directly in front of active player workstation monitor
+          targetCamPos.set(activeX * 0.72, 1.48, activeZ * 0.72);
+          targetLookAt.set(activeX, 1.38, activeZ);
           break;
         }
         case 'discussion': {
