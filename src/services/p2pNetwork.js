@@ -1,4 +1,12 @@
-import { createRoom, joinRoom, onRoomPlayersChanged, onGameStart, launchGame, leaveRoom } from './firebase';
+import {
+  initAsHost,
+  joinAsGuest,
+  announceJoin,
+  onPlayersChanged,
+  onGameStart,
+  launchGame as launchGamePeer,
+  disconnect as peerDisconnect
+} from './firebase';
 
 export class P2PNetwork {
   constructor() {
@@ -7,63 +15,69 @@ export class P2PNetwork {
     this.isHost = false;
     this.listeners = new Set();
     this.actionHandlers = new Map();
-    this._unsubPlayers = null;
-    this._unsubGame = null;
-    this._myPlayerData = null;
   }
 
   async connect(roomCode, playerId, isHost = false, playerData = {}) {
     this.disconnect();
-
-    this.roomCode = roomCode;
-    this.playerId = playerId;
     this.isHost = isHost;
-    this._myPlayerData = playerData;
 
     if (isHost) {
-      const result = await createRoom({
-        name: playerData.name || 'Host',
-        avatar: playerData.avatar || '/avatars/cat.jpg',
-        color: playerData.color || '#3b82f6',
-      });
+      const result = await initAsHost(
+        playerData.name || 'Host',
+        playerData.avatar || '/avatars/cat.jpg',
+        playerData.color || '#3b82f6'
+      );
       this.roomCode = result.roomCode;
       this.playerId = result.playerId;
-    }
 
-    this._unsubPlayers = onRoomPlayersChanged(this.roomCode, (players) => {
+      onPlayersChanged((players) => {
+        this.notifyListeners({
+          type: 'STATE_UPDATE',
+          senderId: this.playerId,
+          payload: { roomPlayers: players },
+          timestamp: Date.now()
+        });
+      });
+
+      onGameStart((config) => {
+        this.notifyListeners({
+          type: 'GAME_START',
+          senderId: 'host',
+          payload: config,
+          timestamp: Date.now()
+        });
+      });
+
       this.notifyListeners({
         type: 'STATE_UPDATE',
         senderId: this.playerId,
-        payload: { roomPlayers: players },
+        payload: { roomPlayers: result.players },
         timestamp: Date.now()
       });
-    });
-
-    this._unsubGame = onGameStart(this.roomCode, (config) => {
-      this.notifyListeners({
-        type: 'GAME_START',
-        senderId: 'host',
-        payload: config,
-        timestamp: Date.now()
-      });
-    });
+    }
   }
 
   async joinAsGuest(roomCode, playerData = {}) {
     this.disconnect();
-    this.roomCode = roomCode;
     this.isHost = false;
-    this._myPlayerData = playerData;
 
-    const result = await joinRoom(roomCode, {
-      name: playerData.name || 'Operator',
-      avatar: playerData.avatar || '/avatars/cat.jpg',
-      color: playerData.color || '#3b82f6',
-    });
+    const result = await joinAsGuest(
+      roomCode,
+      playerData.name || 'Operator',
+      playerData.avatar || '/avatars/cat.jpg',
+      playerData.color || '#3b82f6'
+    );
 
+    this.roomCode = roomCode;
     this.playerId = result.playerId;
 
-    this._unsubPlayers = onRoomPlayersChanged(this.roomCode, (players) => {
+    announceJoin(
+      playerData.name || 'Operator',
+      playerData.avatar || '/avatars/cat.jpg',
+      playerData.color || '#3b82f6'
+    );
+
+    onPlayersChanged((players) => {
       this.notifyListeners({
         type: 'STATE_UPDATE',
         senderId: this.playerId,
@@ -72,7 +86,7 @@ export class P2PNetwork {
       });
     });
 
-    this._unsubGame = onGameStart(this.roomCode, (config) => {
+    onGameStart((config) => {
       this.notifyListeners({
         type: 'GAME_START',
         senderId: 'host',
@@ -93,7 +107,7 @@ export class P2PNetwork {
 
   async sendAction(actionType, payload = {}) {
     if (actionType === 'GAME_START' && this.isHost) {
-      await launchGame(this.roomCode, payload);
+      launchGamePeer(payload);
     }
     this.notifyListeners({
       type: actionType,
@@ -101,14 +115,6 @@ export class P2PNetwork {
       payload,
       timestamp: Date.now()
     });
-  }
-
-  postMessage(message) {
-    this.notifyListeners(message);
-    if (this.actionHandlers.has(message.type)) {
-      const handlers = this.actionHandlers.get(message.type);
-      handlers.forEach(handler => handler(message.payload, message.senderId));
-    }
   }
 
   subscribe(listener) {
@@ -136,11 +142,7 @@ export class P2PNetwork {
   }
 
   disconnect() {
-    if (this._unsubPlayers) { this._unsubPlayers(); this._unsubPlayers = null; }
-    if (this._unsubGame) { this._unsubGame(); this._unsubGame = null; }
-    if (this.roomCode && this.playerId) {
-      leaveRoom(this.roomCode, this.playerId);
-    }
+    peerDisconnect();
     this.roomCode = null;
     this.playerId = null;
     this.isHost = false;

@@ -1,54 +1,12 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, off, push, remove, onDisconnect, serverTimestamp } from 'firebase/database';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import Peer from 'peerjs';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBoA5gHWybs8KxA0pMWETQlBepPZ3HQGP0",
-  authDomain: "spycheck-multiplayer.firebaseapp.com",
-  databaseURL: "https://spycheck-multiplayer-default-rtdb.firebaseio.com",
-  projectId: "spycheck-multiplayer",
-  storageBucket: "spycheck-multiplayer.firebasestorage.app",
-  messagingSenderId: "1012987463292",
-  appId: "1:1012987463292:web:7a8b9c0d1e2f3a4b5c6d7e"
-};
-
-let app = null;
-let db = null;
-let auth = null;
-let authReady = false;
-const authQueue = [];
-
-function getFirebase() {
-  if (!app) {
-    app = initializeApp(firebaseConfig);
-    db = getDatabase(app);
-    auth = getAuth(app);
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        authReady = true;
-        authQueue.forEach(fn => fn(user.uid));
-        authQueue.length = 0;
-      } else {
-        signInAnonymously(auth).catch(() => {});
-      }
-    });
-  }
-  return { db, auth };
-}
-
-function ensureAuth() {
-  getFirebase();
-  return new Promise((resolve) => {
-    if (authReady && auth.currentUser) {
-      resolve(auth.currentUser.uid);
-    } else {
-      authQueue.push((uid) => resolve(uid));
-      if (!auth.currentUser && auth) {
-        signInAnonymously(auth).catch(() => {});
-      }
-    }
-  });
-}
+let peer = null;
+let connections = {};
+let roomCode = null;
+let myPlayerId = null;
+let playerData = null;
+let onPlayersChangedCallback = null;
+let onGameStartCallback = null;
 
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -59,130 +17,204 @@ function generateRoomCode() {
   return code;
 }
 
-function generatePlayerId() {
-  return 'p_' + Math.random().toString(36).substring(2, 10);
+function generatePeerId() {
+  return 'spycheck-' + Math.random().toString(36).substring(2, 10);
 }
 
-export async function createRoom(hostPlayerData) {
-  const { db } = getFirebase();
-  const uid = await ensureAuth();
-  const roomCode = generateRoomCode();
-  const playerId = generatePlayerId();
-
-  const roomRef = ref(db, `rooms/${roomCode}`);
-  await set(roomRef, {
-    hostId: uid,
-    createdAt: serverTimestamp(),
-    playerCount: 0
+function sendToAll(data) {
+  Object.values(connections).forEach(conn => {
+    if (conn.open) conn.send(data);
   });
-
-  const playerRef = ref(db, `rooms/${roomCode}/players/${playerId}`);
-  await set(playerRef, {
-    ...hostPlayerData,
-    uid,
-    joinedAt: serverTimestamp(),
-    isHost: true,
-    isReady: true
-  });
-
-  onDisconnect(playerRef).remove();
-
-  return { roomCode, playerId, uid };
 }
 
-export async function joinRoom(roomCode, playerData) {
-  const { db } = getFirebase();
-  const uid = await ensureAuth();
+export function initAsHost(playerName, avatar, color) {
+  return new Promise((resolve, reject) => {
+    const peerId = generatePeerId();
+    roomCode = generateRoomCode();
+    myPlayerId = 'host_' + Math.random().toString(36).substring(2, 6);
+    playerData = { name: playerName, avatar, color };
 
-  const roomRef = ref(db, `rooms/${roomCode}`);
-  const snapshot = await get(roomRef);
-  if (!snapshot.exists()) {
-    throw new Error('Room not found');
-  }
+    peer = new Peer(peerId);
 
-  const playerId = generatePlayerId();
-  const playerRef = ref(db, `rooms/${roomCode}/players/${playerId}`);
+    peer.on('open', () => {
+      resolve({
+        roomCode: peerId,
+        playerId: myPlayerId,
+        players: [{
+          id: myPlayerId,
+          name: playerName,
+          avatar,
+          color,
+          isBot: false,
+          isHost: true,
+          isReady: true
+        }]
+      });
+    });
 
-  const existing = await get(ref(db, `rooms/${roomCode}/players`));
-  const existingPlayers = existing.val() || {};
-  const alreadyHere = Object.values(existingPlayers).some(p => p.uid === uid);
+    peer.on('connection', (conn) => {
+      connections[conn.peer] = conn;
 
-  if (alreadyHere) {
-    const existingPlayer = Object.entries(existingPlayers).find(([_, p]) => p.uid === uid);
-    if (existingPlayer) {
-      await set(ref(db, `rooms/${roomCode}/players/${existingPlayer[0]}`), {
-        ...playerData,
-        uid,
-        joinedAt: serverTimestamp(),
+      conn.on('open', () => {
+        const guestId = 'guest_' + Math.random().toString(36).substring(2, 6);
+        conn.send({ type: 'WELCOME', playerId: guestId, hostData: playerData, roomPlayers: getAllPlayers() });
+      });
+
+      conn.on('data', (data) => {
+        handleIncomingData(data, conn);
+      });
+
+      conn.on('close', () => {
+        delete connections[conn.peer];
+        if (conn._guestPlayerId) {
+          delete connections._players?.[conn._guestPlayerId];
+        }
+        syncPlayers();
+      });
+    });
+
+    peer.on('error', (err) => {
+      reject(err);
+    });
+
+    connections._players = {};
+    connections._myPeerId = peerId;
+  });
+}
+
+export function joinAsGuest(hostPeerId, playerName, avatar, color) {
+  return new Promise((resolve, reject) => {
+    myPlayerId = 'guest_' + Math.random().toString(36).substring(2, 6);
+    playerData = { name: playerName, avatar, color };
+
+    peer = new Peer(generatePeerId());
+
+    peer.on('open', () => {
+      const conn = peer.connect(hostPeerId, { reliable: true });
+
+      conn.on('open', () => {
+        connections[hostPeerId] = conn;
+        conn._guestPlayerId = myPlayerId;
+      });
+
+      conn.on('data', (data) => {
+        if (data.type === 'WELCOME') {
+          myPlayerId = data.playerId;
+          playerData = data.hostData;
+          const players = data.roomPlayers || [];
+          if (onPlayersChangedCallback) onPlayersChangedCallback(players);
+          resolve({ playerId: myPlayerId, roomCode: hostPeerId, players });
+        } else {
+          handleIncomingData(data, conn);
+        }
+      });
+
+      conn.on('close', () => {
+        delete connections[hostPeerId];
+      });
+    });
+
+    peer.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+function handleIncomingData(data, conn) {
+  switch (data.type) {
+    case 'JOIN_ANNOUNCE': {
+      const newPlayer = {
+        id: conn._guestPlayerId || data.playerId,
+        name: data.playerName || 'Operator',
+        avatar: data.playerAvatar || '/avatars/cat.jpg',
+        color: data.playerColor || '#3b82f6',
+        isBot: false,
         isHost: false,
         isReady: true
-      });
-      return { roomCode, playerId: existingPlayer[0], uid };
+      };
+      connections._players = connections._players || {};
+      connections._players[newPlayer.id] = newPlayer;
+      if (!conn._guestPlayerId) conn._guestPlayerId = newPlayer.id;
+      sendToAll({ type: 'ROOM_STATE', players: getAllPlayers() });
+      syncPlayers();
+      break;
+    }
+    case 'ROOM_STATE': {
+      if (data.players && onPlayersChangedCallback) {
+        onPlayersChangedCallback(data.players);
+      }
+      break;
+    }
+    case 'GAME_START': {
+      if (onGameStartCallback) onGameStartCallback(data.config);
+      break;
     }
   }
+}
 
-  await set(playerRef, {
-    ...playerData,
-    uid,
-    joinedAt: serverTimestamp(),
-    isHost: false,
+function getAllPlayers() {
+  const self = {
+    id: myPlayerId,
+    name: playerData?.name || 'Host',
+    avatar: playerData?.avatar || '/avatars/cat.jpg',
+    color: playerData?.color || '#3b82f6',
+    isBot: false,
+    isHost: true,
     isReady: true
-  });
-
-  onDisconnect(playerRef).remove();
-
-  return { roomCode, playerId, uid };
+  };
+  const guests = connections._players ? Object.values(connections._players) : [];
+  return [self, ...guests];
 }
 
-export function onRoomPlayersChanged(roomCode, callback) {
-  const { db } = getFirebase();
-  const playersRef = ref(db, `rooms/${roomCode}/players`);
-  onValue(playersRef, (snapshot) => {
-    const data = snapshot.val();
-    const players = data ? Object.entries(data).map(([id, p]) => ({ id, ...p })) : [];
-    callback(players);
-  });
-  return () => off(playersRef);
+function syncPlayers() {
+  const players = getAllPlayers();
+  if (onPlayersChangedCallback) onPlayersChangedCallback(players);
+  sendToAll({ type: 'ROOM_STATE', players });
 }
 
-export function onGameStart(roomCode, callback) {
-  const { db } = getFirebase();
-  const stateRef = ref(db, `rooms/${roomCode}/gameAction`);
-  onValue(stateRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data && data.action === 'GAME_START') {
-      callback(data.config);
-    }
-  });
-  return () => off(stateRef);
-}
-
-export async function launchGame(roomCode, config) {
-  const { db } = getFirebase();
-
-  const playersRef = ref(db, `rooms/${roomCode}/players`);
-  const snapshot = await get(playersRef);
-  const players = snapshot.val();
-  const playerList = players ? Object.entries(players).map(([id, p]) => ({ id, ...p })) : [];
-
-  const actionRef = ref(db, `rooms/${roomCode}/gameAction`);
-  await set(actionRef, {
-    action: 'GAME_START',
-    config: { ...config, players: playerList },
-    timestamp: serverTimestamp()
+export function announceJoin(playerName, playerAvatar, playerColor) {
+  playerData = { name: playerName, avatar: playerAvatar, color: playerColor };
+  sendToAll({
+    type: 'JOIN_ANNOUNCE',
+    playerId: myPlayerId,
+    playerName,
+    playerAvatar,
+    playerColor
   });
 }
 
-export function leaveRoom(roomCode, playerId) {
-  const { db } = getFirebase();
-  if (roomCode && playerId) {
-    const playerRef = ref(db, `rooms/${roomCode}/players/${playerId}`);
-    remove(playerRef).catch(() => {});
+export function onPlayersChanged(callback) {
+  onPlayersChangedCallback = callback;
+}
+
+export function onGameStart(callback) {
+  onGameStartCallback = callback;
+}
+
+export function launchGame(config) {
+  sendToAll({ type: 'GAME_START', config });
+}
+
+export function getRoomCode() {
+  return roomCode || (peer ? peer.id : null);
+}
+
+export function getMyPlayerId() {
+  return myPlayerId;
+}
+
+export function disconnect() {
+  Object.values(connections).forEach(conn => {
+    try { conn.close(); } catch {}
+  });
+  connections = {};
+  if (peer) {
+    try { peer.destroy(); } catch {}
+    peer = null;
   }
-}
-
-export async function destroyRoom(roomCode) {
-  const { db } = getFirebase();
-  const roomRef = ref(db, `rooms/${roomCode}`);
-  await remove(roomRef);
+  roomCode = null;
+  myPlayerId = null;
+  playerData = null;
+  onPlayersChangedCallback = null;
+  onGameStartCallback = null;
 }
