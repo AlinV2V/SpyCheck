@@ -31,13 +31,19 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
   const initialDuration = gameState?.discussionDuration || gameState?.timer || 45;
 
   // Extract answer for each player
-  const getPlayerChoice = useCallback((player) => {
-    if (player.choice !== undefined) return String(player.choice);
-    if (player.answer !== undefined) return String(player.answer);
-    if (player.selectedOption !== undefined) return String(player.selectedOption);
-    if (gameState?.answers && gameState.answers[player.id] !== undefined) {
-      return String(gameState.answers[player.id]);
+  const getPlayerChoice = useCallback((player, idx) => {
+    if (!player) return 'No Choice';
+    if (player.choice !== undefined && player.choice !== null) return String(player.choice);
+    if (player.answer !== undefined && player.answer !== null) return String(player.answer);
+    if (player.selectedOption !== undefined && player.selectedOption !== null) return String(player.selectedOption);
+
+    const answers = gameState?.playerAnswers || gameState?.answers;
+    if (answers) {
+      if (answers[player.id] !== undefined && answers[player.id] !== null) return String(answers[player.id]);
+      if (answers[player.name] !== undefined && answers[player.name] !== null) return String(answers[player.name]);
+      if (idx !== undefined && answers[idx] !== undefined && answers[idx] !== null) return String(answers[idx]);
     }
+
     return 'No Choice';
   }, [gameState]);
 
@@ -48,8 +54,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
     const counts = {};
     let total = 0;
 
-    playersList.forEach((p) => {
-      const choice = getPlayerChoice(p);
+    playersList.forEach((p, idx) => {
+      const choice = getPlayerChoice(p, idx);
       if (choice && choice !== 'No Choice') {
         counts[choice] = (counts[choice] || 0) + 1;
         total++;
@@ -68,8 +74,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
     // Discrepancy = any choice that differs from the majority when a clear majority exists (>1 player)
     const discrepancySet = new Set();
     if (total >= 3 && maxCount >= 2) {
-      playersList.forEach((p) => {
-        const choice = getPlayerChoice(p);
+      playersList.forEach((p, idx) => {
+        const choice = getPlayerChoice(p, idx);
         if (choice !== majority && choice !== 'No Choice') {
           discrepancySet.add(p.id);
         }
@@ -469,8 +475,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
           </div>
 
           <div style={styles.seatsGrid}>
-            {playersList.map((player) => {
-              const choice = getPlayerChoice(player);
+            {playersList.map((player, idx) => {
+              const choice = getPlayerChoice(player, idx);
               const isSuspect = taggedSuspects.has(player.id);
               const isDiscrepancy = discrepancies.has(player.id);
               const isMajority = choice === majorityChoice && !isDiscrepancy;
