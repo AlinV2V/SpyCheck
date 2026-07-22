@@ -34,7 +34,9 @@ export function App() {
     } catch (err) {
       console.warn('Purge error:', err);
     }
-    window.location.reload(true);
+    const url = new URL(window.location.href);
+    url.searchParams.set('__v', Date.now().toString(36));
+    window.location.replace(url.toString());
   };
 
   const handleStartGame = (config) => {
