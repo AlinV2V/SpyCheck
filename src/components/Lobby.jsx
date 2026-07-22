@@ -134,6 +134,7 @@ export default function Lobby({ onStartGame }) {
       window.history.pushState({}, '', `?room=${newCode}`);
     } catch (err) {
       console.error('Failed to create room:', err);
+      alert('Could not connect to multiplayer server. The Firebase config in src/services/firebase.js needs to be replaced with your own project config.\n\nGet one at: https://console.firebase.google.com/\n\nSolo play still works — click SOLO PLAY.');
     }
   };
 
@@ -918,9 +919,9 @@ export default function Lobby({ onStartGame }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, justifyContent: 'center' }}>
             {[
-              { label: 'NEW GAME', icon: <UserPlus size={16} />, onClick: handleCreateRoom, view: 'room' },
+              { label: 'SOLO PLAY', icon: <Cpu size={16} />, onClick: () => { playClick(); setViewState('solo'); }, view: 'solo' },
+              { label: 'CREATE ROOM', icon: <UserPlus size={16} />, onClick: handleCreateRoom, view: 'room' },
               { label: 'JOIN ROOM', icon: <LogIn size={16} />, onClick: () => { playClick(); setViewState('join'); }, view: 'join' },
-              { label: 'VS BOTS', icon: <Cpu size={16} />, onClick: () => { playClick(); setViewState('solo'); }, view: 'solo' },
               { label: 'SETTINGS', icon: <Sliders size={16} />, onClick: () => { playClick(); setViewState('menu'); }, view: 'menu' }
             ].map((btn) => {
               const isActive = viewState === btn.view;
