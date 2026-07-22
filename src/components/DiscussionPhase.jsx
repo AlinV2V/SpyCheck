@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { RenderAvatar } from './Lobby';
 
 /**
  * DiscussionPhase Component
@@ -496,7 +497,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                   {/* Player Header */}
                   <div style={styles.playerCardHeader}>
                     <div style={styles.avatarContainer}>
-                      <span style={styles.avatarEmoji}>{player.avatar || (player.isBot ? '🤖' : '🕵️')}</span>
+                      <RenderAvatar avatar={player.avatar || (player.isBot ? '🤖' : '🕵️')} size={40} />
                       {player.isBot && <span style={styles.botTag}>BOT</span>}
                     </div>
                     <div style={styles.playerInfo}>
@@ -657,7 +658,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                 >
                   <div style={styles.chatBubbleHeader}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '1rem' }}>{msg.senderAvatar}</span>
+                      <RenderAvatar avatar={msg.senderAvatar} size={24} />
                       <span style={styles.senderName}>{msg.senderName}</span>
                       {msg.isBot && <span style={styles.miniBotTag}>AI</span>}
                     </div>

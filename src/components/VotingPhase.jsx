@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, AlertTriangle, Crosshair, Target, Lock, Eye, Zap, Radio } from 'lucide-react';
 import { playClick, playLaserLock, playVoteCast, playRevealSting, playAlertSiren } from '../services/audio';
 import { calculateBotVote } from '../services/botAI';
+import { RenderAvatar } from './Lobby';
 
 export default function VotingPhase({ gameState, onCastVote, onProceedToResolution }) {
   const { players, spyIndex, currentRound, mode } = gameState;
@@ -262,8 +263,8 @@ export default function VotingPhase({ gameState, onCastVote, onProceedToResoluti
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <div style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.4))' }}>
-                        {player.avatar}
+                      <div style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.4))' }}>
+                        <RenderAvatar avatar={player.avatar} size={54} />
                       </div>
 
                       <div style={{ flex: 1, textAlign: 'left' }}>
