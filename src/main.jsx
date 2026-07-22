@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 
 // AUTOMATIC BROWSER CACHE PURGING LOGIC
-const CURRENT_BUILD_VERSION = '1.0.25';
+const CURRENT_BUILD_VERSION = '1.0.26';
 try {
   const storedVersion = localStorage.getItem('spycheck_build_version');
   if (storedVersion !== CURRENT_BUILD_VERSION) {

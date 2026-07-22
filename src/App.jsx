@@ -132,7 +132,15 @@ export function App() {
     if (!gameState) return;
     playTerminalPowerOn();
     setGameState(prev => {
-      const votes = prev.playerVotes || {};
+      const votes = { ...(prev.playerVotes || {}) };
+      
+      // Auto-generate AI bot votes if in solo AI mode
+      prev.players.forEach((p, idx) => {
+        if (p.isAI && votes[idx] === undefined) {
+          votes[idx] = Math.floor(Math.random() * prev.players.length);
+        }
+      });
+
       const voteCounts = {};
       Object.values(votes).forEach(target => {
         voteCounts[target] = (voteCounts[target] || 0) + 1;
@@ -148,14 +156,42 @@ export function App() {
       });
 
       const isSpyCaught = accusedIdx === prev.spyIndex;
-      const winner = isSpyCaught ? 'agents' : 'spy';
+      const currentRound = prev.currentRound || 1;
 
-      return {
-        ...prev,
-        accusedPlayerIndex: accusedIdx,
-        winner,
-        currentPhase: 'victory',
-      };
+      // Rule 1: If Intruder is accused -> Agents Win immediately!
+      if (isSpyCaught) {
+        return {
+          ...prev,
+          accusedPlayerIndex: accusedIdx,
+          winner: 'agents',
+          currentPhase: 'victory',
+        };
+      }
+      // Rule 2: If Round 3 ends and Intruder survived -> Intruder Wins!
+      else if (currentRound >= 3) {
+        return {
+          ...prev,
+          accusedPlayerIndex: accusedIdx,
+          winner: 'spy',
+          currentPhase: 'victory',
+        };
+      }
+      // Rule 3: Wrong vote on Round 1 or 2 -> Advance to Next Round (Round 2 or 3)!
+      else {
+        const nextRound = currentRound + 1;
+        const nextQ = prev.questionPool?.[nextRound - 1] || getRandomQuestions(1, prev.players)[0];
+
+        return {
+          ...prev,
+          accusedPlayerIndex: accusedIdx,
+          currentRound: nextRound,
+          currentQuestion: nextQ,
+          currentPhase: 'question',
+          playerAnswers: {},
+          playerVotes: {},
+          timerSeconds: 45,
+        };
+      }
     });
   };
 
@@ -208,7 +244,7 @@ export function App() {
             INTRUDER CHECK
           </span>
           <span style={{ fontSize: '0.7rem', background: '#00ffff', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.25
+            v1.0.26
           </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px' }}>
