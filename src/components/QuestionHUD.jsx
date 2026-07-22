@@ -269,27 +269,23 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         .qhud-monitor-wrapper {
           position: relative;
           width: 100%;
-          max-width: 960px;
+          max-width: 920px;
           margin: 0 auto;
           box-sizing: border-box;
+          background: transparent;
         }
 
         /* 3D PC Computer Monitor Frame / Bezel */
         .qhud-pc-bezel {
           position: relative;
-          background: #0b0f19;
-          border: 12px solid #1e293b;
-          border-radius: 16px;
-          box-shadow: 
-            0 0 0 2px #0f172a,
-            0 20px 50px rgba(0, 0, 0, 0.85),
-            0 0 40px rgba(0, 240, 255, 0.12),
-            inset 0 0 15px rgba(0, 0, 0, 0.9);
-          padding: 16px 20px;
+          background: transparent;
+          border: none;
+          border-radius: 12px;
+          box-shadow: none;
+          padding: 0;
           color: #e0f2fe;
           font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
           overflow: hidden;
-          backdrop-filter: blur(12px);
         }
 
         /* Hardware Top Bezel Bar with Model & LEDs */
@@ -297,9 +293,9 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 4px 10px 12px 10px;
-          margin-bottom: 12px;
-          border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+          padding: 2px 4px 8px 4px;
+          margin-bottom: 10px;
+          border-bottom: 1px dashed rgba(0, 240, 255, 0.2);
           font-size: 11px;
           letter-spacing: 1.5px;
           color: #64748b;
@@ -350,12 +346,12 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         /* Monitor Screen CRT / Glare Overlay */
         .qhud-screen-inner {
           position: relative;
-          background: radial-gradient(circle at 50% 30%, #0d1527 0%, #050811 100%);
-          border: 1px solid rgba(0, 240, 255, 0.25);
-          border-radius: 8px;
-          padding: 20px 24px;
-          overflow: hidden;
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          padding: 4px 0;
+          overflow: visible;
+          box-shadow: none;
         }
 
         /* Scanlines Overlay */
@@ -367,8 +363,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
             0deg,
             rgba(0, 0, 0, 0) 0px,
             rgba(0, 0, 0, 0) 2px,
-            rgba(0, 240, 255, 0.025) 3px,
-            rgba(0, 240, 255, 0.025) 4px
+            rgba(0, 240, 255, 0.02) 3px,
+            rgba(0, 240, 255, 0.02) 4px
           );
           pointer-events: none;
           z-index: 1;
@@ -382,9 +378,9 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
           gap: 16px;
-          margin-bottom: 16px;
-          padding-bottom: 14px;
-          border-bottom: 1px dashed rgba(0, 240, 255, 0.2);
+          margin-bottom: 14px;
+          padding-bottom: 12px;
+          border-bottom: 1px dashed rgba(0, 240, 255, 0.25);
         }
 
         .qhud-sys-meta {
@@ -509,17 +505,19 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-role-agent {
-          background: rgba(0, 240, 255, 0.1);
+          background: rgba(0, 240, 255, 0.12);
           border: 1px solid rgba(0, 240, 255, 0.5);
           color: #00f0ff;
           box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+          backdrop-filter: blur(4px);
         }
 
         .qhud-role-intruder {
-          background: rgba(255, 42, 95, 0.15);
+          background: rgba(255, 42, 95, 0.18);
           border: 1px solid rgba(255, 42, 95, 0.7);
           color: #ff2a5f;
           box-shadow: 0 0 15px rgba(255, 42, 95, 0.3);
+          backdrop-filter: blur(4px);
           animation: qhud-glitch-border 1.5s infinite alternate;
         }
 
@@ -527,19 +525,22 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         .qhud-question-box {
           position: relative;
           z-index: 2;
-          background: rgba(10, 18, 34, 0.85);
-          border: 1px solid rgba(0, 240, 255, 0.3);
+          background: rgba(8, 14, 28, 0.45);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          border: 1px solid rgba(0, 240, 255, 0.35);
           border-left: 4px solid #00f0ff;
-          border-radius: 4px;
-          padding: 16px 20px;
-          margin-bottom: 20px;
-          box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+          border-radius: 6px;
+          padding: 14px 18px;
+          margin-bottom: 16px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.08);
         }
 
         .qhud-question-box.encrypted {
           border-left-color: #ff2a5f;
-          border-color: rgba(255, 42, 95, 0.4);
-          background: rgba(24, 10, 20, 0.9);
+          border-color: rgba(255, 42, 95, 0.45);
+          background: rgba(28, 10, 22, 0.55);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(255, 42, 95, 0.1);
         }
 
         .qhud-terminal-prompt-header {
@@ -578,6 +579,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           line-height: 1.45;
           color: #ffffff;
           font-family: system-ui, -apple-system, sans-serif;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
         }
 
         .qhud-encrypted-prompt {
@@ -598,14 +600,14 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           font-family: system-ui, -apple-system, sans-serif;
         }
 
-        /* 4 Cyber Option Buttons Grid */
+        /* 4 Cyber Option Buttons Grid - Styled as In-World Terminal Buttons */
         .qhud-options-grid {
           position: relative;
           z-index: 2;
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 12px;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
         }
 
         @media (max-width: 640px) {
@@ -616,8 +618,10 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
         .qhud-option-card {
           position: relative;
-          background: rgba(15, 23, 42, 0.7);
-          border: 1px solid rgba(0, 240, 255, 0.2);
+          background: rgba(10, 18, 34, 0.5);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          border: 1px solid rgba(0, 240, 255, 0.3);
           border-radius: 6px;
           padding: 12px 16px;
           display: flex;
@@ -627,19 +631,20 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
           overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(0, 240, 255, 0.05);
         }
 
         .qhud-option-card:hover {
-          border-color: rgba(0, 240, 255, 0.7);
-          background: rgba(0, 240, 255, 0.1);
+          border-color: #00f0ff;
+          background: rgba(0, 240, 255, 0.2);
           transform: translateY(-2px);
-          box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.2);
         }
 
         .qhud-option-card.selected {
           border-color: #00f0ff;
-          background: linear-gradient(90deg, rgba(0, 240, 255, 0.22) 0%, rgba(0, 119, 255, 0.15) 100%);
-          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 8px rgba(0, 240, 255, 0.25);
+          background: linear-gradient(90deg, rgba(0, 240, 255, 0.32) 0%, rgba(0, 119, 255, 0.22) 100%);
+          box-shadow: 0 0 25px rgba(0, 240, 255, 0.55), inset 0 0 15px rgba(0, 240, 255, 0.3);
         }
 
         .qhud-option-card.locked {
@@ -660,28 +665,30 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           width: 32px;
           height: 32px;
           border-radius: 4px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(0, 240, 255, 0.3);
+          background: rgba(0, 240, 255, 0.12);
+          border: 1px solid rgba(0, 240, 255, 0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 800;
           font-size: 14px;
-          color: #38bdf8;
+          color: #00f0ff;
           transition: all 0.15s ease;
+          box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
         }
 
         .qhud-option-card:hover .qhud-option-badge {
           border-color: #00f0ff;
-          color: #00f0ff;
-          background: rgba(0, 240, 255, 0.2);
+          color: #ffffff;
+          background: rgba(0, 240, 255, 0.35);
+          box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
         }
 
         .qhud-option-card.selected .qhud-option-badge {
           background: #00f0ff;
           color: #020617;
           border-color: #00f0ff;
-          box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+          box-shadow: 0 0 14px rgba(0, 240, 255, 0.9);
         }
 
         .qhud-key-tag {
@@ -702,6 +709,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           color: #f1f5f9;
           flex: 1;
           font-family: system-ui, -apple-system, sans-serif;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
         }
 
         /* Laser Reticle Overlay */
@@ -715,7 +723,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           justify-content: flex-end;
           padding-right: 14px;
           border: 1px dashed rgba(0, 240, 255, 0.8);
-          background: radial-gradient(circle at center, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
+          background: radial-gradient(circle at center, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
         }
 
         .qhud-laser-dot {
@@ -736,7 +744,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           justify-content: space-between;
           gap: 16px;
           padding-top: 8px;
-          border-top: 1px dashed rgba(255, 255, 255, 0.1);
+          border-top: 1px dashed rgba(255, 255, 255, 0.15);
         }
 
         .qhud-status-notice {
@@ -748,17 +756,19 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-confirm-btn {
-          background: linear-gradient(135deg, #00f0ff 0%, #0077ff 100%);
+          background: linear-gradient(135deg, rgba(0, 240, 255, 0.85) 0%, rgba(0, 119, 255, 0.85) 100%);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           color: #020617;
           font-size: 13px;
           font-weight: 800;
           letter-spacing: 1.5px;
           padding: 12px 28px;
-          border: none;
+          border: 1px solid rgba(0, 240, 255, 0.5);
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
           text-transform: uppercase;
           display: flex;
           align-items: center;
@@ -768,11 +778,12 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
         .qhud-confirm-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 0 25px rgba(0, 240, 255, 0.65);
+          box-shadow: 0 0 28px rgba(0, 240, 255, 0.7);
         }
 
         .qhud-confirm-btn:disabled {
           background: rgba(255, 255, 255, 0.08);
+          border-color: transparent;
           color: rgba(255, 255, 255, 0.3);
           cursor: not-allowed;
           box-shadow: none;
@@ -789,7 +800,12 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           position: absolute;
           inset: 0;
           z-index: 50;
-          background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+          background: rgba(6, 10, 20, 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-radius: 8px;
+          border: 1px solid rgba(255, 42, 95, 0.4);
+          box-shadow: 0 0 30px rgba(255, 42, 95, 0.25);
           display: flex;
           flex-direction: column;
           align-items: center;

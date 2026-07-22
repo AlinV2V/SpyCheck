@@ -44,20 +44,31 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * 
  * 3D Sci-Fi Command Center background built with Three.js.
  * Renders dynamic 3D PC/Laptop Monitor screens for each player workstation!
+ * Raycaster interactive option selection on 3D screens.
  * 
  * @param {Object} props
  * @param {Object} [props.gameState] - State object containing game & player data
  * @param {string} [props.currentPhase='lobby'] - Current phase ('lobby', 'question', 'discussion', 'voting', 'victory')
  * @param {number} [props.activePlayerIndex=0] - Index of active player (0-5)
+ * @param {Function} [props.onSelectOption] - Callback when option is selected (idx)
+ * @param {Function} [props.onConfirmAnswer] - Callback when answer is confirmed (idx)
  */
-export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlayerIndex = 0 }) {
+export function ControlRoomScene({
+  gameState,
+  currentPhase = 'lobby',
+  activePlayerIndex = 0,
+  onSelectOption,
+  onConfirmAnswer,
+}) {
   const containerRef = useRef(null);
 
-  // Store mutable refs for animation loop state
+  // Store mutable refs for animation loop state and raycasting callbacks
   const sceneStateRef = useRef({
     currentPhase,
     activePlayerIndex,
     gameState,
+    onSelectOption,
+    onConfirmAnswer,
   });
 
   // Keep refs synchronized with props without re-triggering Three setup
@@ -65,7 +76,9 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     sceneStateRef.current.currentPhase = currentPhase;
     sceneStateRef.current.activePlayerIndex = activePlayerIndex;
     sceneStateRef.current.gameState = gameState;
-  }, [currentPhase, activePlayerIndex, gameState]);
+    sceneStateRef.current.onSelectOption = onSelectOption;
+    sceneStateRef.current.onConfirmAnswer = onConfirmAnswer;
+  }, [currentPhase, activePlayerIndex, gameState, onSelectOption, onConfirmAnswer]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -254,6 +267,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
     const screenCanvasList = [];
     const screenTextureList = [];
+    const screenMeshList = [];
 
     const deskGeo = new THREE.BoxGeometry(2.2, 0.9, 1.4);
     const deskMat = new THREE.MeshStandardMaterial({
@@ -331,7 +345,9 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       const screenMesh = new THREE.Mesh(screenGeo, screenMat);
       screenMesh.position.set(0, 1.38, 0.056);
       screenMesh.rotation.x = -Math.PI / 16;
+      screenMesh.userData = { playerIndex: i };
       pDeskGroup.add(screenMesh);
+      screenMeshList.push(screenMesh);
 
       // Console status ring on ground around desk base
       const ringMat = new THREE.MeshBasicMaterial({
@@ -358,7 +374,131 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     }
     scene.add(consoleGroup);
 
-    // --- 6. AMBIENT STARFIELD / CYBER DUST PARTICLE FIELD ---
+    // --- 6. RAYCASTER & POINTER EVENT LISTENERS FOR INTERACTIVE 3D MONITORS ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const getCanvasCoordsFromHit = (hit) => {
+      if (!hit || !hit.uv) return null;
+      const canvasX = hit.uv.x * 512;
+      const canvasY = (1 - hit.uv.y) * 320;
+      return { canvasX, canvasY };
+    };
+
+    const getOptionIndexAtCanvasPos = (canvasX, canvasY) => {
+      const optYStart = 168;
+      for (let oIdx = 0; oIdx < 4; oIdx++) {
+        const col = oIdx % 2;
+        const row = Math.floor(oIdx / 2);
+        const boxX = 20 + col * 238;
+        const boxY = optYStart + row * 64;
+        const boxW = 226;
+        const boxH = 54;
+
+        if (canvasX >= boxX && canvasX <= boxX + boxW && canvasY >= boxY && canvasY <= boxY + boxH) {
+          return oIdx;
+        }
+      }
+      return -1;
+    };
+
+    const isConfirmButtonAtCanvasPos = (canvasX, canvasY, hasSelection) => {
+      if (!hasSelection) return false;
+      const btnX = 140;
+      const btnY = 290;
+      const btnW = 232;
+      const btnH = 24;
+      return canvasX >= btnX && canvasX <= btnX + btnW && canvasY >= btnY && canvasY <= btnY + btnH;
+    };
+
+    const handlePointerMove = (event) => {
+      if (!renderer.domElement) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const hits = raycaster.intersectObjects(screenMeshList, false);
+
+      if (hits.length > 0) {
+        const hit = hits[0];
+        const activeIdx = sceneStateRef.current.activePlayerIndex;
+        const phase = sceneStateRef.current.currentPhase;
+
+        if (hit.object.userData.playerIndex === activeIdx && phase === 'question') {
+          const coords = getCanvasCoordsFromHit(hit);
+          if (coords) {
+            const { canvasX, canvasY } = coords;
+            const optIdx = getOptionIndexAtCanvasPos(canvasX, canvasY);
+            const playerAns = sceneStateRef.current.gameState?.playerAnswers?.[activeIdx];
+            const isConfirm = isConfirmButtonAtCanvasPos(canvasX, canvasY, playerAns !== undefined && playerAns !== null);
+
+            if (optIdx !== -1 || isConfirm) {
+              renderer.domElement.style.cursor = 'pointer';
+              return;
+            }
+          }
+        }
+      }
+      renderer.domElement.style.cursor = 'default';
+    };
+
+    const handleClick = (event) => {
+      if (!renderer.domElement) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const hits = raycaster.intersectObjects(screenMeshList, false);
+
+      if (hits.length > 0) {
+        const hit = hits[0];
+        const activeIdx = sceneStateRef.current.activePlayerIndex;
+        const phase = sceneStateRef.current.currentPhase;
+
+        if (hit.object.userData.playerIndex === activeIdx && phase === 'question') {
+          const coords = getCanvasCoordsFromHit(hit);
+          if (coords) {
+            const { canvasX, canvasY } = coords;
+            const clickedOption = getOptionIndexAtCanvasPos(canvasX, canvasY);
+            const { gameState: state, onSelectOption: selectFn, onConfirmAnswer: confirmFn } = sceneStateRef.current;
+            const playerAns = state?.playerAnswers?.[activeIdx];
+            const isConfirm = isConfirmButtonAtCanvasPos(canvasX, canvasY, playerAns !== undefined && playerAns !== null);
+
+            if (clickedOption !== -1) {
+              const questionObj = state?.currentQuestion || state?.question;
+              const options = questionObj?.options || [];
+              const optVal = options[clickedOption];
+
+              if (playerAns === clickedOption || playerAns === optVal) {
+                if (confirmFn) {
+                  confirmFn(clickedOption);
+                } else if (selectFn) {
+                  selectFn(clickedOption);
+                }
+              } else {
+                if (selectFn) {
+                  selectFn(clickedOption);
+                }
+              }
+            } else if (isConfirm) {
+              if (confirmFn) {
+                confirmFn();
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const domElem = renderer.domElement;
+    domElem.addEventListener('pointermove', handlePointerMove);
+    domElem.addEventListener('click', handleClick);
+
+    // --- 7. AMBIENT STARFIELD / CYBER DUST PARTICLE FIELD ---
     const starCount = 600;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
@@ -379,7 +519,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // --- 7. HELPER TO DRAW DYNAMIC 3D PC SCREEN CONTENT ---
+    // --- 8. HELPER TO DRAW DYNAMIC 3D PC SCREEN CONTENT ---
     const update3DScreenTextures = (state, phase, activeIdx) => {
       const players = state?.players || [];
       const questionObj = state?.currentQuestion || state?.question;
@@ -470,17 +610,45 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
           ctx.lineWidth = isSelected ? 2 : 1;
           ctx.strokeRect(boxX, boxY, 226, 54);
 
+          // Option letter badge (A, B, C, D)
+          const letter = String.fromCharCode(65 + oIdx);
+          ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(0, 240, 255, 0.5)';
+          ctx.font = 'bold 16px Orbitron, sans-serif';
+          ctx.fillText(`[${letter}]`, boxX + 10, boxY + 32);
+
           ctx.font = 'bold 14px Rajdhani, sans-serif';
           ctx.fillStyle = isSelected ? '#ffffff' : '#00f0ff';
           const optText = typeof opt === 'string' ? opt : (opt.text || opt.label || '');
-          ctx.fillText(optText.length > 24 ? optText.substring(0, 22) + '...' : optText, boxX + 10, boxY + 32);
+          ctx.fillText(optText.length > 20 ? optText.substring(0, 18) + '...' : optText, boxX + 50, boxY + 32);
         });
+
+        // Optional Lock-In Transmit Button at bottom of 3D monitor screen when an option is selected
+        const playerAns = state?.playerAnswers?.[idx];
+        if (playerAns !== undefined && playerAns !== null && isQuestionPhase) {
+          const btnX = 140;
+          const btnY = 290;
+          const btnW = 232;
+          const btnH = 24;
+
+          ctx.fillStyle = 'rgba(0, 255, 170, 0.25)';
+          ctx.fillRect(btnX, btnY, btnW, btnH);
+
+          ctx.strokeStyle = '#00ffaa';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+          ctx.font = 'bold 11px Orbitron, sans-serif';
+          ctx.fillStyle = '#00ffaa';
+          ctx.textAlign = 'center';
+          ctx.fillText('⚡ LOCK-IN TRANSMISSION ⚡', btnX + btnW / 2, btnY + 16);
+          ctx.textAlign = 'left';
+        }
 
         texture.needsUpdate = true;
       });
     };
 
-    // --- 8. ANIMATION LOOP & CAMERA CHOREOGRAPHY ---
+    // --- 9. ANIMATION LOOP & CAMERA CHOREOGRAPHY ---
     const clock = new THREE.Clock();
     let animationFrameId;
 
@@ -621,12 +789,19 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
+      // Smoothly update Field of View (FOV) for seated PC monitor view (38-42 range, 40)
+      const targetFov = phase === 'question' ? 40 : 55;
+      if (Math.abs(camera.fov - targetFov) > 0.001) {
+        camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
+        camera.updateProjectionMatrix();
+      }
+
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // --- 9. RESIZE HANDLER ---
+    // --- 10. RESIZE HANDLER ---
     const handleResize = () => {
       if (!container) return;
       const newWidth = container.clientWidth || window.innerWidth;
@@ -638,9 +813,11 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
     window.addEventListener('resize', handleResize);
 
-    // --- 10. CLEANUP ON UNMOUNT ---
+    // --- 11. CLEANUP ON UNMOUNT ---
     return () => {
       cancelAnimationFrame(animationFrameId);
+      domElem.removeEventListener('pointermove', handlePointerMove);
+      domElem.removeEventListener('click', handleClick);
       window.removeEventListener('resize', handleResize);
       if (container && renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -659,7 +836,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
         width: '100%',
         height: '100%',
         zIndex: 0,
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
       }}
     />
   );

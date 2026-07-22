@@ -276,6 +276,8 @@ export default function App() {
         gameState={gameState}
         currentPhase={gameState?.winner ? 'victory' : (gameState?.currentPhase || 'lobby')}
         activePlayerIndex={activePlayerIndex}
+        onSelectOption={handleSelectOption}
+        onConfirmAnswer={handleConfirmAnswer}
       />
 
       {/* Global Top HUD Header Bar */}

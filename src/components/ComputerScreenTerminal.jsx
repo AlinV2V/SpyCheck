@@ -61,15 +61,12 @@ export function ComputerScreenTerminal({
           max-width: 1040px;
           margin: 0 auto;
           padding: 12px;
-          background: #080c14;
-          border: 3px solid #1e293b;
-          border-radius: 20px;
-          box-shadow: 
-            0 0 50px rgba(0, 0, 0, 0.9),
-            0 0 30px rgba(0, 240, 255, 0.15),
-            inset 0 0 15px rgba(0, 0, 0, 0.8);
+          background: transparent;
+          border: none;
+          box-shadow: none;
           font-family: 'Rajdhani', 'Orbitron', sans-serif;
           box-sizing: border-box;
+          overflow: hidden;
         }
 
         /* Monitor Bezel Header */
@@ -78,9 +75,10 @@ export function ComputerScreenTerminal({
           align-items: center;
           justify-content: space-between;
           padding: 8px 16px;
-          background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-          border-radius: 12px 12px 0 0;
-          border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+          background: rgba(12, 18, 30, 0.6);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(0, 240, 255, 0.3);
           color: #94a3b8;
           font-size: 0.85rem;
           letter-spacing: 1.5px;
@@ -94,6 +92,7 @@ export function ComputerScreenTerminal({
           font-family: 'Orbitron', sans-serif;
           font-weight: 700;
           color: #00f0ff;
+          text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
         }
 
         .pc-terminal-status-dots {
@@ -128,11 +127,8 @@ export function ComputerScreenTerminal({
         /* Screen Display Container */
         .pc-terminal-screen {
           position: relative;
-          background: radial-gradient(circle at center, #0b1220 0%, #04070d 100%);
-          border: 2px solid rgba(0, 240, 255, 0.25);
-          border-top: none;
-          border-bottom: none;
-          padding: 16px;
+          background: transparent;
+          padding: 14px 16px;
           overflow: hidden;
         }
 
@@ -143,12 +139,12 @@ export function ComputerScreenTerminal({
           inset: 0;
           background: linear-gradient(
             rgba(18, 16, 16, 0) 50%, 
-            rgba(0, 0, 0, 0.25) 50%
+            rgba(0, 240, 255, 0.03) 50%
           );
           background-size: 100% 4px;
           pointer-events: none;
           z-index: 20;
-          opacity: 0.6;
+          opacity: 0.35;
         }
 
         /* Corner Hardware Bracket Accents */
@@ -160,6 +156,8 @@ export function ComputerScreenTerminal({
           border-style: solid;
           pointer-events: none;
           z-index: 25;
+          opacity: 0.85;
+          filter: drop-shadow(0 0 4px #00f0ff);
         }
         .pc-cb-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
         .pc-cb-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
@@ -173,10 +171,11 @@ export function ComputerScreenTerminal({
           justify-content: space-between;
           flex-wrap: wrap;
           gap: 10px;
-          padding: 10px 18px;
-          background: linear-gradient(180deg, #0f172a 0%, #090d16 100%);
-          border-radius: 0 0 12px 12px;
-          border-top: 2px solid rgba(0, 240, 255, 0.2);
+          padding: 8px 16px;
+          background: rgba(12, 18, 30, 0.6);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-top: 1px solid rgba(0, 240, 255, 0.25);
           color: #e2e8f0;
           font-size: 0.85rem;
         }
