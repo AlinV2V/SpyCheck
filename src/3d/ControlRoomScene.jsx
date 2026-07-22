@@ -605,3 +605,5 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     />
   );
 }
+
+export default ControlRoomScene;
