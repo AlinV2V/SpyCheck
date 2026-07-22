@@ -414,19 +414,29 @@ export function ControlRoomScene({
         const { hoveredOptionIdx, hoveredLockIn, hoveredVoteIdx } = sceneStateRef.current;
 
         // Robust Question Text Extraction
+        const rawQ = questionObj?.question || questionObj?.text || questionObj?.prompt || questionObj?.title || questionObj;
         let qText = 'What is your usual bedtime on a weekday night?';
-        if (questionObj) {
-          if (typeof questionObj === 'string') qText = questionObj;
-          else if (questionObj.question) qText = String(questionObj.question);
-          else if (questionObj.text) qText = String(questionObj.text);
-          else if (questionObj.prompt) qText = String(questionObj.prompt);
-          else if (questionObj.title) qText = String(questionObj.title);
+        if (rawQ) {
+          if (typeof rawQ === 'string') qText = rawQ;
+          else if (rawQ.question) qText = String(rawQ.question);
+          else if (rawQ.text) qText = String(rawQ.text);
         }
 
         let rawOptions = [];
-        if (questionObj && Array.isArray(questionObj.options)) rawOptions = questionObj.options;
-        else if (state && Array.isArray(state.options)) rawOptions = state.options;
-        if (rawOptions.length === 0) rawOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+        if (questionObj && Array.isArray(questionObj.options) && questionObj.options.length > 0) {
+          rawOptions = questionObj.options;
+        } else if (state && Array.isArray(state.options) && state.options.length > 0) {
+          rawOptions = state.options;
+        }
+
+        if (!rawOptions || rawOptions.length === 0) {
+          rawOptions = [
+            'A) Twice a day — Hyper clean',
+            'B) Once a day like normal',
+            'C) Every 2-3 days unless I sweat',
+            'D) Once a week',
+          ];
+        }
 
         screenCanvasList.forEach((canvas, idx) => {
           const ctx = canvas.getContext('2d');
@@ -454,13 +464,13 @@ export function ControlRoomScene({
           ctx.fillStyle = isSpy && phase === 'question' ? 'rgba(255, 0, 85, 0.3)' : 'rgba(0, 240, 255, 0.22)';
           ctx.fillRect(20, 20, canvas.width - 40, 65);
 
-          ctx.font = 'bold 24px Orbitron, sans-serif';
+          ctx.font = 'bold 24px Orbitron, "Segoe UI", Arial, sans-serif';
           ctx.fillStyle = isSpy && phase === 'question' ? '#ff0055' : '#00f0ff';
           const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
           ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 40, 62);
 
           // System Clock / Timer Top Right
-          ctx.font = 'bold 20px Orbitron, sans-serif';
+          ctx.font = 'bold 20px Orbitron, "Segoe UI", Arial, sans-serif';
           const sysTimeStr = new Date().toTimeString().split(' ')[0];
           ctx.fillStyle = isSpy && phase === 'question' ? '#ff0055' : '#00ffaa';
           ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 250, 62);
@@ -474,7 +484,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 2;
             ctx.strokeRect(40, 100, 1200, 42);
 
-            ctx.font = 'bold 18px Orbitron, sans-serif';
+            ctx.font = 'bold 18px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#00f0ff';
             ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 128);
 
@@ -484,7 +494,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 2;
             ctx.strokeRect(40, 160, 1200, 70);
 
-            ctx.font = 'bold 14px Orbitron, sans-serif';
+            ctx.font = 'bold 14px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#00f0ff';
             ctx.fillText('QUESTION PROMPT >', 56, 185);
 
@@ -511,7 +521,7 @@ export function ControlRoomScene({
               ctx.strokeRect(bx, by, bw, bh);
 
               ctx.fillStyle = '#00f0ff';
-              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.font = 'bold 18px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 16, by + 36);
 
               ctx.fillStyle = '#cbd5e1';
@@ -532,12 +542,12 @@ export function ControlRoomScene({
             ctx.lineWidth = isBtnHovered ? 4 : 2;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 22px Orbitron, sans-serif';
+            ctx.font = 'bold 22px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#00f0ff';
             ctx.textAlign = 'center';
             ctx.fillText('🗳️ PROCEED TO SECURITY VOTE', btnX + btnW / 2, btnY + 54);
 
-            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.font = 'bold 15px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#cbd5e1';
             ctx.fillText('[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
             ctx.textAlign = 'left';
@@ -550,7 +560,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 2;
             ctx.strokeRect(40, 100, 1200, 42);
 
-            ctx.font = 'bold 18px Orbitron, sans-serif';
+            ctx.font = 'bold 18px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#ffaa00';
             ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 128);
 
@@ -580,7 +590,7 @@ export function ControlRoomScene({
               ctx.strokeRect(bx, by, bw, bh);
 
               ctx.fillStyle = isSelectedTarget ? '#ff0055' : '#00f0ff';
-              ctx.font = 'bold 22px Orbitron, sans-serif';
+              ctx.font = 'bold 22px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 20, by + 48);
 
               ctx.fillStyle = '#94a3b8';
@@ -591,14 +601,14 @@ export function ControlRoomScene({
                 ctx.fillStyle = 'rgba(255,255,255,0.2)';
                 ctx.fillRect(bx + 20, by + 110, 140, 30);
                 ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 12px Orbitron, sans-serif';
+                ctx.font = 'bold 12px Orbitron, "Segoe UI", Arial, sans-serif';
                 ctx.fillText('YOUR WORKSTATION', bx + 28, by + 130);
               }
 
               if (isSelectedTarget) {
                 ctx.fillStyle = '#ff0055';
                 ctx.fillRect(bx + bw - 140, by + 16, 124, 32);
-                ctx.font = 'bold 14px Orbitron, sans-serif';
+                ctx.font = 'bold 14px Orbitron, "Segoe UI", Arial, sans-serif';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText('ACCUSED 🎯', bx + bw - 130, by + 38);
               }
@@ -617,12 +627,12 @@ export function ControlRoomScene({
             ctx.lineWidth = isBtnHovered ? 4 : 2;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 22px Orbitron, sans-serif';
+            ctx.font = 'bold 22px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = hasVoted ? '#ffffff' : '#ffaa00';
             ctx.textAlign = 'center';
             ctx.fillText(hasVoted ? '✔ VOTE TRANSMITTED' : '🚨 CAST VOTE TO EJECT', btnX + btnW / 2, btnY + 54);
 
-            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.font = 'bold 15px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#cbd5e1';
             ctx.fillText(hasVoted ? 'VOTE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 86);
             ctx.textAlign = 'left';
@@ -638,7 +648,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 3;
             ctx.strokeRect(40, 100, 1200, 140);
 
-            ctx.font = 'bold 36px Orbitron, sans-serif';
+            ctx.font = 'bold 36px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
             ctx.fillText(isAgentsWon ? '🛡️ AGENTS VICTORIOUS — INTRUDER NEUTRALIZED!' : '⚠️ INTRUDER WINS — DEFENSES BREACHED!', 64, 165);
 
@@ -659,7 +669,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 3;
             ctx.strokeRect(btn1X, btn1Y, btn1W, btn1H);
 
-            ctx.font = 'bold 24px Orbitron, sans-serif';
+            ctx.font = 'bold 24px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#00f0ff';
             ctx.textAlign = 'center';
             ctx.fillText('🔄 PLAY AGAIN', btn1X + btn1W / 2, btn1Y + 70);
@@ -675,7 +685,7 @@ export function ControlRoomScene({
             ctx.lineWidth = 3;
             ctx.strokeRect(btn2X, btn2Y, btn2W, btn2H);
 
-            ctx.font = 'bold 24px Orbitron, sans-serif';
+            ctx.font = 'bold 24px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.fillText('🏠 RETURN TO LOBBY', btn2X + btn2W / 2, btn2Y + 70);
             ctx.textAlign = 'left';
@@ -690,7 +700,7 @@ export function ControlRoomScene({
               ctx.lineWidth = 2;
               ctx.strokeRect(40, badgeY, 620, 42);
 
-              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.font = 'bold 18px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillStyle = '#00f0ff';
               ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 56, badgeY + 28);
             } else {
@@ -700,7 +710,7 @@ export function ControlRoomScene({
               ctx.lineWidth = 2;
               ctx.strokeRect(40, badgeY, 720, 42);
 
-              ctx.font = 'bold 18px Orbitron, sans-serif';
+              ctx.font = 'bold 18px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillStyle = '#ff0055';
               ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 56, badgeY + 28);
             }
@@ -716,13 +726,13 @@ export function ControlRoomScene({
             ctx.fillStyle = isSpy ? '#ff0055' : '#00f0ff';
             ctx.fillRect(40, qBoxY, 10, qBoxH);
 
-            ctx.font = 'bold 15px Orbitron, sans-serif';
+            ctx.font = 'bold 15px Orbitron, "Segoe UI", Arial, sans-serif';
             ctx.fillStyle = isSpy ? '#ff0055' : '#00f0ff';
             ctx.fillText('OPERATIVE_PROMPT >', 64, qBoxY + 32);
 
             if (isSpy) {
               ctx.fillStyle = '#ff0055';
-              ctx.font = 'bold 22px Orbitron, sans-serif';
+              ctx.font = 'bold 22px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 64, qBoxY + 68);
 
               ctx.fillStyle = '#cbd5e1';
@@ -781,11 +791,11 @@ export function ControlRoomScene({
               ctx.lineWidth = 2;
               ctx.strokeRect(box.x + 16, box.y + 16, 52, 52);
 
-              ctx.font = 'bold 26px Orbitron, sans-serif';
+              ctx.font = 'bold 26px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
               ctx.fillText(box.label, box.x + 31, box.y + 51);
 
-              ctx.font = 'bold 12px Orbitron, sans-serif';
+              ctx.font = 'bold 12px Orbitron, "Segoe UI", Arial, sans-serif';
               ctx.fillStyle = '#94a3b8';
               ctx.fillText(`KEY [${box.label}]`, box.x + 20, box.y + 92);
 
@@ -810,7 +820,7 @@ export function ControlRoomScene({
               if (isSelected) {
                 ctx.fillStyle = '#00f0ff';
                 ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
-                ctx.font = 'bold 14px Orbitron, sans-serif';
+                ctx.font = 'bold 14px Orbitron, "Segoe UI", Arial, sans-serif';
                 ctx.fillStyle = '#020617';
                 ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
               }
