@@ -400,231 +400,244 @@ export function ControlRoomScene({
 
     // --- 7. HELPER TO DRAW INTERACTIVE 3D VIRTUAL PC MONITOR SCREEN TEXTURES ---
     const update3DScreenTextures = (state, phase, activeIdx) => {
-      const players = state?.players || [];
-      const questionObj = state?.currentQuestion || state?.question;
-      const qText = questionObj?.question || questionObj?.text || 'SECURITY CHECK PROMPT';
-      const options = questionObj?.options || [];
-      const { hoveredOptionIdx, hoveredLockIn } = sceneStateRef.current;
-
-      screenCanvasList.forEach((canvas, idx) => {
-        const ctx = canvas.getContext('2d');
-        const texture = screenTextureList[idx];
-        const player = players[idx];
-        const isSpy = idx === state?.spyIndex;
-        const isQuestionPhase = phase === 'question';
-        const isRevealed = phase === 'discussion' || phase === 'voting' || phase === 'victory';
-        const isActiveDesk = idx === activeIdx;
-
-        // Clear Screen & Dark Cyber Metallic Background
-        ctx.fillStyle = '#070b15';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Glass CRT Scanlines Texture
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.035)';
-        for (let y = 0; y < canvas.height; y += 8) {
-          ctx.fillRect(0, y, canvas.width, 4);
+      try {
+        const players = state?.players || [];
+        const questionObj = state?.currentQuestion || state?.question;
+        
+        let qText = 'SECURITY CHECK PROMPT';
+        if (questionObj) {
+          if (typeof questionObj === 'string') qText = questionObj;
+          else if (questionObj.question) qText = String(questionObj.question);
+          else if (questionObj.text) qText = String(questionObj.text);
         }
 
-        // Screen Outer Bezel Glow Line
-        ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : isActiveDesk ? '#00f0ff' : 'rgba(0, 240, 255, 0.4)';
-        ctx.lineWidth = 10;
-        ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
+        let rawOptions = [];
+        if (questionObj && Array.isArray(questionObj.options)) rawOptions = questionObj.options;
+        else if (state && Array.isArray(state.options)) rawOptions = state.options;
+        if (rawOptions.length === 0) rawOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
 
-        // --- TOP MONITOR HEADER BAR ---
-        ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(255, 0, 85, 0.25)' : 'rgba(0, 240, 255, 0.18)';
-        ctx.fillRect(12, 12, canvas.width - 24, 60);
+        const { hoveredOptionIdx, hoveredLockIn } = sceneStateRef.current;
 
-        ctx.font = 'bold 24px Orbitron, sans-serif';
-        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-        ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${player?.name ? player.name.toUpperCase() : `AGENT 0${idx + 1}`}`, 26, 50);
+        screenCanvasList.forEach((canvas, idx) => {
+          const ctx = canvas.getContext('2d');
+          const texture = screenTextureList[idx];
+          const player = players[idx];
+          const isSpy = idx === state?.spyIndex;
+          const isQuestionPhase = phase === 'question';
+          const isRevealed = phase === 'discussion' || phase === 'voting' || phase === 'victory';
+          const isActiveDesk = idx === activeIdx;
 
-        // System Clock / Status Top Right
-        ctx.font = 'bold 20px Orbitron, sans-serif';
-        const sysTimeStr = new Date().toTimeString().split(' ')[0];
-        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00ffaa';
-        ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 230, 50);
+          // Clear Screen & Vibrant Dark Cyber Background
+          ctx.fillStyle = '#0b1326';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // --- ROLE BADGE ---
-        const badgeY = 88;
-        if (!isSpy || !isQuestionPhase) {
-          ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
-          ctx.fillRect(26, badgeY, 560, 36);
-          ctx.strokeStyle = '#00f0ff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(26, badgeY, 560, 36);
+          // Grid scanline texture
+          ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+          for (let y = 0; y < canvas.height; y += 8) {
+            ctx.fillRect(0, y, canvas.width, 4);
+          }
 
-          ctx.font = 'bold 16px Orbitron, sans-serif';
-          ctx.fillStyle = '#00f0ff';
-          ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 40, badgeY + 24);
-        } else {
-          ctx.fillStyle = 'rgba(255, 0, 85, 0.25)';
-          ctx.fillRect(26, badgeY, 640, 36);
-          ctx.strokeStyle = '#ff0055';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(26, badgeY, 640, 36);
+          // Screen Bezel Border Glow
+          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : isActiveDesk ? '#00f0ff' : 'rgba(0, 240, 255, 0.5)';
+          ctx.lineWidth = 10;
+          ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
 
-          ctx.font = 'bold 16px Orbitron, sans-serif';
-          ctx.fillStyle = '#ff0055';
-          ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 40, badgeY + 24);
-        }
+          // --- TOP MONITOR HEADER BAR ---
+          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(255, 0, 85, 0.28)' : 'rgba(0, 240, 255, 0.22)';
+          ctx.fillRect(12, 12, canvas.width - 24, 60);
 
-        // --- QUESTION PROMPT / SPY WARNING BOX ---
-        const qBoxY = 140;
-        const qBoxH = 110;
-        ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(30, 10, 20, 0.9)' : 'rgba(12, 20, 36, 0.9)';
-        ctx.fillRect(26, qBoxY, 580, qBoxH);
-        ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(26, qBoxY, 580, qBoxH);
+          ctx.font = 'bold 24px Orbitron, sans-serif';
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
+          ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 26, 50);
 
-        // Left accent indicator bar
-        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-        ctx.fillRect(26, qBoxY, 8, qBoxH);
-
-        ctx.font = 'bold 14px Orbitron, sans-serif';
-        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
-        ctx.fillText('OPERATIVE_PROMPT >', 44, qBoxY + 28);
-
-        if (isSpy && isQuestionPhase) {
-          ctx.fillStyle = '#ff0055';
+          // System Clock / Status Top Right
           ctx.font = 'bold 20px Orbitron, sans-serif';
-          ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 44, qBoxY + 60);
+          const sysTimeStr = new Date().toTimeString().split(' ')[0];
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00ffaa';
+          ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 230, 50);
 
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '16px Rajdhani, sans-serif';
-          ctx.fillText('Decryption key absent. Analyze choices below to deduce prompt & blend in.', 44, qBoxY + 88);
-        } else {
-          ctx.fillStyle = isRevealed ? '#00ffaa' : '#ffffff';
-          ctx.font = 'bold 18px Rajdhani, sans-serif';
+          // --- ROLE BADGE ---
+          const badgeY = 88;
+          if (!isSpy || !isQuestionPhase) {
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+            ctx.fillRect(26, badgeY, 560, 36);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(26, badgeY, 560, 36);
 
-          // Word Wrap Question Prompt Text on 3D Monitor
-          const words = qText.split(' ');
-          let line = '';
-          let yPos = qBoxY + 58;
-          for (let w of words) {
-            const testLine = line + w + ' ';
-            if (ctx.measureText(testLine).width > 530) {
-              ctx.fillText(line, 44, yPos);
-              line = w + ' ';
-              yPos += 24;
-            } else {
-              line = testLine;
-            }
-          }
-          ctx.fillText(line, 44, yPos);
-        }
-
-        // --- LOCK-IN TRANSMISSION BUTTON (x: 630..995, y: 140..250) ---
-        const btnX = 630;
-        const btnY = 140;
-        const btnW = 368;
-        const btnH = 110;
-
-        const playerAns = state?.playerAnswers?.[idx];
-        const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
-        const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
-
-        ctx.fillStyle = isConfirmed
-          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-          : isBtnHovered
-          ? 'rgba(0, 240, 255, 0.4)'
-          : playerAns !== undefined
-          ? 'rgba(0, 240, 255, 0.25)'
-          : 'rgba(255, 255, 255, 0.08)';
-        ctx.fillRect(btnX, btnY, btnW, btnH);
-
-        ctx.strokeStyle = isConfirmed ? '#10b981' : isBtnHovered ? '#ffffff' : '#00f0ff';
-        ctx.lineWidth = isBtnHovered ? 4 : 2;
-        ctx.strokeRect(btnX, btnY, btnW, btnH);
-
-        ctx.font = 'bold 22px Orbitron, sans-serif';
-        ctx.fillStyle = isConfirmed ? '#ffffff' : playerAns !== undefined ? '#00f0ff' : '#64748b';
-        ctx.textAlign = 'center';
-        ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 52);
-
-        ctx.font = 'bold 15px Orbitron, sans-serif';
-        ctx.fillStyle = isConfirmed ? '#e2e8f0' : '#94a3b8';
-        ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 84);
-        ctx.textAlign = 'left';
-
-        // --- 4 INTERACTIVE OPTION BOXES (A, B, C, D) ---
-        // Option A: x: 26..496, y: 270..430
-        // Option B: x: 524..995, y: 270..430
-        // Option C: x: 26..496, y: 450..610
-        // Option D: x: 524..995, y: 450..610
-        const optBoxes = [
-          { x: 26, y: 270, w: 470, h: 160, label: 'A' },
-          { x: 524, y: 270, w: 471, h: 160, label: 'B' },
-          { x: 26, y: 450, w: 470, h: 160, label: 'C' },
-          { x: 524, y: 450, w: 471, h: 160, label: 'D' },
-        ];
-
-        options.slice(0, 4).forEach((optTextRaw, oIdx) => {
-          const box = optBoxes[oIdx];
-          const optString = typeof optTextRaw === 'string' ? optTextRaw : (optTextRaw.text || optTextRaw.label || '');
-          const isSelected = playerAns === optString || playerAns === oIdx || playerAns === box.label;
-          const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
-
-          // Box Fill
-          ctx.fillStyle = isSelected
-            ? 'rgba(0, 240, 255, 0.42)'
-            : isHovered
-            ? 'rgba(0, 240, 255, 0.22)'
-            : 'rgba(15, 23, 42, 0.85)';
-          ctx.fillRect(box.x, box.y, box.w, box.h);
-
-          // Box Border
-          ctx.strokeStyle = isSelected ? '#00f0ff' : isHovered ? '#ffffff' : 'rgba(0, 240, 255, 0.35)';
-          ctx.lineWidth = isSelected ? 4 : isHovered ? 3 : 2;
-          ctx.strokeRect(box.x, box.y, box.w, box.h);
-
-          // Letter Badge Box [A], [B], [C], [D]
-          ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.1)';
-          ctx.fillRect(box.x + 16, box.y + 16, 56, 56);
-          ctx.strokeStyle = '#00f0ff';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(box.x + 16, box.y + 16, 56, 56);
-
-          ctx.font = 'bold 28px Orbitron, sans-serif';
-          ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
-          ctx.fillText(box.label, box.x + 32, box.y + 54);
-
-          // Key Binding Hint Tag [A]
-          ctx.font = 'bold 12px Orbitron, sans-serif';
-          ctx.fillStyle = '#64748b';
-          ctx.fillText(`KEY [${box.label}]`, box.x + 22, box.y + 96);
-
-          // Option Text Word Wrap
-          ctx.font = 'bold 22px Rajdhani, sans-serif';
-          ctx.fillStyle = isSelected ? '#ffffff' : '#e2e8f0';
-
-          const optWords = optString.split(' ');
-          let optLine = '';
-          let optY = box.y + 44;
-          for (let w of optWords) {
-            const testLine = optLine + w + ' ';
-            if (ctx.measureText(testLine).width > box.w - 100) {
-              ctx.fillText(optLine, box.x + 90, optY);
-              optLine = w + ' ';
-              optY += 28;
-            } else {
-              optLine = testLine;
-            }
-          }
-          ctx.fillText(optLine, box.x + 90, optY);
-
-          // Selected Pill Indicator
-          if (isSelected) {
+            ctx.font = 'bold 16px Orbitron, sans-serif';
             ctx.fillStyle = '#00f0ff';
-            ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
-            ctx.font = 'bold 14px Orbitron, sans-serif';
-            ctx.fillStyle = '#020617';
-            ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
-          }
-        });
+            ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 40, badgeY + 24);
+          } else {
+            ctx.fillStyle = 'rgba(255, 0, 85, 0.3)';
+            ctx.fillRect(26, badgeY, 640, 36);
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(26, badgeY, 640, 36);
 
-        texture.needsUpdate = true;
-      });
+            ctx.font = 'bold 16px Orbitron, sans-serif';
+            ctx.fillStyle = '#ff0055';
+            ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 40, badgeY + 24);
+          }
+
+          // --- QUESTION PROMPT / SPY WARNING BOX ---
+          const qBoxY = 140;
+          const qBoxH = 110;
+          ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(35, 12, 24, 0.95)' : 'rgba(15, 25, 45, 0.95)';
+          ctx.fillRect(26, qBoxY, 580, qBoxH);
+          ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(26, qBoxY, 580, qBoxH);
+
+          // Left accent indicator bar
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.fillRect(26, qBoxY, 8, qBoxH);
+
+          ctx.font = 'bold 14px Orbitron, sans-serif';
+          ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+          ctx.fillText('OPERATIVE_PROMPT >', 44, qBoxY + 28);
+
+          if (isSpy && isQuestionPhase) {
+            ctx.fillStyle = '#ff0055';
+            ctx.font = 'bold 20px Orbitron, sans-serif';
+            ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 44, qBoxY + 60);
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '16px Rajdhani, sans-serif';
+            ctx.fillText('Decryption key absent. Analyze choices below to deduce prompt & blend in.', 44, qBoxY + 88);
+          } else {
+            ctx.fillStyle = isRevealed ? '#00ffaa' : '#ffffff';
+            ctx.font = 'bold 18px Rajdhani, sans-serif';
+
+            // Word Wrap Question Prompt Text on 3D Monitor
+            const safeQText = String(qText || '');
+            const words = safeQText.split(' ');
+            let line = '';
+            let yPos = qBoxY + 58;
+            for (let w of words) {
+              const testLine = line + w + ' ';
+              if (ctx.measureText(testLine).width > 530) {
+                ctx.fillText(line, 44, yPos);
+                line = w + ' ';
+                yPos += 24;
+              } else {
+                line = testLine;
+              }
+            }
+            ctx.fillText(line, 44, yPos);
+          }
+
+          // --- LOCK-IN TRANSMISSION BUTTON (x: 630..995, y: 140..250) ---
+          const btnX = 630;
+          const btnY = 140;
+          const btnW = 368;
+          const btnH = 110;
+
+          const playerAns = state?.playerAnswers?.[idx];
+          const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
+          const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
+
+          ctx.fillStyle = isConfirmed
+            ? '#10b981'
+            : isBtnHovered
+            ? 'rgba(0, 240, 255, 0.45)'
+            : playerAns !== undefined
+            ? 'rgba(0, 240, 255, 0.3)'
+            : 'rgba(255, 255, 255, 0.12)';
+          ctx.fillRect(btnX, btnY, btnW, btnH);
+
+          ctx.strokeStyle = isConfirmed ? '#10b981' : isBtnHovered ? '#ffffff' : '#00f0ff';
+          ctx.lineWidth = isBtnHovered ? 4 : 2;
+          ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+          ctx.font = 'bold 22px Orbitron, sans-serif';
+          ctx.fillStyle = isConfirmed ? '#ffffff' : playerAns !== undefined ? '#00f0ff' : '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 52);
+
+          ctx.font = 'bold 15px Orbitron, sans-serif';
+          ctx.fillStyle = isConfirmed ? '#e2e8f0' : '#cbd5e1';
+          ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 84);
+          ctx.textAlign = 'left';
+
+          // --- 4 INTERACTIVE OPTION BOXES (A, B, C, D) ---
+          const optBoxes = [
+            { x: 26, y: 270, w: 470, h: 160, label: 'A' },
+            { x: 524, y: 270, w: 471, h: 160, label: 'B' },
+            { x: 26, y: 450, w: 470, h: 160, label: 'C' },
+            { x: 524, y: 450, w: 471, h: 160, label: 'D' },
+          ];
+
+          rawOptions.slice(0, 4).forEach((optTextRaw, oIdx) => {
+            const box = optBoxes[oIdx];
+            const optString = String(typeof optTextRaw === 'string' ? optTextRaw : (optTextRaw?.text || optTextRaw?.label || ''));
+            const isSelected = playerAns === optString || playerAns === oIdx || playerAns === box.label;
+            const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
+
+            // Box Fill
+            ctx.fillStyle = isSelected
+              ? 'rgba(0, 240, 255, 0.48)'
+              : isHovered
+              ? 'rgba(0, 240, 255, 0.28)'
+              : 'rgba(18, 30, 52, 0.95)';
+            ctx.fillRect(box.x, box.y, box.w, box.h);
+
+            // Box Border
+            ctx.strokeStyle = isSelected ? '#00f0ff' : isHovered ? '#ffffff' : 'rgba(0, 240, 255, 0.4)';
+            ctx.lineWidth = isSelected ? 4 : isHovered ? 3 : 2;
+            ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+            // Letter Badge Box [A], [B], [C], [D]
+            ctx.fillStyle = isSelected ? '#00f0ff' : 'rgba(255, 255, 255, 0.15)';
+            ctx.fillRect(box.x + 16, box.y + 16, 56, 56);
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(box.x + 16, box.y + 16, 56, 56);
+
+            ctx.font = 'bold 28px Orbitron, sans-serif';
+            ctx.fillStyle = isSelected ? '#020617' : '#00f0ff';
+            ctx.fillText(box.label, box.x + 32, box.y + 54);
+
+            // Key Binding Hint Tag [A]
+            ctx.font = 'bold 12px Orbitron, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(`KEY [${box.label}]`, box.x + 22, box.y + 96);
+
+            // Option Text Word Wrap
+            ctx.font = 'bold 22px Rajdhani, sans-serif';
+            ctx.fillStyle = isSelected ? '#ffffff' : '#f1f5f9';
+
+            const optWords = optString.split(' ');
+            let optLine = '';
+            let optY = box.y + 44;
+            for (let w of optWords) {
+              const testLine = optLine + w + ' ';
+              if (ctx.measureText(testLine).width > box.w - 100) {
+                ctx.fillText(optLine, box.x + 90, optY);
+                optLine = w + ' ';
+                optY += 28;
+              } else {
+                optLine = testLine;
+              }
+            }
+            ctx.fillText(optLine, box.x + 90, optY);
+
+            // Selected Pill Indicator
+            if (isSelected) {
+              ctx.fillStyle = '#00f0ff';
+              ctx.fillRect(box.x + box.w - 140, box.y + 16, 124, 32);
+              ctx.font = 'bold 14px Orbitron, sans-serif';
+              ctx.fillStyle = '#020617';
+              ctx.fillText('SELECTED ✓', box.x + box.w - 130, box.y + 38);
+            }
+          });
+
+          texture.needsUpdate = true;
+        });
+      } catch (err) {
+        console.error('Error updating 3D screen textures:', err);
+      }
     };
 
     // --- 8. THREE.JS RAYCASTER & CLICK LISTENER FOR 3D VIRTUAL COMPUTER MONITORS ---
