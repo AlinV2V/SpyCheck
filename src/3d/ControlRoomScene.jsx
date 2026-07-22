@@ -60,12 +60,12 @@ export function ControlRoomScene({
 }) {
   const containerRef = useRef(null);
 
-  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES (EXTREMELY CLOSE PC MONITOR VIEW) ---
+  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES (PERFECT BALANCED 3D DESK MONITOR VIEW) ---
   const [showCalibration, setShowCalibration] = useState(false);
-  const [camDist, setCamDist] = useState(1.05); // EXTREMELY CLOSE: Fills 95% of screen height
-  const [camHeight, setCamHeight] = useState(1.45);
-  const [camLookOffset, setCamLookOffset] = useState(0.98);
-  const [camFov, setCamFov] = useState(42);
+  const [camDist, setCamDist] = useState(1.38); // Perfect framing: monitor fills ~70% screen height in center
+  const [camHeight, setCamHeight] = useState(1.85);
+  const [camLookOffset, setCamLookOffset] = useState(0.85);
+  const [camFov, setCamFov] = useState(52);
 
   // Store mutable refs for animation loop & interaction state
   const sceneStateRef = useRef({
@@ -82,10 +82,10 @@ export function ControlRoomScene({
     hoveredOptionIdx: null,
     hoveredLockIn: false,
     hoveredVoteIdx: null,
-    camDist: 1.05,
-    camHeight: 1.45,
-    camLookOffset: 0.98,
-    camFov: 42,
+    camDist: 1.38,
+    camHeight: 1.85,
+    camLookOffset: 0.85,
+    camFov: 52,
   });
 
   // Keep refs synchronized with state & props
@@ -1312,7 +1312,7 @@ export function ControlRoomScene({
             {/* Preset Buttons */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <button
-                onClick={() => { setCamDist(1.05); setCamHeight(1.45); setCamLookOffset(0.98); setCamFov(42); }}
+                onClick={() => { setCamDist(1.38); setCamHeight(1.85); setCamLookOffset(0.85); setCamFov(52); }}
                 style={{
                   background: 'rgba(0, 240, 255, 0.15)',
                   border: '1px solid #00f0ff',
@@ -1324,7 +1324,7 @@ export function ControlRoomScene({
                   cursor: 'pointer'
                 }}
               >
-                🎯 FULL MONITOR (95%)
+                🎯 BALANCED DESK
               </button>
               <button
                 onClick={() => { setCamDist(1.65); setCamHeight(2.40); setCamLookOffset(0.70); setCamFov(52); }}
