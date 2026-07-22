@@ -259,7 +259,7 @@ export function App() {
             INTRUDER CHECK
           </span>
           <span style={{ fontSize: '0.7rem', background: '#3b82f6', color: '#000000', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.30
+            v1.0.32
           </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px', background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', color: '#3b82f6' }}>
