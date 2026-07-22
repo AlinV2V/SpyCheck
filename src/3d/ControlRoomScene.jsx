@@ -853,10 +853,10 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // Seated in player chair at perfect distance so 3D desk monitor matches central menu size (55% width) and room is fully visible
-          const chairDist = 1.38;
-          targetCamPos.set(activeX * chairDist, 2.25, activeZ * chairDist);
-          targetLookAt.set(activeX * 0.75, 1.25, activeZ * 0.75);
+          // Seated in player chair aiming directly at 3D PC monitor screen center
+          const chairDist = 1.18;
+          targetCamPos.set(activeX * chairDist, 1.45, activeZ * chairDist);
+          targetLookAt.set(activeX, 1.38, activeZ);
           break;
         }
         case 'discussion': {
@@ -903,8 +903,8 @@ export function ControlRoomScene({
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Smoothly update Field of View (FOV) for seated PC monitor view (48)
-      const targetFov = phase === 'question' ? 48 : 55;
+      // Smoothly update Field of View (FOV) for seated PC monitor view (52)
+      const targetFov = phase === 'question' ? 52 : 55;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
