@@ -1,120 +1,48 @@
-import {
-  initAsHost,
-  joinAsGuest,
-  announceJoin,
-  onPlayersChanged,
-  onGameStart,
-  launchGame as launchGamePeer,
-  disconnect as peerDisconnect
-} from './firebase';
-
 export class P2PNetwork {
   constructor() {
+    this.channel = null;
     this.roomCode = null;
     this.playerId = null;
-    this.isHost = false;
     this.listeners = new Set();
     this.actionHandlers = new Map();
+    this.isHost = false;
   }
 
-  async connect(roomCode, playerId, isHost = false, playerData = {}) {
+  connect(roomCode, playerId, isHost = false) {
     this.disconnect();
+    this.roomCode = roomCode;
+    this.playerId = playerId;
     this.isHost = isHost;
 
-    if (isHost) {
-      const result = await initAsHost(
-        playerData.name || 'Host',
-        playerData.avatar || '/avatars/cat.jpg',
-        playerData.color || '#3b82f6'
-      );
-      this.roomCode = result.roomCode;
-      this.playerId = result.playerId;
-
-      onPlayersChanged((players) => {
-        this.notifyListeners({
-          type: 'STATE_UPDATE',
-          senderId: this.playerId,
-          payload: { roomPlayers: players },
-          timestamp: Date.now()
-        });
-      });
-
-      onGameStart((config) => {
-        this.notifyListeners({
-          type: 'GAME_START',
-          senderId: 'host',
-          payload: config,
-          timestamp: Date.now()
-        });
-      });
-
-      this.notifyListeners({
-        type: 'STATE_UPDATE',
-        senderId: this.playerId,
-        payload: { roomPlayers: result.players },
-        timestamp: Date.now()
-      });
+    const channelName = `spycheck_room_${roomCode}`;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      this.channel = new BroadcastChannel(channelName);
+      this.channel.onmessage = (event) => this.handleIncomingMessage(event.data);
     }
   }
 
-  async joinAsGuest(roomCode, playerData = {}) {
-    this.disconnect();
-    this.isHost = false;
-
-    const result = await joinAsGuest(
-      roomCode,
-      playerData.name || 'Operator',
-      playerData.avatar || '/avatars/cat.jpg',
-      playerData.color || '#3b82f6'
-    );
-
-    this.roomCode = roomCode;
-    this.playerId = result.playerId;
-
-    announceJoin(
-      playerData.name || 'Operator',
-      playerData.avatar || '/avatars/cat.jpg',
-      playerData.color || '#3b82f6'
-    );
-
-    onPlayersChanged((players) => {
-      this.notifyListeners({
-        type: 'STATE_UPDATE',
-        senderId: this.playerId,
-        payload: { roomPlayers: players },
-        timestamp: Date.now()
-      });
-    });
-
-    onGameStart((config) => {
-      this.notifyListeners({
-        type: 'GAME_START',
-        senderId: 'host',
-        payload: config,
-        timestamp: Date.now()
-      });
-    });
+  handleIncomingMessage(data) {
+    if (!data || typeof data !== 'object') return;
+    const { type, senderId, payload, timestamp } = data;
+    if (senderId === this.playerId) return;
+    this.notifyListeners({ type, senderId, payload, timestamp });
+    if (this.actionHandlers.has(type)) {
+      this.actionHandlers.get(type).forEach(handler => handler(payload, senderId));
+    }
   }
 
   broadcastState(roomState) {
-    this.notifyListeners({
-      type: 'STATE_UPDATE',
-      senderId: this.playerId,
-      payload: roomState,
-      timestamp: Date.now()
-    });
+    this.postMessage({ type: 'STATE_UPDATE', senderId: this.playerId, payload: roomState, timestamp: Date.now() });
   }
 
-  async sendAction(actionType, payload = {}) {
-    if (actionType === 'GAME_START' && this.isHost) {
-      launchGamePeer(payload);
+  sendAction(actionType, payload = {}) {
+    this.postMessage({ type: actionType, senderId: this.playerId, payload, timestamp: Date.now() });
+  }
+
+  postMessage(message) {
+    if (this.channel) {
+      try { this.channel.postMessage(message); } catch {}
     }
-    this.notifyListeners({
-      type: actionType,
-      senderId: this.playerId,
-      payload,
-      timestamp: Date.now()
-    });
   }
 
   subscribe(listener) {
@@ -123,29 +51,19 @@ export class P2PNetwork {
   }
 
   on(actionType, handler) {
-    if (!this.actionHandlers.has(actionType)) {
-      this.actionHandlers.set(actionType, new Set());
-    }
+    if (!this.actionHandlers.has(actionType)) this.actionHandlers.set(actionType, new Set());
     this.actionHandlers.get(actionType).add(handler);
-    return () => {
-      const handlers = this.actionHandlers.get(actionType);
-      if (handlers) handlers.delete(handler);
-    };
+    return () => { const h = this.actionHandlers.get(actionType); if (h) h.delete(handler); };
   }
 
   notifyListeners(data) {
-    this.listeners.forEach(listener => {
-      try { listener(data); } catch (err) {
-        console.error('Error in network event listener:', err);
-      }
-    });
+    this.listeners.forEach(listener => { try { listener(data); } catch {} });
   }
 
   disconnect() {
-    peerDisconnect();
+    if (this.channel) { this.channel.close(); this.channel = null; }
     this.roomCode = null;
     this.playerId = null;
-    this.isHost = false;
     this.listeners.clear();
     this.actionHandlers.clear();
   }
