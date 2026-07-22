@@ -60,12 +60,12 @@ export function ControlRoomScene({
 }) {
   const containerRef = useRef(null);
 
-  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES ---
+  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES (EXTREMELY CLOSE PC MONITOR VIEW) ---
   const [showCalibration, setShowCalibration] = useState(false);
-  const [camDist, setCamDist] = useState(1.32); // Closer 3D desk monitor view
-  const [camHeight, setCamHeight] = useState(1.85);
-  const [camLookOffset, setCamLookOffset] = useState(0.82);
-  const [camFov, setCamFov] = useState(50);
+  const [camDist, setCamDist] = useState(1.05); // EXTREMELY CLOSE: Fills 95% of screen height
+  const [camHeight, setCamHeight] = useState(1.45);
+  const [camLookOffset, setCamLookOffset] = useState(0.98);
+  const [camFov, setCamFov] = useState(42);
 
   // Store mutable refs for animation loop & interaction state
   const sceneStateRef = useRef({
@@ -82,10 +82,10 @@ export function ControlRoomScene({
     hoveredOptionIdx: null,
     hoveredLockIn: false,
     hoveredVoteIdx: null,
-    camDist: 1.32,
-    camHeight: 1.85,
-    camLookOffset: 0.82,
-    camFov: 50,
+    camDist: 1.05,
+    camHeight: 1.45,
+    camLookOffset: 0.98,
+    camFov: 42,
   });
 
   // Keep refs synchronized with state & props
@@ -413,6 +413,21 @@ export function ControlRoomScene({
         const questionObj = state?.currentQuestion || state?.question;
         const { hoveredOptionIdx, hoveredLockIn, hoveredVoteIdx } = sceneStateRef.current;
 
+        // Robust Question Text Extraction
+        let qText = 'What is your usual bedtime on a weekday night?';
+        if (questionObj) {
+          if (typeof questionObj === 'string') qText = questionObj;
+          else if (questionObj.question) qText = String(questionObj.question);
+          else if (questionObj.text) qText = String(questionObj.text);
+          else if (questionObj.prompt) qText = String(questionObj.prompt);
+          else if (questionObj.title) qText = String(questionObj.title);
+        }
+
+        let rawOptions = [];
+        if (questionObj && Array.isArray(questionObj.options)) rawOptions = questionObj.options;
+        else if (state && Array.isArray(state.options)) rawOptions = state.options;
+        if (rawOptions.length === 0) rawOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+
         screenCanvasList.forEach((canvas, idx) => {
           const ctx = canvas.getContext('2d');
           const texture = screenTextureList[idx];
@@ -452,10 +467,7 @@ export function ControlRoomScene({
 
           // --- GAME PHASE SWITCH DRAWING ---
           if (phase === 'discussion') {
-            // ==========================================
-            // PHASE 2: DISCUSSION / DEBRIEFING ON 3D SCREEN
-            // ==========================================
-            // Sub-header Banner
+            // PHASE 2: DISCUSSION ON 3D SCREEN
             ctx.fillStyle = 'rgba(0, 240, 255, 0.18)';
             ctx.fillRect(40, 100, 1200, 42);
             ctx.strokeStyle = '#00f0ff';
@@ -466,7 +478,6 @@ export function ControlRoomScene({
             ctx.fillStyle = '#00f0ff';
             ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 128);
 
-            // Question Prompt Banner
             ctx.fillStyle = 'rgba(15, 25, 45, 0.95)';
             ctx.fillRect(40, 160, 1200, 70);
             ctx.strokeStyle = '#00f0ff';
@@ -479,13 +490,9 @@ export function ControlRoomScene({
 
             ctx.font = 'bold 18px Rajdhani, sans-serif';
             ctx.fillStyle = '#ffffff';
-            const qTextStr = String(questionObj?.question || questionObj?.text || questionObj || 'OPERATIVE QUESTION');
-            ctx.fillText(qTextStr, 56, 212);
+            ctx.fillText(qText, 56, 212);
 
-            // Operatives Submissions Log Table (y: 250..580)
             const playerAnswers = state?.playerAnswers || {};
-            const rawOptions = questionObj?.options || state?.options || ['Option A', 'Option B', 'Option C', 'Option D'];
-
             players.forEach((p, pIdx) => {
               const col = pIdx % 2;
               const row = Math.floor(pIdx / 2);
@@ -513,7 +520,6 @@ export function ControlRoomScene({
               ctx.fillText(`ANSWER: ${ansStr}`, bx + 16, by + 72);
             });
 
-            // Proceed to Vote Action Button (y: 635..750)
             const btnX = 440;
             const btnY = 635;
             const btnW = 400;
@@ -537,10 +543,7 @@ export function ControlRoomScene({
             ctx.textAlign = 'left';
 
           } else if (phase === 'voting') {
-            // ==========================================
-            // PHASE 3: VOTING PHASE ON 3D SCREEN
-            // ==========================================
-            // Sub-header Banner
+            // PHASE 3: VOTING ON 3D SCREEN
             ctx.fillStyle = 'rgba(255, 170, 0, 0.2)';
             ctx.fillRect(40, 100, 1200, 42);
             ctx.strokeStyle = '#ffaa00';
@@ -551,7 +554,6 @@ export function ControlRoomScene({
             ctx.fillStyle = '#ffaa00';
             ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 128);
 
-            // 6 Player Suspect Cards Grid (y: 160..600)
             const playerVotes = state?.playerVotes || {};
             const myVote = playerVotes[idx];
 
@@ -602,7 +604,6 @@ export function ControlRoomScene({
               }
             });
 
-            // Confirm Vote Button (y: 635..750)
             const btnX = 440;
             const btnY = 635;
             const btnW = 400;
@@ -627,13 +628,10 @@ export function ControlRoomScene({
             ctx.textAlign = 'left';
 
           } else if (phase === 'victory') {
-            // ==========================================
-            // PHASE 4: VICTORY / DEBRIEFING ON 3D SCREEN
-            // ==========================================
+            // PHASE 4: VICTORY ON 3D SCREEN
             const winner = state?.winner;
             const isAgentsWon = winner === 'agents';
 
-            // Sub-header Banner
             ctx.fillStyle = isAgentsWon ? 'rgba(0, 255, 170, 0.25)' : 'rgba(255, 0, 85, 0.25)';
             ctx.fillRect(40, 100, 1200, 140);
             ctx.strokeStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
@@ -650,7 +648,6 @@ export function ControlRoomScene({
             const spyNameStr = spyPlayer?.name || `Agent 0${(state?.spyIndex || 0) + 1}`;
             ctx.fillText(`THE INTRUDER WAS: ${spyNameStr.toUpperCase()}`, 64, 210);
 
-            // Rematch / Lobby Action Buttons (y: 450..600)
             const btn1X = 240;
             const btn1Y = 450;
             const btn1W = 360;
@@ -684,10 +681,7 @@ export function ControlRoomScene({
             ctx.textAlign = 'left';
 
           } else {
-            // ==========================================
-            // DEFAULT / QUESTION PHASE ON 3D SCREEN
-            // ==========================================
-            // Role Badge
+            // PHASE 1: QUESTION PHASE ON 3D SCREEN
             const badgeY = 100;
             if (!isSpy) {
               ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
@@ -711,7 +705,6 @@ export function ControlRoomScene({
               ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 56, badgeY + 28);
             }
 
-            // Question Prompt / Spy Warning Box
             const qBoxY = 160;
             const qBoxH = 135;
             ctx.fillStyle = isSpy ? 'rgba(35, 12, 24, 0.95)' : 'rgba(15, 25, 45, 0.95)';
@@ -1309,7 +1302,7 @@ export function ControlRoomScene({
             {/* Preset Buttons */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <button
-                onClick={() => { setCamDist(1.32); setCamHeight(1.85); setCamLookOffset(0.82); setCamFov(50); }}
+                onClick={() => { setCamDist(1.05); setCamHeight(1.45); setCamLookOffset(0.98); setCamFov(42); }}
                 style={{
                   background: 'rgba(0, 240, 255, 0.15)',
                   border: '1px solid #00f0ff',
@@ -1321,10 +1314,10 @@ export function ControlRoomScene({
                   cursor: 'pointer'
                 }}
               >
-                🎯 CLOSE-UP MONITOR
+                🎯 FULL MONITOR (95%)
               </button>
               <button
-                onClick={() => { setCamDist(1.80); setCamHeight(2.80); setCamLookOffset(0.50); setCamFov(55); }}
+                onClick={() => { setCamDist(1.65); setCamHeight(2.40); setCamLookOffset(0.70); setCamFov(52); }}
                 style={{
                   background: 'rgba(255, 170, 0, 0.15)',
                   border: '1px solid #ffaa00',
