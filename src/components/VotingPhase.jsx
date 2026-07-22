@@ -6,6 +6,8 @@ import { RenderAvatar } from './Lobby';
 
 export default function VotingPhase({ gameState, onCastVote, onProceedToResolution }) {
   const { players, spyIndex, currentRound, mode } = gameState;
+  const questionObj = gameState?.currentQuestion || gameState?.question;
+  const questionTitle = questionObj?.question || questionObj?.text || (typeof questionObj === 'string' ? questionObj : 'Secret Security Check Prompt');
 
   // In Pass & Play, we cycle through human players for secret voting. In solo_ai, player 0 votes, bots auto-vote.
   const [currentVoterIndex, setCurrentVoterIndex] = useState(0);
@@ -205,6 +207,27 @@ export default function VotingPhase({ gameState, onCastVote, onProceedToResoluti
         {/* Laser Targeting Grid */}
         {((votingState === 'voting' && isVoterReady) || votingState !== 'voting') && (
           <div style={{ marginBottom: '28px' }}>
+            
+            {/* Revealed Question Banner in Voting Phase */}
+            <div style={{
+              background: 'rgba(0, 240, 255, 0.06)',
+              border: '1px solid rgba(0, 240, 255, 0.3)',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: '#00f0ff', letterSpacing: '1.5px', marginBottom: '4px' }}>
+                🔓 REVEALED SECURITY CHECK PROMPT (SPY CAN SEE QUESTION NOW)
+              </div>
+              <h3 style={{ fontFamily: 'Rajdhani', fontSize: '1.35rem', color: '#ffffff', margin: '0 0 4px 0', fontWeight: 700 }}>
+                "{questionTitle}"
+              </h3>
+              <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.7)', fontFamily: 'Rajdhani' }}>
+                Cross-examine everyone's choices against the revealed prompt to vote out the Spy!
+              </div>
+            </div>
+
             <div className={`player-stations-grid stations-${players.length}`}>
               {players.map((player, idx) => {
                 const isSelf = idx === currentVoterIndex && votingState === 'voting';

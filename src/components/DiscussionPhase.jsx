@@ -26,7 +26,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
     return Object.values(rawPlayers);
   }, [rawPlayers]);
 
-  const questionTitle = gameState?.question?.text || gameState?.question || 'Secret Intel Mission Target';
+  const questionObj = gameState?.currentQuestion || gameState?.question;
+  const questionTitle = questionObj?.question || questionObj?.text || (typeof questionObj === 'string' ? questionObj : 'Secret Security Check Prompt');
   const initialDuration = gameState?.discussionDuration || gameState?.timer || 45;
 
   // Extract answer for each player
@@ -426,12 +427,15 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
           {/* Mission Objective Header */}
           <div style={styles.intelBanner}>
             <div style={styles.intelHeader}>
-              <span style={styles.intelTag}>ACTIVE INTEL BRIEFING</span>
+              <span style={styles.intelTag}>🔓 REVEALED INTEL QUESTION (OPEN TO ALL OPERATORS & SPY)</span>
               <span style={styles.intelStatusBadge}>
                 {discrepancies.size > 0 ? '⚠️ DISCREPANCY DETECTED' : '✅ CONSENSUS REACHED'}
               </span>
             </div>
-            <h2 style={styles.intelQuestion}>{questionTitle}</h2>
+            <h2 style={styles.intelQuestion}>"{questionTitle}"</h2>
+            <div style={{ fontSize: '0.85rem', color: '#00ffaa', margin: '4px 0 10px 0', fontFamily: 'Rajdhani', fontWeight: 600 }}>
+              💡 <strong>Spy Defense Rule:</strong> The prompt is now revealed! Spies can see what the question was and try to bluff/explain their answer choice to blend in!
+            </div>
             <div style={styles.breakdownBar}>
               <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Choice Breakdown:</span>
               {Object.entries(choiceCounts).map(([choice, count]) => {
