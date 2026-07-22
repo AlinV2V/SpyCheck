@@ -1,0 +1,637 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+/* ==========================================================================
+   INTRUDER CHECK - CYBERPUNK / SCI-FI DESIGN SYSTEM
+   ========================================================================== */
+
+:root {
+  /* --- Color Palette --- */
+  --bg-obsidian: #0a0d14;
+  --bg-obsidian-alt: #06080d;
+  --bg-obsidian-light: #121824;
+  --bg-obsidian-glass: rgba(10, 13, 20, 0.85);
+
+  --color-cyan: #00f0ff;
+  --color-cyan-glow: rgba(0, 240, 255, 0.4);
+  --color-cyan-dim: rgba(0, 240, 255, 0.15);
+
+  --color-crimson: #ff0055;
+  --color-crimson-glow: rgba(255, 0, 85, 0.4);
+  --color-crimson-dim: rgba(255, 0, 85, 0.15);
+
+  --color-amber: #ffaa00;
+  --color-amber-glow: rgba(255, 170, 0, 0.4);
+  --color-amber-dim: rgba(255, 170, 0, 0.15);
+
+  --color-matrix: #00ffaa;
+  --color-matrix-glow: rgba(0, 255, 170, 0.4);
+  --color-matrix-dim: rgba(0, 255, 170, 0.15);
+
+  --color-text-main: #e2f1f8;
+  --color-text-muted: #8096a7;
+  --color-text-dim: #485b6c;
+
+  /* --- Glassmorphism & Borders --- */
+  --glass-bg-card: rgba(18, 24, 36, 0.65);
+  --glass-border: rgba(0, 240, 255, 0.15);
+  --glass-border-hover: rgba(0, 240, 255, 0.45);
+  --glass-border-crimson: rgba(255, 0, 85, 0.35);
+  --glass-blur: blur(12px);
+
+  /* --- Typography --- */
+  --font-title: 'Orbitron', sans-serif;
+  --font-ui: 'Rajdhani', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* --- Shadows & Glows --- */
+  --shadow-cyan-glow: 0 0 20px rgba(0, 240, 255, 0.25), 0 0 40px rgba(0, 240, 255, 0.1);
+  --shadow-crimson-glow: 0 0 20px rgba(255, 0, 85, 0.3), 0 0 40px rgba(255, 0, 85, 0.15);
+  --shadow-card-depth: 0 10px 30px rgba(0, 0, 0, 0.6);
+
+  /* --- Clip Paths / Cyber Cut Corners --- */
+  --clip-corner-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  --clip-corner-md: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  --clip-corner-lg: polygon(22px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%, 0 22px);
+  --clip-tab: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+/* ==========================================================================
+   RESET & BASE STYLES
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-obsidian);
+  color: var(--color-text-main);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background grid & scanline ambiance */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: 
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.07) 0%, rgba(10, 13, 20, 0.95) 75%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+  pointer-events: none;
+  z-index: -2;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.3)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+}
+
+/* ==========================================================================
+   SCROLLBAR STYLES
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-obsidian-alt);
+  border-left: 1px solid var(--glass-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.25);
+  border-radius: 2px;
+  box-shadow: inset 0 0 6px var(--color-cyan-glow);
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyan);
+  box-shadow: 0 0 10px var(--color-cyan-glow);
+}
+
+/* ==========================================================================
+   KEYFRAME ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--color-cyan-dim), 0 0 20px rgba(0, 240, 255, 0.1);
+    border-color: rgba(0, 240, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--color-cyan-glow), 0 0 45px rgba(0, 240, 255, 0.35);
+    border-color: var(--color-cyan);
+  }
+}
+
+@keyframes alert-flash {
+  0%, 100% {
+    background-color: rgba(255, 0, 85, 0.08);
+    border-color: rgba(255, 0, 85, 0.3);
+    box-shadow: 0 0 15px rgba(255, 0, 85, 0.2);
+  }
+  50% {
+    background-color: rgba(255, 0, 85, 0.25);
+    border-color: var(--color-crimson);
+    box-shadow: 0 0 35px var(--color-crimson-glow);
+  }
+}
+
+@keyframes scanner-beam {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes float-3d {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateX(2deg) rotateY(-2deg);
+  }
+}
+
+@keyframes laser-reticle {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes text-glitch {
+  0% {
+    text-shadow: 2px 0 0 var(--color-crimson), -2px 0 0 var(--color-cyan);
+    transform: translate(0);
+  }
+  20% {
+    text-shadow: -2px 0 0 var(--color-crimson), 2px 0 0 var(--color-cyan);
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    text-shadow: 2px 0 0 var(--color-amber), -2px 0 0 var(--color-matrix);
+    transform: translate(1px, -1px);
+  }
+  60% {
+    text-shadow: -1px 0 0 var(--color-crimson), 1px 0 0 var(--color-cyan);
+    transform: translate(-1px, 2px);
+  }
+  80% {
+    text-shadow: 2px 0 0 var(--color-cyan), -2px 0 0 var(--color-crimson);
+    transform: translate(2px, 0px);
+  }
+  100% {
+    text-shadow: none;
+    transform: translate(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   CUSTOM STYLED COMPONENTS
+   ========================================================================== */
+
+/* --- .glass-panel --- */
+.glass-panel {
+  background: var(--bg-obsidian-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card-depth);
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- .cyber-card --- */
+.cyber-card {
+  background: var(--glass-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  clip-path: var(--clip-corner-md);
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-card-depth);
+}
+
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-cyan), transparent);
+  opacity: 0.7;
+}
+
+.cyber-card:hover {
+  border-color: var(--glass-border-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-cyan-glow), var(--shadow-card-depth);
+}
+
+.cyber-card.alert-mode {
+  border-color: var(--glass-border-crimson);
+  animation: alert-flash 2s infinite ease-in-out;
+}
+
+.cyber-card.alert-mode::before {
+  background: linear-gradient(90deg, var(--color-crimson), transparent);
+}
+
+/* --- .cyber-button --- */
+.cyber-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bg-obsidian);
+  background: var(--color-cyan);
+  border: none;
+  clip-path: var(--clip-corner-sm);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px var(--color-cyan-glow);
+}
+
+.cyber-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 45%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 55%
+  );
+  transform: rotate(30deg) translateY(-100%);
+  transition: transform 0.6s ease;
+}
+
+.cyber-button:hover {
+  background: #ffffff;
+  color: var(--bg-obsidian);
+  box-shadow: 0 0 25px var(--color-cyan), 0 0 45px rgba(0, 240, 255, 0.6);
+  transform: scale(1.02);
+}
+
+.cyber-button:hover::after {
+  transform: rotate(30deg) translateY(100%);
+}
+
+.cyber-button:active {
+  transform: scale(0.98);
+}
+
+.cyber-button.variant-crimson {
+  background: var(--color-crimson);
+  color: #ffffff;
+  box-shadow: 0 0 15px var(--color-crimson-glow);
+}
+
+.cyber-button.variant-crimson:hover {
+  background: #ff3377;
+  box-shadow: 0 0 25px var(--color-crimson), 0 0 45px rgba(255, 0, 85, 0.6);
+}
+
+.cyber-button.variant-outline {
+  background: transparent;
+  color: var(--color-cyan);
+  border: 1px solid var(--color-cyan);
+  box-shadow: inset 0 0 10px var(--color-cyan-dim);
+}
+
+.cyber-button.variant-outline:hover {
+  background: var(--color-cyan-dim);
+  box-shadow: 0 0 20px var(--color-cyan-glow), inset 0 0 15px var(--color-cyan-glow);
+}
+
+/* --- .cyber-input --- */
+.cyber-input {
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--color-text-main);
+  background: rgba(6, 8, 13, 0.8);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.cyber-input::placeholder {
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cyber-input:focus {
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 12px var(--color-cyan-glow), inset 0 0 8px rgba(0, 240, 255, 0.1);
+  background: rgba(10, 13, 20, 0.95);
+}
+
+/* --- .hud-overlay --- */
+.hud-overlay {
+  position: relative;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--glass-border);
+  background: rgba(10, 13, 20, 0.4);
+}
+
+/* Tech corner markers for HUD overlay */
+.hud-overlay::before,
+.hud-overlay::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-cyan);
+  pointer-events: none;
+}
+
+.hud-overlay::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.hud-overlay::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+/* --- .laser-pointer --- */
+.laser-pointer {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.laser-pointer::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed var(--color-crimson);
+  border-radius: 50%;
+  animation: laser-reticle 6s linear infinite;
+}
+
+.laser-pointer::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-crimson);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-crimson), 0 0 20px var(--color-crimson);
+  animation: pulse-glow 1.5s infinite alternate;
+}
+
+/* --- Badges --- */
+.badge-spy, .badge-agent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 3px;
+}
+
+.badge-spy {
+  background: rgba(255, 0, 85, 0.15);
+  color: var(--color-crimson);
+  border: 1px solid var(--color-crimson);
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.25);
+}
+
+.badge-agent {
+  background: rgba(0, 255, 170, 0.15);
+  color: var(--color-matrix);
+  border: 1px solid var(--color-matrix);
+  box-shadow: 0 0 10px rgba(0, 255, 170, 0.25);
+}
+
+/* --- .progress-bar-cyan --- */
+.progress-bar-cyan {
+  width: 100%;
+  height: 10px;
+  background: var(--bg-obsidian-alt);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-cyan .fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-cyan-dim), var(--color-cyan));
+  box-shadow: 0 0 12px var(--color-cyan);
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.progress-bar-cyan .fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: scanner-beam 2s linear infinite;
+}
+
+/* --- .stat-pill --- */
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: rgba(18, 24, 36, 0.8);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.stat-pill .value {
+  color: var(--color-cyan);
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+/* --- .glitch-text --- */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-title);
+  color: var(--color-text-main);
+  animation: text-glitch 4s infinite alternate ease-in-out;
+}
+
+/* ==========================================================================
+   LAYOUT & PLAYER STATIONS UTILITIES
+   ========================================================================== */
+
+.hud-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Responsive Grid for 3-6 Player Stations */
+.player-stations-grid {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+/* Dynamic Grid Layouts depending on player counts */
+.player-stations-grid.stations-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.player-stations-grid.stations-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.player-stations-grid.stations-5,
+.player-stations-grid.stations-6 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Default responsive fallback when count class isn't explicitly set */
+.player-stations-grid:not([class*="stations-"]) {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.slide-up-anim {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Media Queries for Mobile & Tablet Responsiveness */
+@media (max-width: 1024px) {
+  .player-stations-grid.stations-5,
+  .player-stations-grid.stations-6 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .player-stations-grid,
+  .player-stations-grid.stations-3,
+  .player-stations-grid.stations-4,
+  .player-stations-grid.stations-5,
+  .player-stations-grid.stations-6 {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-container {
+    padding: 1rem;
+  }
+  
+  .cyber-button {
+    width: 100%;
+  }
+}

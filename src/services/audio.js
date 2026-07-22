@@ -1,0 +1,457 @@
+/**
+ * Procedural Web Audio API Sound Synthesizer for Intruder Check / SpyCheck
+ * Cybernetic & Sci-Fi aesthetic procedural sound effects without external audio files.
+ */
+
+let audioCtx = null;
+let isMutedState = false;
+
+/**
+ * Initialize or resume the AudioContext.
+ * Call this inside a user gesture handler (e.g., click, touch) to comply with browser audio policies.
+ */
+export const initAudio = () => {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+};
+
+/**
+ * Toggle or set the mute state.
+ * @param {boolean} muted 
+ */
+export const setMuted = (muted) => {
+  isMutedState = Boolean(muted);
+};
+
+/**
+ * Check if audio is currently muted.
+ * @returns {boolean}
+ */
+export const isMuted = () => isMutedState;
+
+/**
+ * Helper to acquire a valid, running AudioContext if unmuted.
+ */
+const getContext = () => {
+  if (isMutedState) return null;
+  if (!audioCtx) {
+    initAudio();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  if (!audioCtx || audioCtx.state !== 'running') return null;
+  return audioCtx;
+};
+
+/**
+ * Create a noise buffer (white noise) for percussion & impacts.
+ */
+const createNoiseBuffer = (ctx, duration = 0.2) => {
+  const bufferSize = ctx.sampleRate * duration;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  return buffer;
+};
+
+/**
+ * Play a crisp cybernetic UI click.
+ */
+export const playClick = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // Tone generator
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1400, now);
+  osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + 0.03);
+
+  // Micro high-hat noise transient
+  const noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, 0.015);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.setValueAtTime(3000, now);
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.1, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+  noise.connect(filter);
+  filter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+
+  noise.start(now);
+  noise.stop(now + 0.015);
+};
+
+/**
+ * Play a laser lock-in sound when selecting an option or answer.
+ */
+export const playLaserLock = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // Laser chirper
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(350, now);
+  osc.frequency.exponentialRampToValueAtTime(2200, now + 0.12);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1500, now);
+  filter.frequency.linearRampToValueAtTime(3500, now + 0.12);
+  filter.Q.setValueAtTime(5, now);
+
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.08);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + 0.14);
+
+  // Metallic Lock Ring
+  const ring = ctx.createOscillator();
+  const ringGain = ctx.createGain();
+  ring.type = 'sine';
+  ring.frequency.setValueAtTime(1760, now + 0.05); // A6
+  ringGain.gain.setValueAtTime(0, now);
+  ringGain.gain.setValueAtTime(0.15, now + 0.05);
+  ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+  ring.connect(ringGain);
+  ringGain.connect(ctx.destination);
+
+  ring.start(now + 0.05);
+  ring.stop(now + 0.2);
+};
+
+/**
+ * Play a dramatic intruder alert alarm siren.
+ */
+export const playAlertSiren = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // Dual tone siren with sweep
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+
+  // Pitch modulation over 1 second
+  osc1.frequency.setValueAtTime(440, now);
+  osc1.frequency.linearRampToValueAtTime(880, now + 0.25);
+  osc1.frequency.linearRampToValueAtTime(440, now + 0.5);
+  osc1.frequency.linearRampToValueAtTime(880, now + 0.75);
+  osc1.frequency.linearRampToValueAtTime(440, now + 1.0);
+
+  osc2.frequency.setValueAtTime(444, now);
+  osc2.frequency.linearRampToValueAtTime(888, now + 0.25);
+  osc2.frequency.linearRampToValueAtTime(444, now + 0.5);
+  osc2.frequency.linearRampToValueAtTime(888, now + 0.75);
+  osc2.frequency.linearRampToValueAtTime(444, now + 1.0);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1200, now);
+  filter.Q.setValueAtTime(3, now);
+
+  gain.gain.setValueAtTime(0.01, now);
+  gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+  gain.gain.setValueAtTime(0.2, now + 0.9);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 1.1);
+  osc2.stop(now + 1.1);
+};
+
+/**
+ * Play high-tech countdown tick.
+ * @param {boolean} isUrgent - whether the timer is in urgent mode (e.g. final 5 seconds)
+ */
+export const playTimerTick = (isUrgent = false) => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  if (isUrgent) {
+    // Urgent tick: double pitch synth alert
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1600, now);
+    osc.frequency.exponentialRampToValueAtTime(2400, now + 0.04);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.06);
+  } else {
+    // Standard cyber tick
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.03);
+
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.035);
+  }
+};
+
+/**
+ * Play a futuristic vote confirmation pulse.
+ */
+export const playVoteCast = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  // Sub-bass heavy impact pulse
+  const sub = ctx.createOscillator();
+  const subGain = ctx.createGain();
+
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(150, now);
+  sub.frequency.exponentialRampToValueAtTime(40, now + 0.25);
+
+  subGain.gain.setValueAtTime(0.4, now);
+  subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+  sub.connect(subGain);
+  subGain.connect(ctx.destination);
+
+  sub.start(now);
+  sub.stop(now + 0.25);
+
+  // Cyber lock arpeggio pulse
+  const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+  notes.forEach((freq, idx) => {
+    const noteOsc = ctx.createOscillator();
+    const noteGain = ctx.createGain();
+
+    noteOsc.type = 'triangle';
+    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+    noteGain.gain.setValueAtTime(0, now);
+    noteGain.gain.setValueAtTime(0.15, now + idx * 0.04);
+    noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.08);
+
+    noteOsc.connect(noteGain);
+    noteGain.connect(ctx.destination);
+
+    noteOsc.start(now + idx * 0.04);
+    noteOsc.stop(now + idx * 0.04 + 0.08);
+  });
+};
+
+/**
+ * Play dramatic reveal sting.
+ * @param {boolean} isSpyCaught - true if intruder/spy was caught, false if innocent eliminated / spy escaped.
+ */
+export const playRevealSting = (isSpyCaught = true) => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  if (isSpyCaught) {
+    // Triumphant intruder caught sting: Power chord + rising synth brass
+    const chordFreqs = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+    chordFreqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(500, now);
+      filter.frequency.exponentialRampToValueAtTime(4000, now + 0.3);
+
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 1.2);
+    });
+  } else {
+    // Intruder escaped / innocent sting: Dark low dissonance drop
+    const darkFreqs = [220.00, 233.08, 110.00]; // A3, Bb3, A2 (dissonant semitone + sub)
+    darkFreqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.6, now + 0.9);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, now);
+      filter.frequency.exponentialRampToValueAtTime(200, now + 0.9);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 1.0);
+    });
+  }
+};
+
+/**
+ * Play Victory fanfare.
+ */
+export const playVictory = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  const notes = [
+    { freq: 523.25, time: 0.00, dur: 0.12 }, // C5
+    { freq: 659.25, time: 0.12, dur: 0.12 }, // E5
+    { freq: 783.99, time: 0.24, dur: 0.12 }, // G5
+    { freq: 1046.50, time: 0.36, dur: 0.50 }  // C6
+  ];
+
+  notes.forEach(({ freq, time, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + time);
+
+    gain.gain.setValueAtTime(0, now + time);
+    gain.gain.linearRampToValueAtTime(0.2, now + time + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now + time);
+    osc.stop(now + time + dur);
+  });
+};
+
+/**
+ * Play Defeat fanfare.
+ */
+export const playDefeat = () => {
+  const ctx = getContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  const notes = [
+    { freq: 415.30, time: 0.00, dur: 0.20 }, // Ab4
+    { freq: 349.23, time: 0.20, dur: 0.20 }, // F4
+    { freq: 277.18, time: 0.40, dur: 0.20 }, // Db4
+    { freq: 261.63, time: 0.60, dur: 0.60 }  // C4
+  ];
+
+  notes.forEach(({ freq, time, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, now + time);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1000, now + time);
+    filter.frequency.exponentialRampToValueAtTime(200, now + time + dur);
+
+    gain.gain.setValueAtTime(0, now + time);
+    gain.gain.linearRampToValueAtTime(0.18, now + time + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now + time);
+    osc.stop(now + time + dur);
+  });
+};
+
+export default {
+  initAudio,
+  setMuted,
+  isMuted,
+  playClick,
+  playLaserLock,
+  playAlertSiren,
+  playTimerTick,
+  playVoteCast,
+  playRevealSting,
+  playVictory,
+  playDefeat
+};
