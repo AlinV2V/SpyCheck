@@ -44,8 +44,8 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center built with Three.js.
- * Features Tactical Stealth Emerald (#00ffaa) & Cyber Gold (#ffb700) design system.
- * Zero hot pink/magenta scanlines! Ultra-high contrast, thick 28-38px Arial typography!
+ * Renders 100% In-World High-Tech Virtual Computer Monitor Screen UI across all phases.
+ * Features Solid Tactical Gold (#ffb700) & Emerald (#00ffaa) Arcade Hardware Interface!
  */
 export function ControlRoomScene({
   gameState,
@@ -61,7 +61,7 @@ export function ControlRoomScene({
 }) {
   const containerRef = useRef(null);
 
-  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES (BALANCED 3D DESK MONITOR VIEW) ---
+  // --- LIVE 3D CAMERA CALIBRATION PIPELINE DEFAULT VALUES ---
   const [showCalibration, setShowCalibration] = useState(false);
   const [camDist, setCamDist] = useState(1.38); // Perfect framing: monitor fills ~70% screen height in center
   const [camHeight, setCamHeight] = useState(1.85);
@@ -304,10 +304,10 @@ export function ControlRoomScene({
       metalness: 0.8,
     });
 
-    // Sleek Dark Metallic Monitor Backing Frame (NO WIREFRAME CROSS X OVERLAY)
+    // Sleek Dark Metallic Monitor Backing Frame
     const bezelBackingGeo = new THREE.BoxGeometry(2.46, 1.56, 0.05);
     const bezelBackingMat = new THREE.MeshStandardMaterial({
-      color: 0x030712,
+      color: 0x0b1329,
       roughness: 0.2,
       metalness: 0.9,
     });
@@ -347,7 +347,7 @@ export function ControlRoomScene({
       standMesh.position.set(0, 0.65, 0.08);
       pDeskGroup.add(standMesh);
 
-      // Sleek Metallic Bezel Backing Plane (NO WIREFRAME CROSS X OVERLAY)
+      // Sleek Metallic Bezel Backing Plane
       const bezelBackingMesh = new THREE.Mesh(bezelBackingGeo, bezelBackingMat);
       bezelBackingMesh.position.set(0, 1.68, 0.03);
       bezelBackingMesh.rotation.x = -Math.PI / 16;
@@ -355,7 +355,7 @@ export function ControlRoomScene({
 
       // Outer Glowing Emerald Bezel Border Trim
       const bezelEdgeGeo = new THREE.BoxGeometry(2.48, 1.58, 0.02);
-      const bezelEdgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffaa, transparent: true, opacity: 0.8 });
+      const bezelEdgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffaa, transparent: true, opacity: 0.85 });
       const bezelEdgeMesh = new THREE.Mesh(bezelEdgeGeo, bezelEdgeMat);
       bezelEdgeMesh.position.set(0, 1.68, 0.04);
       bezelEdgeMesh.rotation.x = -Math.PI / 16;
@@ -431,7 +431,7 @@ export function ControlRoomScene({
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // --- 7. HELPER TO DRAW ALL GAME PHASES WITH TACTICAL STEALTH EMERALD & GOLD DESIGN SYSTEM ---
+    // --- 7. HELPER TO DRAW ALL GAME PHASES WITH SOLID GOLD & EMERALD HIGH-TECH ARCADE CANVAS INTERFACE ---
     const update3DScreenTextures = (state, phase, activeIdx) => {
       try {
         const players = state?.players || [];
@@ -440,7 +440,7 @@ export function ControlRoomScene({
 
         // Robust Question Text Extraction
         const rawQ = questionObj?.question || questionObj?.text || questionObj?.prompt || questionObj?.title || questionObj;
-        let qText = 'Who in this group is the biggest hypochondriac?';
+        let qText = 'Who in this group is most likely to fall for an obvious scam?';
         if (rawQ) {
           if (typeof rawQ === 'string') qText = rawQ;
           else if (rawQ.question) qText = String(rawQ.question);
@@ -457,10 +457,10 @@ export function ControlRoomScene({
         }
         if (!rawOptions || rawOptions.length === 0) {
           rawOptions = [
-            'A) Option 1',
-            'B) Option 2',
-            'C) Option 3',
-            'D) Option 4',
+            'A) Agent Alpha',
+            'B) Agent 02',
+            'C) Agent 03',
+            'D) Agent 04',
           ];
         }
 
@@ -471,24 +471,23 @@ export function ControlRoomScene({
           const isSpy = idx === state?.spyIndex;
           const isActiveDesk = idx === activeIdx;
 
-          // Clear Screen & Dark Solid Metallic Obsidian Background (#040814)
-          ctx.fillStyle = '#040814';
+          // Clear Screen & Pitch Charcoal Deep Canvas Background (#060a12)
+          ctx.fillStyle = '#060a12';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Outer Border Frame (Tactical Emerald / Cyber Gold)
-          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : isActiveDesk ? '#00ffaa' : '#0f3856';
+          // Outer Screen Border Frame (Tactical Emerald / Cyber Gold)
+          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : isActiveDesk ? '#00ffaa' : '#0d3856';
           ctx.lineWidth = 14;
           ctx.strokeRect(7, 7, canvas.width - 14, canvas.height - 14);
 
-          // Inner Accent Border
+          // Inner Accent Border Frame
           ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           ctx.lineWidth = 3;
           ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
 
-          // If this is another player's workstation in the 3D room (Station 02, 03, etc.)
+          // Dedicated Display for Other Players' Workstations in 3D Room
           if (!isActiveDesk) {
-            // RENDER DEDICATED STATION STATUS FOR OTHER OPERATIVES IN ROOM
-            ctx.fillStyle = '#09182a';
+            ctx.fillStyle = '#0a1a2e';
             ctx.fillRect(24, 24, canvas.width - 48, 70);
             ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
@@ -499,8 +498,7 @@ export function ControlRoomScene({
             const otherName = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
             ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${otherName}`, 48, 68);
 
-            // Center Status Card
-            ctx.fillStyle = '#0d223a';
+            ctx.fillStyle = '#0e233d';
             ctx.fillRect(100, 160, 1080, 520);
             ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 4;
@@ -517,7 +515,7 @@ export function ControlRoomScene({
             ctx.fillStyle = '#ffffff';
             ctx.fillText(`OPERATIVE CONSOLE 0${idx + 1} — ACTIVE IN SESSION`, 640, 380);
 
-            ctx.fillStyle = '#00ffaa';
+            ctx.fillStyle = '#ffb700';
             ctx.fillRect(240, 440, 800, 90);
             ctx.font = 'bold 32px Arial, sans-serif';
             ctx.fillStyle = '#020617';
@@ -529,58 +527,72 @@ export function ControlRoomScene({
           }
 
           // --- TOP MONITOR HEADER BAR FOR ACTIVE PLAYER ---
-          ctx.fillStyle = isSpy && phase === 'question' ? '#3d2b00' : '#09182a';
-          ctx.fillRect(24, 24, canvas.width - 48, 70);
-          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
-          ctx.lineWidth = 4;
-          ctx.strokeRect(24, 24, canvas.width - 48, 70);
-
-          ctx.font = 'bold 28px Arial, sans-serif';
-          ctx.fillStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
-          ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 44, 68);
 
-          // System Clock / Timer Top Right
-          ctx.font = 'bold 24px Arial, sans-serif';
-          const sysTimeStr = new Date().toTimeString().split(' ')[0];
-          ctx.fillStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
-          ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 260, 68);
+          if (isSpy && phase === 'question') {
+            // Intruder Top Header
+            ctx.fillStyle = '#ffb700';
+            ctx.fillRect(24, 20, canvas.width - 48, 64);
+            ctx.font = 'bold 28px Arial, sans-serif';
+            ctx.fillStyle = '#020617';
+            ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 44, 62);
 
-          // --- GAME PHASE SWITCH DRAWING FOR ACTIVE PLAYER ---
+            ctx.font = 'bold 24px Arial, sans-serif';
+            const sysTimeStr = new Date().toTimeString().split(' ')[0];
+            ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 260, 62);
+          } else {
+            // Agent Top Header
+            ctx.fillStyle = '#0c1b30';
+            ctx.fillRect(24, 20, canvas.width - 48, 64);
+            ctx.strokeStyle = '#00ffaa';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(24, 20, canvas.width - 48, 64);
+
+            ctx.font = 'bold 28px Arial, sans-serif';
+            ctx.fillStyle = '#00ffaa';
+            ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 44, 62);
+
+            ctx.font = 'bold 24px Arial, sans-serif';
+            const sysTimeStr = new Date().toTimeString().split(' ')[0];
+            ctx.fillStyle = '#00ffaa';
+            ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 260, 62);
+          }
+
+          // --- GAME PHASE CANVAS DRAWING ---
           if (phase === 'discussion') {
             // PHASE 2: DISCUSSION ON 3D SCREEN
             ctx.fillStyle = '#091e36';
-            ctx.fillRect(40, 104, 1200, 48);
+            ctx.fillRect(40, 95, 1200, 48);
             ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
-            ctx.strokeRect(40, 104, 1200, 48);
+            ctx.strokeRect(40, 95, 1200, 48);
 
             ctx.font = 'bold 22px Arial, sans-serif';
             ctx.fillStyle = '#00ffaa';
-            ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 137);
+            ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 127);
 
-            ctx.fillStyle = '#071729';
-            ctx.fillRect(40, 165, 1200, 75);
+            ctx.fillStyle = '#0e1d33';
+            ctx.fillRect(40, 155, 1200, 80);
             ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
-            ctx.strokeRect(40, 165, 1200, 75);
+            ctx.strokeRect(40, 155, 1200, 80);
 
             ctx.font = 'bold 16px Arial, sans-serif';
             ctx.fillStyle = '#ffb700';
-            ctx.fillText('QUESTION PROMPT >', 56, 192);
+            ctx.fillText('QUESTION PROMPT >', 56, 182);
 
             ctx.font = 'bold 24px Arial, sans-serif';
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(qText, 56, 224);
+            ctx.fillText(qText, 56, 218);
 
             const playerAnswers = state?.playerAnswers || {};
             players.forEach((p, pIdx) => {
               const col = pIdx % 2;
               const row = Math.floor(pIdx / 2);
               const bx = 40 + col * 610;
-              const by = 250 + row * 118;
+              const by = 250 + row * 160;
               const bw = 590;
-              const bh = 104;
+              const bh = 140;
 
               const ansVal = playerAnswers[pIdx];
               const ansText = typeof ansVal === 'number' ? rawOptions[ansVal] : (ansVal || 'SUBMITTED ANSWER');
@@ -592,48 +604,48 @@ export function ControlRoomScene({
               ctx.strokeRect(bx, by, bw, bh);
 
               ctx.fillStyle = '#00ffaa';
-              ctx.font = 'bold 22px Arial, sans-serif';
-              ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 18, by + 38);
+              ctx.font = 'bold 24px Arial, sans-serif';
+              ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 20, by + 42);
 
               ctx.fillStyle = '#ffb700';
-              ctx.font = 'bold 22px Arial, sans-serif';
+              ctx.font = 'bold 24px Arial, sans-serif';
               const ansStr = String(typeof ansText === 'string' ? ansText : (ansText?.text || ansText?.label || 'Choice'));
-              ctx.fillText(`ANSWER: ${ansStr}`, bx + 18, by + 76);
+              ctx.fillText(`ANSWER: ${ansStr}`, bx + 20, by + 95);
             });
 
-            const btnX = 360;
-            const btnY = 615;
-            const btnW = 560;
-            const btnH = 125;
+            const btnX = 340;
+            const btnY = 600;
+            const btnW = 600;
+            const btnH = 140;
             const isBtnHovered = isActiveDesk && hoveredLockIn;
 
             ctx.fillStyle = isBtnHovered ? '#ffffff' : '#00ffaa';
             ctx.fillRect(btnX, btnY, btnW, btnH);
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 5;
+            ctx.lineWidth = 6;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 28px Arial, sans-serif';
+            ctx.font = 'bold 30px Arial, sans-serif';
             ctx.fillStyle = '#020617';
             ctx.textAlign = 'center';
-            ctx.fillText('🗳️ PROCEED TO SECURITY VOTE', btnX + btnW / 2, btnY + 58);
+            ctx.fillText('🗳️ PROCEED TO SECURITY VOTE', btnX + btnW / 2, btnY + 65);
 
             ctx.font = 'bold 18px Arial, sans-serif';
             ctx.fillStyle = '#020617';
-            ctx.fillText('[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 96);
+            ctx.fillText('[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 105);
             ctx.textAlign = 'left';
 
           } else if (phase === 'voting') {
             // PHASE 3: VOTING ON 3D SCREEN
             ctx.fillStyle = '#3d2b00';
-            ctx.fillRect(40, 104, 1200, 48);
+            ctx.fillRect(40, 95, 1200, 48);
             ctx.strokeStyle = '#ffb700';
             ctx.lineWidth = 3;
-            ctx.strokeRect(40, 104, 1200, 48);
+            ctx.strokeRect(40, 95, 1200, 48);
 
             ctx.font = 'bold 20px Arial, sans-serif';
             ctx.fillStyle = '#ffb700';
-            ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 137);
+            ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 127);
 
             const playerVotes = state?.playerVotes || {};
             const myVote = playerVotes[idx];
@@ -642,9 +654,9 @@ export function ControlRoomScene({
               const col = pIdx % 3;
               const row = Math.floor(pIdx / 3);
               const bx = 40 + col * 405;
-              const by = 165 + row * 220;
+              const by = 160 + row * 210;
               const bw = 390;
-              const bh = 200;
+              const bh = 190;
 
               const isSelectedTarget = myVote === pIdx;
               const isHoveredTarget = isActiveDesk && hoveredVoteIdx === pIdx;
@@ -685,27 +697,27 @@ export function ControlRoomScene({
               }
             });
 
-            const btnX = 360;
-            const btnY = 615;
-            const btnW = 560;
-            const btnH = 125;
+            const btnX = 340;
+            const btnY = 600;
+            const btnW = 600;
+            const btnH = 140;
             const isBtnHovered = isActiveDesk && hoveredLockIn;
             const hasVoted = myVote !== undefined;
 
             ctx.fillStyle = hasVoted ? '#00ffaa' : isBtnHovered ? '#ffffff' : '#ffb700';
             ctx.fillRect(btnX, btnY, btnW, btnH);
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 5;
+            ctx.lineWidth = 6;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 28px Arial, sans-serif';
+            ctx.font = 'bold 30px Arial, sans-serif';
             ctx.fillStyle = '#020617';
             ctx.textAlign = 'center';
-            ctx.fillText(hasVoted ? '✔ VOTE TRANSMITTED' : '🚨 CAST VOTE TO EJECT', btnX + btnW / 2, btnY + 58);
+            ctx.fillText(hasVoted ? '✔ VOTE TRANSMITTED' : '🚨 CAST VOTE TO EJECT', btnX + btnW / 2, btnY + 65);
 
             ctx.font = 'bold 18px Arial, sans-serif';
             ctx.fillStyle = '#020617';
-            ctx.fillText(hasVoted ? 'VOTE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 96);
+            ctx.fillText(hasVoted ? 'VOTE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 105);
             ctx.textAlign = 'left';
 
           } else if (phase === 'victory') {
@@ -713,18 +725,18 @@ export function ControlRoomScene({
             const winner = state?.winner;
             const isAgentsWon = winner === 'agents';
 
-            ctx.fillStyle = isAgentsWon ? '#084d31' : '#4d3700';
+            ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ffb700';
             ctx.fillRect(40, 100, 1200, 145);
-            ctx.strokeStyle = isAgentsWon ? '#00ffaa' : '#ffb700';
+            ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 5;
             ctx.strokeRect(40, 100, 1200, 145);
 
             ctx.font = 'bold 38px Arial, sans-serif';
-            ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ffb700';
+            ctx.fillStyle = '#020617';
             ctx.fillText(isAgentsWon ? '🛡️ AGENTS VICTORIOUS — INTRUDER NEUTRALIZED!' : '⚠️ INTRUDER WINS — DEFENSES BREACHED!', 64, 168);
 
             ctx.font = 'bold 24px Arial, sans-serif';
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#020617';
             const spyPlayer = players[state?.spyIndex];
             const spyNameStr = spyPlayer?.name || `Agent 0${(state?.spyIndex || 0) + 1}`;
             ctx.fillText(`THE INTRUDER WAS: ${spyNameStr.toUpperCase()}`, 64, 218);
@@ -763,54 +775,51 @@ export function ControlRoomScene({
 
           } else {
             // PHASE 1: QUESTION PHASE ON 3D SCREEN
-            const badgeY = 104;
+            const badgeY = 95;
             if (!isSpy) {
-              ctx.fillStyle = '#082138';
-              ctx.fillRect(40, badgeY, 660, 48);
-              ctx.strokeStyle = '#00ffaa';
-              ctx.lineWidth = 3;
-              ctx.strokeRect(40, badgeY, 660, 48);
-
-              ctx.font = 'bold 22px Arial, sans-serif';
+              // Agent Security Question Header
               ctx.fillStyle = '#00ffaa';
-              ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 58, badgeY + 33);
-            } else {
-              // High-Contrast Solid Gold Cyber Intruder Banner
-              ctx.fillStyle = '#ffb700';
-              ctx.fillRect(40, badgeY, 820, 52);
-              ctx.strokeStyle = '#ffffff';
-              ctx.lineWidth = 4;
-              ctx.strokeRect(40, badgeY, 820, 52);
-
+              ctx.fillRect(24, badgeY, 700, 48);
               ctx.font = 'bold 22px Arial, sans-serif';
               ctx.fillStyle = '#020617';
-              ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 58, badgeY + 35);
+              ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 44, badgeY + 33);
+            } else {
+              // Intruder Alert Banner Header
+              ctx.fillStyle = '#ffb700';
+              ctx.fillRect(24, badgeY, 860, 48);
+              ctx.font = 'bold 22px Arial, sans-serif';
+              ctx.fillStyle = '#020617';
+              ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 44, badgeY + 33);
             }
 
-            // Question Prompt Box (Solid High-Contrast Background)
-            const qBoxY = 168;
-            const qBoxH = 130;
-            ctx.fillStyle = isSpy ? '#382800' : '#071629';
-            ctx.fillRect(40, qBoxY, 1200, qBoxH);
-            ctx.strokeStyle = isSpy ? '#ffb700' : '#00ffaa';
+            // Question Prompt Card Box (Solid High-Contrast Obsidian Tile)
+            const qBoxY = 152;
+            const qBoxH = 135;
+            ctx.fillStyle = isSpy ? '#1c1300' : '#0e1826';
+            ctx.fillRect(24, qBoxY, 1232, qBoxH);
+            ctx.strokeStyle = isSpy ? '#ffb700' : '#ffb700';
             ctx.lineWidth = 4;
-            ctx.strokeRect(40, qBoxY, 1200, qBoxH);
+            ctx.strokeRect(24, qBoxY, 1232, qBoxH);
 
-            ctx.fillStyle = isSpy ? '#ffb700' : '#00ffaa';
-            ctx.fillRect(40, qBoxY, 14, qBoxH);
+            // Left Gold Accent Strip
+            ctx.fillStyle = '#ffb700';
+            ctx.fillRect(24, qBoxY, 16, qBoxH);
 
-            ctx.font = 'bold 18px Arial, sans-serif';
-            ctx.fillStyle = isSpy ? '#ffb700' : '#ffb700';
-            ctx.fillText('OPERATIVE_PROMPT >', 68, qBoxY + 34);
+            // Question Prompt Label Pill
+            ctx.fillStyle = '#ffb700';
+            ctx.fillRect(52, qBoxY + 16, 210, 32);
+            ctx.font = 'bold 16px Arial, sans-serif';
+            ctx.fillStyle = '#020617';
+            ctx.fillText('OPERATIVE_PROMPT >', 64, qBoxY + 38);
 
             if (isSpy) {
               ctx.fillStyle = '#ffb700';
-              ctx.font = 'bold 26px Arial, sans-serif';
-              ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 68, qBoxY + 72);
+              ctx.font = 'bold 28px Arial, sans-serif';
+              ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 52, qBoxY + 84);
 
               ctx.fillStyle = '#ffffff';
               ctx.font = 'bold 22px Arial, sans-serif';
-              ctx.fillText('Decryption key absent. Deducing prompt from operative choices below.', 68, qBoxY + 106);
+              ctx.fillText('Decryption key absent. Deducing prompt from operative choices below.', 52, qBoxY + 118);
             } else {
               ctx.fillStyle = '#ffffff';
               ctx.font = 'bold 30px Arial, sans-serif';
@@ -818,26 +827,26 @@ export function ControlRoomScene({
               const safeQText = String(qText || '');
               const words = safeQText.split(' ');
               let line = '';
-              let yPos = qBoxY + 76;
+              let yPos = qBoxY + 82;
               for (let w of words) {
                 const testLine = line + w + ' ';
-                if (ctx.measureText(testLine).width > 1120) {
-                  ctx.fillText(line, 68, yPos);
+                if (ctx.measureText(testLine).width > 1150) {
+                  ctx.fillText(line, 52, yPos);
                   line = w + ' ';
                   yPos += 36;
                 } else {
                   line = testLine;
                 }
               }
-              ctx.fillText(line, 68, yPos);
+              ctx.fillText(line, 52, yPos);
             }
 
-            // 4 Interactive Option Boxes (A, B, C, D) — Solid Ultra-High Contrast Tactical Cards
+            // 4 Interactive Option Cards (A, B, C, D) — Solid Ultra-High Contrast Arcade Cards
             const optBoxes = [
-              { x: 40, y: 310, w: 585, h: 135, label: 'A' },
-              { x: 655, y: 310, w: 585, h: 135, label: 'B' },
-              { x: 40, y: 460, w: 585, h: 135, label: 'C' },
-              { x: 655, y: 460, w: 585, h: 135, label: 'D' },
+              { x: 24, y: 300, w: 600, h: 135, label: 'A' },
+              { x: 656, y: 300, w: 600, h: 135, label: 'B' },
+              { x: 24, y: 448, w: 600, h: 135, label: 'C' },
+              { x: 656, y: 448, w: 600, h: 135, label: 'D' },
             ];
 
             rawOptions.slice(0, 4).forEach((optTextRaw, oIdx) => {
@@ -851,7 +860,7 @@ export function ControlRoomScene({
                 ? '#ffb700'
                 : isHovered
                 ? '#1e40af'
-                : '#0f2038';
+                : '#0d1e36';
               ctx.fillRect(box.x, box.y, box.w, box.h);
 
               ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#00ffaa';
@@ -860,76 +869,76 @@ export function ControlRoomScene({
 
               // Massive Solid Key Badge Box [A] [B] [C] [D]
               ctx.fillStyle = isSelected ? '#020617' : '#00ffaa';
-              ctx.fillRect(box.x + 14, box.y + 14, 60, 60);
+              ctx.fillRect(box.x + 14, box.y + 14, 64, 64);
               ctx.strokeStyle = isSelected ? '#ffb700' : '#020617';
               ctx.lineWidth = 3;
-              ctx.strokeRect(box.x + 14, box.y + 14, 60, 60);
+              ctx.strokeRect(box.x + 14, box.y + 14, 64, 64);
 
-              ctx.font = 'bold 36px Arial, sans-serif';
+              ctx.font = 'bold 40px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#ffb700' : '#020617';
-              ctx.fillText(box.label, box.x + 30, box.y + 56);
+              ctx.fillText(box.label, box.x + 32, box.y + 60);
 
               ctx.font = 'bold 14px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#020617' : '#00ffaa';
-              ctx.fillText(`KEY [${box.label}]`, box.x + 16, box.y + 98);
+              ctx.fillText(`KEY [${box.label}]`, box.x + 16, box.y + 104);
 
               // Massive Chonky White Option Text (28px Arial)
-              ctx.font = 'bold 28px Arial, sans-serif';
+              ctx.font = isSelected ? 'bold 30px Arial, sans-serif' : 'bold 28px Arial, sans-serif';
               ctx.fillStyle = isSelected ? '#020617' : '#ffffff';
 
               const optWords = optString.split(' ');
               let optLine = '';
-              let optY = box.y + 48;
+              let optY = box.y + 50;
               for (let w of optWords) {
                 const testLine = optLine + w + ' ';
-                if (ctx.measureText(testLine).width > box.w - 115) {
-                  ctx.fillText(optLine, box.x + 90, optY);
+                if (ctx.measureText(testLine).width > box.w - 120) {
+                  ctx.fillText(optLine, box.x + 94, optY);
                   optLine = w + ' ';
                   optY += 34;
                 } else {
                   optLine = testLine;
                 }
               }
-              ctx.fillText(optLine, box.x + 90, optY);
+              ctx.fillText(optLine, box.x + 94, optY);
 
               if (isSelected) {
                 ctx.fillStyle = '#020617';
-                ctx.fillRect(box.x + box.w - 152, box.y + 14, 138, 40);
+                ctx.fillRect(box.x + box.w - 156, box.y + 14, 142, 42);
                 ctx.font = 'bold 16px Arial, sans-serif';
                 ctx.fillStyle = '#ffb700';
-                ctx.fillText('SELECTED ✓', box.x + box.w - 140, box.y + 40);
+                ctx.fillText('SELECTED ✓', box.x + box.w - 144, box.y + 41);
               }
             });
 
             // Lock-In Answer Button (Massive Solid High-Contrast Button)
-            const btnX = 360;
-            const btnY = 615;
-            const btnW = 560;
-            const btnH = 125;
+            const btnX = 340;
+            const btnY = 600;
+            const btnW = 600;
+            const btnH = 140;
 
             const playerAns = state?.playerAnswers?.[idx];
             const isConfirmed = state?.isAnswerConfirmed || Boolean(playerAns);
             const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
 
             ctx.fillStyle = isConfirmed
-              ? '#00ffaa'
+              ? '#10b981'
               : isBtnHovered
               ? '#ffffff'
               : '#00ffaa';
             ctx.fillRect(btnX, btnY, btnW, btnH);
 
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 5;
+            ctx.lineWidth = 6;
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
-            ctx.font = 'bold 30px Arial, sans-serif';
-            ctx.fillStyle = '#020617';
+            ctx.font = 'bold 32px Arial, sans-serif';
+            ctx.fillStyle = isConfirmed ? '#ffffff' : '#020617';
             ctx.textAlign = 'center';
-            ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 58);
+            ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 65);
 
             ctx.font = 'bold 18px Arial, sans-serif';
-            ctx.fillStyle = '#020617';
-            ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 96);
+            ctx.fillStyle = isConfirmed ? '#ffffff' : '#020617';
+            ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 105);
             ctx.textAlign = 'left';
           }
 
@@ -966,26 +975,26 @@ export function ControlRoomScene({
         let foundHoverVote = null;
 
         if (phase === 'question') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) foundHoverLockIn = true;
           const optBoxes = [
-            { x: 40, y: 310, w: 585, h: 135, idx: 0 },
-            { x: 655, y: 310, w: 585, h: 135, idx: 1 },
-            { x: 40, y: 460, w: 585, h: 135, idx: 2 },
-            { x: 655, y: 460, w: 585, h: 135, idx: 3 },
+            { x: 24, y: 300, w: 600, h: 135, idx: 0 },
+            { x: 656, y: 300, w: 600, h: 135, idx: 1 },
+            { x: 24, y: 448, w: 600, h: 135, idx: 2 },
+            { x: 656, y: 448, w: 600, h: 135, idx: 3 },
           ];
           optBoxes.forEach(b => {
             if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) foundHoverOption = b.idx;
           });
         } else if (phase === 'discussion') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) foundHoverLockIn = true;
         } else if (phase === 'voting') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) foundHoverLockIn = true;
           for (let pIdx = 0; pIdx < 6; pIdx++) {
             const col = pIdx % 3;
             const row = Math.floor(pIdx / 3);
             const bx = 40 + col * 405;
-            const by = 165 + row * 220;
-            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 200) foundHoverVote = pIdx;
+            const by = 160 + row * 210;
+            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 190) foundHoverVote = pIdx;
           }
         }
 
@@ -1035,16 +1044,16 @@ export function ControlRoomScene({
         const py = (1 - uv.y) * 800;
 
         if (phase === 'question') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) {
             playVoteCast();
             confirmCb?.();
             return;
           }
           const optBoxes = [
-            { x: 40, y: 310, w: 585, h: 135, idx: 0 },
-            { x: 655, y: 310, w: 585, h: 135, idx: 1 },
-            { x: 40, y: 460, w: 585, h: 135, idx: 2 },
-            { x: 655, y: 460, w: 585, h: 135, idx: 3 },
+            { x: 24, y: 300, w: 600, h: 135, idx: 0 },
+            { x: 656, y: 300, w: 600, h: 135, idx: 1 },
+            { x: 24, y: 448, w: 600, h: 135, idx: 2 },
+            { x: 656, y: 448, w: 600, h: 135, idx: 3 },
           ];
           optBoxes.forEach(b => {
             if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
@@ -1053,12 +1062,12 @@ export function ControlRoomScene({
             }
           });
         } else if (phase === 'discussion') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) {
             playTerminalPowerOn();
             proceedVoteCb?.();
           }
         } else if (phase === 'voting') {
-          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
+          if (px >= 340 && px <= 940 && py >= 600 && py <= 740) {
             playTerminalPowerOn();
             resolveCb?.();
             return;
@@ -1067,8 +1076,8 @@ export function ControlRoomScene({
             const col = pIdx % 3;
             const row = Math.floor(pIdx / 3);
             const bx = 40 + col * 405;
-            const by = 165 + row * 220;
-            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 200) {
+            const by = 160 + row * 210;
+            if (px >= bx && px <= bx + 390 && py >= by && py <= by + 190) {
               playLaserLock();
               castVoteCb?.(pIdx);
             }
