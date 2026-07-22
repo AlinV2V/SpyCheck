@@ -209,7 +209,7 @@ export function App() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', background: '#0a0d14' }}>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', background: '#040711' }}>
       {/* 3D Command Room Background Scene & Virtual Computer Monitors */}
       <ControlRoomScene
         gameState={gameState}
@@ -234,20 +234,20 @@ export function App() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'linear-gradient(180deg, rgba(10,13,20,0.95) 0%, rgba(10,13,20,0) 100%)',
+        background: 'linear-gradient(180deg, rgba(4,7,17,0.95) 0%, rgba(4,7,17,0) 100%)',
         zIndex: 100,
         pointerEvents: 'auto'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Shield color="#00f0ff" size={24} />
-          <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#00f0ff', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
+          <Shield color="#00ffaa" size={24} />
+          <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#00ffaa', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
             INTRUDER CHECK
           </span>
-          <span style={{ fontSize: '0.7rem', background: '#00ffff', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.27
+          <span style={{ fontSize: '0.7rem', background: '#00ffaa', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
+            v1.0.28
           </span>
           {gameState && (
-            <span className="badge-agent" style={{ marginLeft: '10px' }}>
+            <span className="badge-agent" style={{ marginLeft: '10px', background: 'rgba(0,255,170,0.15)', border: '1px solid #00ffaa', color: '#00ffaa' }}>
               ROUND {gameState.currentRound} / 3
             </span>
           )}
@@ -259,27 +259,27 @@ export function App() {
             onClick={handlePurgeCache}
             title="Purge Browser Cache & Hard Reload"
             style={{
-              background: 'rgba(255, 0, 85, 0.2)',
-              border: '1px solid #ff0055',
+              background: 'rgba(0, 255, 170, 0.1)',
+              border: '1px solid #00ffaa',
               borderRadius: '6px',
               padding: '6px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              color: '#ff0055',
+              color: '#00ffaa',
               fontFamily: 'Orbitron, sans-serif',
               fontSize: '11px',
               fontWeight: 800,
               cursor: 'pointer',
-              boxShadow: '0 0 10px rgba(255, 0, 85, 0.3)',
+              boxShadow: '0 0 10px rgba(0, 255, 170, 0.25)',
               transition: 'all 0.2s ease'
             }}
           >
-            <RefreshCw size={14} /> PURGE CACHE & RELOAD
+            <RefreshCw size={14} color="#ffb700" /> PURGE CACHE & RELOAD
           </button>
 
           {gameState && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'Rajdhani' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#ffb700', fontFamily: 'Rajdhani', fontWeight: 700 }}>
               <Radio color="#00ffaa" size={16} /> MODE: {gameState.mode.toUpperCase()}
             </div>
           )}
@@ -288,14 +288,14 @@ export function App() {
             onClick={toggleMute}
             style={{
               background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.2)',
+              border: '1px solid rgba(0,255,170,0.3)',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: audioMuted ? '#ff0055' : '#00f0ff',
+              color: audioMuted ? '#ffb700' : '#00ffaa',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}

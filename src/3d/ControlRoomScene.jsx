@@ -44,8 +44,8 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center built with Three.js.
- * Renders ALL GAME PHASES (Questions, Discussion, Voting, Victory) directly on the 3D PC Computer Monitors!
- * Features ultra-high-contrast screen graphics and sleek workstation 3D geometry!
+ * Features Tactical Stealth Emerald (#00ffaa) & Cyber Gold (#ffb700) design system.
+ * Zero hot pink/magenta scanlines! Ultra-high contrast, thick 28-38px Arial typography!
  */
 export function ControlRoomScene({
   gameState,
@@ -134,22 +134,22 @@ export function ControlRoomScene({
     }
     container.appendChild(renderer.domElement);
 
-    // --- 2. LIGHTING ---
-    const ambientLight = new THREE.AmbientLight(0x1e293b, 1.8);
+    // --- 2. LIGHTING (TACTICAL EMERALD & GOLD ACCENTS) ---
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 2.0);
     scene.add(ambientLight);
 
-    // Central Cyan Hologram Light
-    const holoLightCyan = new THREE.PointLight(0x00f3ff, 4.5, 22);
-    holoLightCyan.position.set(0, 3, 0);
-    scene.add(holoLightCyan);
+    // Central Tactical Emerald Hologram Light
+    const holoLightEmerald = new THREE.PointLight(0x00ffaa, 4.5, 22);
+    holoLightEmerald.position.set(0, 3, 0);
+    scene.add(holoLightEmerald);
 
-    // Central Amber Accent Light
-    const holoLightAmber = new THREE.PointLight(0xff9900, 3, 20);
-    holoLightAmber.position.set(0, 1, 0);
-    scene.add(holoLightAmber);
+    // Central Cyber Gold Accent Light
+    const holoLightGold = new THREE.PointLight(0xffb700, 3.5, 20);
+    holoLightGold.position.set(0, 1, 0);
+    scene.add(holoLightGold);
 
-    // Dynamic Phase Warning Light (Overhead Red/Amber)
-    const overheadLight = new THREE.PointLight(0xff0055, 0, 30);
+    // Overhead Tactical Status Light
+    const overheadLight = new THREE.PointLight(0xffb700, 0, 30);
     overheadLight.position.set(0, 12, 0);
     scene.add(overheadLight);
 
@@ -159,7 +159,7 @@ export function ControlRoomScene({
     // Dark metallic base floor plane
     const floorGeo = new THREE.PlaneGeometry(60, 60);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x070b14,
+      color: 0x060b14,
       roughness: 0.2,
       metalness: 0.85,
     });
@@ -168,15 +168,15 @@ export function ControlRoomScene({
     floorMesh.position.y = -0.01;
     floorGroup.add(floorMesh);
 
-    // Cyan Grid Helper
-    const gridHelper = new THREE.GridHelper(50, 50, 0x00f3ff, 0x0d3856);
+    // Tactical Emerald Grid Helper
+    const gridHelper = new THREE.GridHelper(50, 50, 0x00ffaa, 0x0d3856);
     gridHelper.position.y = 0;
     floorGroup.add(gridHelper);
 
     // Concentric glowing ring floor markers
     const ringGeo1 = new THREE.RingGeometry(7.2, 7.42, 64);
     const ringMat1 = new THREE.MeshBasicMaterial({
-      color: 0x00f3ff,
+      color: 0x00ffaa,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.6,
@@ -188,7 +188,7 @@ export function ControlRoomScene({
 
     const ringGeo2 = new THREE.RingGeometry(2.4, 2.58, 48);
     const ringMat2 = new THREE.MeshBasicMaterial({
-      color: 0xffaa00,
+      color: 0xffb700,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.7,
@@ -216,16 +216,16 @@ export function ControlRoomScene({
 
     // Glowing emitter ring inside base
     const emitterRingGeo = new THREE.TorusGeometry(2.0, 0.08, 16, 64);
-    const emitterRingMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+    const emitterRingMat = new THREE.MeshBasicMaterial({ color: 0x00ffaa });
     const emitterRing = new THREE.Mesh(emitterRingGeo, emitterRingMat);
     emitterRing.rotation.x = Math.PI / 2;
     emitterRing.position.y = 0.51;
     holoGroup.add(emitterRing);
 
-    // Semi-transparent Outer Hologram Cylinder
+    // Outer Hologram Cylinder
     const holoCylGeo = new THREE.CylinderGeometry(1.8, 1.8, 5, 32, 1, true);
     const holoCylMat = new THREE.MeshBasicMaterial({
-      color: 0x00f3ff,
+      color: 0x00ffaa,
       transparent: true,
       opacity: 0.22,
       side: THREE.DoubleSide,
@@ -236,10 +236,10 @@ export function ControlRoomScene({
     holoCyl.position.y = 3.0;
     holoGroup.add(holoCyl);
 
-    // Inner Sci-Fi Rotating Holographic Geometry
+    // Inner Sci-Fi Rotating Holographic Core
     const holoCoreGeo = new THREE.IcosahedronGeometry(1.0, 1);
     const holoCoreMat = new THREE.MeshBasicMaterial({
-      color: 0x00f3ff,
+      color: 0x00ffaa,
       wireframe: true,
       transparent: true,
       opacity: 0.8,
@@ -251,7 +251,7 @@ export function ControlRoomScene({
 
     // Outer rotating ring around core
     const coreRingGeo = new THREE.TorusGeometry(1.4, 0.04, 16, 64);
-    const coreRingMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.85 });
+    const coreRingMat = new THREE.MeshBasicMaterial({ color: 0xffb700, transparent: true, opacity: 0.85 });
     const coreRing = new THREE.Mesh(coreRingGeo, coreRingMat);
     coreRing.position.y = 3.0;
     holoGroup.add(coreRing);
@@ -273,7 +273,7 @@ export function ControlRoomScene({
 
     holoParticleGeo.setAttribute('position', new THREE.BufferAttribute(holoPositions, 3));
     const holoParticleMat = new THREE.PointsMaterial({
-      color: 0x00f3ff,
+      color: 0x00ffaa,
       size: 0.12,
       transparent: true,
       opacity: 0.85,
@@ -327,9 +327,9 @@ export function ControlRoomScene({
       deskMesh.position.set(0, 0.425, 0);
       pDeskGroup.add(deskMesh);
 
-      // Glowing Under-Desk LED Strip Trim
+      // Glowing Under-Desk Emerald LED Strip Trim
       const ledTrimGeo = new THREE.BoxGeometry(2.52, 0.04, 1.42);
-      const ledTrimMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+      const ledTrimMat = new THREE.MeshBasicMaterial({ color: 0x00ffaa });
       const ledTrimMesh = new THREE.Mesh(ledTrimGeo, ledTrimMat);
       ledTrimMesh.position.set(0, 0.84, 0);
       pDeskGroup.add(ledTrimMesh);
@@ -353,9 +353,9 @@ export function ControlRoomScene({
       bezelBackingMesh.rotation.x = -Math.PI / 16;
       pDeskGroup.add(bezelBackingMesh);
 
-      // Outer Glowing LED Bezel Border Trim
+      // Outer Glowing Emerald Bezel Border Trim
       const bezelEdgeGeo = new THREE.BoxGeometry(2.48, 1.58, 0.02);
-      const bezelEdgeMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.8 });
+      const bezelEdgeMat = new THREE.MeshBasicMaterial({ color: 0x00ffaa, transparent: true, opacity: 0.8 });
       const bezelEdgeMesh = new THREE.Mesh(bezelEdgeGeo, bezelEdgeMat);
       bezelEdgeMesh.position.set(0, 1.68, 0.04);
       bezelEdgeMesh.rotation.x = -Math.PI / 16;
@@ -388,7 +388,7 @@ export function ControlRoomScene({
 
       // Console status ring
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x00f3ff,
+        color: 0x00ffaa,
         transparent: true,
         opacity: 0.9,
       });
@@ -398,7 +398,7 @@ export function ControlRoomScene({
       pDeskGroup.add(ringMesh);
 
       // Point light per console
-      const cLight = new THREE.PointLight(0x00f3ff, 0.9, 4);
+      const cLight = new THREE.PointLight(0x00ffaa, 0.9, 4);
       cLight.position.set(0, 2.4, 0.5);
       pDeskGroup.add(cLight);
 
@@ -423,7 +423,7 @@ export function ControlRoomScene({
 
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMat = new THREE.PointsMaterial({
-      color: 0x00f3ff,
+      color: 0x00ffaa,
       size: 0.08,
       transparent: true,
       opacity: 0.4,
@@ -431,7 +431,7 @@ export function ControlRoomScene({
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // --- 7. HELPER TO DRAW ALL GAME PHASES WITH MASSIVE CHONKY HIGH-CONTRAST TYPOGRAPHY ---
+    // --- 7. HELPER TO DRAW ALL GAME PHASES WITH TACTICAL STEALTH EMERALD & GOLD DESIGN SYSTEM ---
     const update3DScreenTextures = (state, phase, activeIdx) => {
       try {
         const players = state?.players || [];
@@ -475,34 +475,34 @@ export function ControlRoomScene({
           ctx.fillStyle = '#040814';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Outer Border Frame
-          ctx.strokeStyle = isSpy && phase === 'question' ? '#ff0055' : isActiveDesk ? '#00ffff' : '#0d4a75';
+          // Outer Border Frame (Tactical Emerald / Cyber Gold)
+          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : isActiveDesk ? '#00ffaa' : '#0f3856';
           ctx.lineWidth = 14;
           ctx.strokeRect(7, 7, canvas.width - 14, canvas.height - 14);
 
           // Inner Accent Border
-          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffea00' : '#00ffff';
+          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           ctx.lineWidth = 3;
           ctx.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
 
           // If this is another player's workstation in the 3D room (Station 02, 03, etc.)
           if (!isActiveDesk) {
             // RENDER DEDICATED STATION STATUS FOR OTHER OPERATIVES IN ROOM
-            ctx.fillStyle = '#0a192f';
+            ctx.fillStyle = '#09182a';
             ctx.fillRect(24, 24, canvas.width - 48, 70);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
             ctx.strokeRect(24, 24, canvas.width - 48, 70);
 
             ctx.font = 'bold 28px Arial, sans-serif';
-            ctx.fillStyle = '#00ffff';
+            ctx.fillStyle = '#00ffaa';
             const otherName = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
             ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${otherName}`, 48, 68);
 
             // Center Status Card
-            ctx.fillStyle = '#0d213a';
+            ctx.fillStyle = '#0d223a';
             ctx.fillRect(100, 160, 1080, 520);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 4;
             ctx.strokeRect(100, 160, 1080, 520);
 
@@ -517,7 +517,7 @@ export function ControlRoomScene({
             ctx.fillStyle = '#ffffff';
             ctx.fillText(`OPERATIVE CONSOLE 0${idx + 1} — ACTIVE IN SESSION`, 640, 380);
 
-            ctx.fillStyle = '#00ffff';
+            ctx.fillStyle = '#00ffaa';
             ctx.fillRect(240, 440, 800, 90);
             ctx.font = 'bold 32px Arial, sans-serif';
             ctx.fillStyle = '#020617';
@@ -529,44 +529,44 @@ export function ControlRoomScene({
           }
 
           // --- TOP MONITOR HEADER BAR FOR ACTIVE PLAYER ---
-          ctx.fillStyle = isSpy && phase === 'question' ? '#770022' : '#0a192f';
+          ctx.fillStyle = isSpy && phase === 'question' ? '#3d2b00' : '#09182a';
           ctx.fillRect(24, 24, canvas.width - 48, 70);
-          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffea00' : '#00ffff';
+          ctx.strokeStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           ctx.lineWidth = 4;
           ctx.strokeRect(24, 24, canvas.width - 48, 70);
 
           ctx.font = 'bold 28px Arial, sans-serif';
-          ctx.fillStyle = isSpy && phase === 'question' ? '#ffea00' : '#00ffff';
+          ctx.fillStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           const pNameStr = player?.name ? String(player.name).toUpperCase() : `AGENT 0${idx + 1}`;
           ctx.fillText(`STATION 0${idx + 1} // OPERATIVE: ${pNameStr}`, 44, 68);
 
           // System Clock / Timer Top Right
           ctx.font = 'bold 24px Arial, sans-serif';
           const sysTimeStr = new Date().toTimeString().split(' ')[0];
-          ctx.fillStyle = isSpy && phase === 'question' ? '#ffea00' : '#00ffaa';
+          ctx.fillStyle = isSpy && phase === 'question' ? '#ffb700' : '#00ffaa';
           ctx.fillText(`SYS: ${sysTimeStr}`, canvas.width - 260, 68);
 
           // --- GAME PHASE SWITCH DRAWING FOR ACTIVE PLAYER ---
           if (phase === 'discussion') {
             // PHASE 2: DISCUSSION ON 3D SCREEN
-            ctx.fillStyle = '#0f2b48';
+            ctx.fillStyle = '#091e36';
             ctx.fillRect(40, 104, 1200, 48);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
             ctx.strokeRect(40, 104, 1200, 48);
 
             ctx.font = 'bold 22px Arial, sans-serif';
-            ctx.fillStyle = '#00ffff';
+            ctx.fillStyle = '#00ffaa';
             ctx.fillText('📡 INTEL DEBRIEFING MATRIX // ANALYZE ANSWERS & DISCUSS SUSPECTS', 56, 137);
 
-            ctx.fillStyle = '#071629';
+            ctx.fillStyle = '#071729';
             ctx.fillRect(40, 165, 1200, 75);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 3;
             ctx.strokeRect(40, 165, 1200, 75);
 
             ctx.font = 'bold 16px Arial, sans-serif';
-            ctx.fillStyle = '#ffcc00';
+            ctx.fillStyle = '#ffb700';
             ctx.fillText('QUESTION PROMPT >', 56, 192);
 
             ctx.font = 'bold 24px Arial, sans-serif';
@@ -585,17 +585,17 @@ export function ControlRoomScene({
               const ansVal = playerAnswers[pIdx];
               const ansText = typeof ansVal === 'number' ? rawOptions[ansVal] : (ansVal || 'SUBMITTED ANSWER');
 
-              ctx.fillStyle = '#091c33';
+              ctx.fillStyle = '#0d223a';
               ctx.fillRect(bx, by, bw, bh);
-              ctx.strokeStyle = '#00ffff';
+              ctx.strokeStyle = '#00ffaa';
               ctx.lineWidth = 3;
               ctx.strokeRect(bx, by, bw, bh);
 
-              ctx.fillStyle = '#00ffff';
+              ctx.fillStyle = '#00ffaa';
               ctx.font = 'bold 22px Arial, sans-serif';
               ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 18, by + 38);
 
-              ctx.fillStyle = '#ffeb3b';
+              ctx.fillStyle = '#ffb700';
               ctx.font = 'bold 22px Arial, sans-serif';
               const ansStr = String(typeof ansText === 'string' ? ansText : (ansText?.text || ansText?.label || 'Choice'));
               ctx.fillText(`ANSWER: ${ansStr}`, bx + 18, by + 76);
@@ -607,7 +607,7 @@ export function ControlRoomScene({
             const btnH = 125;
             const isBtnHovered = isActiveDesk && hoveredLockIn;
 
-            ctx.fillStyle = isBtnHovered ? '#ffffff' : '#00ffff';
+            ctx.fillStyle = isBtnHovered ? '#ffffff' : '#00ffaa';
             ctx.fillRect(btnX, btnY, btnW, btnH);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 5;
@@ -625,14 +625,14 @@ export function ControlRoomScene({
 
           } else if (phase === 'voting') {
             // PHASE 3: VOTING ON 3D SCREEN
-            ctx.fillStyle = '#422204';
+            ctx.fillStyle = '#3d2b00';
             ctx.fillRect(40, 104, 1200, 48);
-            ctx.strokeStyle = '#ffaa00';
+            ctx.strokeStyle = '#ffb700';
             ctx.lineWidth = 3;
             ctx.strokeRect(40, 104, 1200, 48);
 
             ctx.font = 'bold 20px Arial, sans-serif';
-            ctx.fillStyle = '#ffaa00';
+            ctx.fillStyle = '#ffb700';
             ctx.fillText('⚠️ SECURITY ACCUSATION MATRIX // SELECT SUSPECTED INTRUDER TO EJECT', 56, 137);
 
             const playerVotes = state?.playerVotes || {};
@@ -650,17 +650,17 @@ export function ControlRoomScene({
               const isHoveredTarget = isActiveDesk && hoveredVoteIdx === pIdx;
 
               ctx.fillStyle = isSelectedTarget
-                ? '#660b24'
+                ? '#523a00'
                 : isHoveredTarget
-                ? '#523009'
-                : '#091c33';
+                ? '#1e40af'
+                : '#0d223a';
               ctx.fillRect(bx, by, bw, bh);
 
-              ctx.strokeStyle = isSelectedTarget ? '#ff0055' : isHoveredTarget ? '#ffaa00' : '#00ffff';
+              ctx.strokeStyle = isSelectedTarget ? '#ffb700' : isHoveredTarget ? '#ffffff' : '#00ffaa';
               ctx.lineWidth = isSelectedTarget || isHoveredTarget ? 5 : 3;
               ctx.strokeRect(bx, by, bw, bh);
 
-              ctx.fillStyle = isSelectedTarget ? '#ff0055' : '#00ffff';
+              ctx.fillStyle = isSelectedTarget ? '#ffb700' : '#00ffaa';
               ctx.font = 'bold 24px Arial, sans-serif';
               ctx.fillText(`${p.name || `AGENT 0${pIdx + 1}`}`, bx + 20, by + 50);
 
@@ -677,10 +677,10 @@ export function ControlRoomScene({
               }
 
               if (isSelectedTarget) {
-                ctx.fillStyle = '#ff0055';
+                ctx.fillStyle = '#ffb700';
                 ctx.fillRect(bx + bw - 145, by + 16, 130, 38);
                 ctx.font = 'bold 15px Arial, sans-serif';
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = '#020617';
                 ctx.fillText('ACCUSED 🎯', bx + bw - 134, by + 41);
               }
             });
@@ -692,7 +692,7 @@ export function ControlRoomScene({
             const isBtnHovered = isActiveDesk && hoveredLockIn;
             const hasVoted = myVote !== undefined;
 
-            ctx.fillStyle = hasVoted ? '#10b981' : isBtnHovered ? '#ffffff' : '#00ffff';
+            ctx.fillStyle = hasVoted ? '#00ffaa' : isBtnHovered ? '#ffffff' : '#ffb700';
             ctx.fillRect(btnX, btnY, btnW, btnH);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 5;
@@ -713,14 +713,14 @@ export function ControlRoomScene({
             const winner = state?.winner;
             const isAgentsWon = winner === 'agents';
 
-            ctx.fillStyle = isAgentsWon ? '#084d31' : '#570a20';
+            ctx.fillStyle = isAgentsWon ? '#084d31' : '#4d3700';
             ctx.fillRect(40, 100, 1200, 145);
-            ctx.strokeStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
+            ctx.strokeStyle = isAgentsWon ? '#00ffaa' : '#ffb700';
             ctx.lineWidth = 5;
             ctx.strokeRect(40, 100, 1200, 145);
 
             ctx.font = 'bold 38px Arial, sans-serif';
-            ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ff0055';
+            ctx.fillStyle = isAgentsWon ? '#00ffaa' : '#ffb700';
             ctx.fillText(isAgentsWon ? '🛡️ AGENTS VICTORIOUS — INTRUDER NEUTRALIZED!' : '⚠️ INTRUDER WINS — DEFENSES BREACHED!', 64, 168);
 
             ctx.font = 'bold 24px Arial, sans-serif';
@@ -734,7 +734,7 @@ export function ControlRoomScene({
             const btn1W = 360;
             const btn1H = 120;
 
-            ctx.fillStyle = '#00ffff';
+            ctx.fillStyle = '#00ffaa';
             ctx.fillRect(btn1X, btn1Y, btn1W, btn1H);
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 4;
@@ -752,7 +752,7 @@ export function ControlRoomScene({
 
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(btn2X, btn2Y, btn2W, btn2H);
-            ctx.strokeStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffaa';
             ctx.lineWidth = 4;
             ctx.strokeRect(btn2X, btn2Y, btn2W, btn2H);
 
@@ -765,46 +765,46 @@ export function ControlRoomScene({
             // PHASE 1: QUESTION PHASE ON 3D SCREEN
             const badgeY = 104;
             if (!isSpy) {
-              ctx.fillStyle = '#0a324d';
+              ctx.fillStyle = '#082138';
               ctx.fillRect(40, badgeY, 660, 48);
-              ctx.strokeStyle = '#00ffff';
+              ctx.strokeStyle = '#00ffaa';
               ctx.lineWidth = 3;
               ctx.strokeRect(40, badgeY, 660, 48);
 
               ctx.font = 'bold 22px Arial, sans-serif';
-              ctx.fillStyle = '#00ffff';
+              ctx.fillStyle = '#00ffaa';
               ctx.fillText('🛡️ AGENT - SECURITY QUESTION ASSIGNED', 58, badgeY + 33);
             } else {
-              // High-Contrast Solid Crimson Intruder Banner
-              ctx.fillStyle = '#880022';
+              // High-Contrast Solid Gold Cyber Intruder Banner
+              ctx.fillStyle = '#ffb700';
               ctx.fillRect(40, badgeY, 820, 52);
-              ctx.strokeStyle = '#ffea00';
+              ctx.strokeStyle = '#ffffff';
               ctx.lineWidth = 4;
               ctx.strokeRect(40, badgeY, 820, 52);
 
               ctx.font = 'bold 22px Arial, sans-serif';
-              ctx.fillStyle = '#ffea00';
+              ctx.fillStyle = '#020617';
               ctx.fillText('⚠️ INTRUDER ALERT - QUESTION CLASSIFIED! INFER FROM CHOICES', 58, badgeY + 35);
             }
 
             // Question Prompt Box (Solid High-Contrast Background)
             const qBoxY = 168;
             const qBoxH = 130;
-            ctx.fillStyle = isSpy ? '#66001a' : '#071526';
+            ctx.fillStyle = isSpy ? '#382800' : '#071629';
             ctx.fillRect(40, qBoxY, 1200, qBoxH);
-            ctx.strokeStyle = isSpy ? '#ffea00' : '#00ffff';
+            ctx.strokeStyle = isSpy ? '#ffb700' : '#00ffaa';
             ctx.lineWidth = 4;
             ctx.strokeRect(40, qBoxY, 1200, qBoxH);
 
-            ctx.fillStyle = isSpy ? '#ffea00' : '#00ffff';
+            ctx.fillStyle = isSpy ? '#ffb700' : '#00ffaa';
             ctx.fillRect(40, qBoxY, 14, qBoxH);
 
             ctx.font = 'bold 18px Arial, sans-serif';
-            ctx.fillStyle = isSpy ? '#ffea00' : '#ffcc00';
+            ctx.fillStyle = isSpy ? '#ffb700' : '#ffb700';
             ctx.fillText('OPERATIVE_PROMPT >', 68, qBoxY + 34);
 
             if (isSpy) {
-              ctx.fillStyle = '#ffea00';
+              ctx.fillStyle = '#ffb700';
               ctx.font = 'bold 26px Arial, sans-serif';
               ctx.fillText('🔒 WARNING: SECURITY PROMPT ENCRYPTED', 68, qBoxY + 72);
 
@@ -832,7 +832,7 @@ export function ControlRoomScene({
               ctx.fillText(line, 68, yPos);
             }
 
-            // 4 Interactive Option Boxes (A, B, C, D) — Solid Ultra-High Contrast Arcade Cards
+            // 4 Interactive Option Boxes (A, B, C, D) — Solid Ultra-High Contrast Tactical Cards
             const optBoxes = [
               { x: 40, y: 310, w: 585, h: 135, label: 'A' },
               { x: 655, y: 310, w: 585, h: 135, label: 'B' },
@@ -848,29 +848,29 @@ export function ControlRoomScene({
               const isHovered = isActiveDesk && hoveredOptionIdx === oIdx;
 
               ctx.fillStyle = isSelected
-                ? '#00ffff'
+                ? '#ffb700'
                 : isHovered
                 ? '#1e40af'
-                : '#0c192e';
+                : '#0f2038';
               ctx.fillRect(box.x, box.y, box.w, box.h);
 
-              ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#00ffff';
+              ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffffff' : '#00ffaa';
               ctx.lineWidth = isSelected ? 6 : isHovered ? 5 : 4;
               ctx.strokeRect(box.x, box.y, box.w, box.h);
 
               // Massive Solid Key Badge Box [A] [B] [C] [D]
-              ctx.fillStyle = isSelected ? '#020617' : '#00ffff';
+              ctx.fillStyle = isSelected ? '#020617' : '#00ffaa';
               ctx.fillRect(box.x + 14, box.y + 14, 60, 60);
-              ctx.strokeStyle = isSelected ? '#00ffff' : '#020617';
+              ctx.strokeStyle = isSelected ? '#ffb700' : '#020617';
               ctx.lineWidth = 3;
               ctx.strokeRect(box.x + 14, box.y + 14, 60, 60);
 
               ctx.font = 'bold 36px Arial, sans-serif';
-              ctx.fillStyle = isSelected ? '#00ffff' : '#020617';
+              ctx.fillStyle = isSelected ? '#ffb700' : '#020617';
               ctx.fillText(box.label, box.x + 30, box.y + 56);
 
               ctx.font = 'bold 14px Arial, sans-serif';
-              ctx.fillStyle = isSelected ? '#020617' : '#00ffff';
+              ctx.fillStyle = isSelected ? '#020617' : '#00ffaa';
               ctx.fillText(`KEY [${box.label}]`, box.x + 16, box.y + 98);
 
               // Massive Chonky White Option Text (28px Arial)
@@ -896,7 +896,7 @@ export function ControlRoomScene({
                 ctx.fillStyle = '#020617';
                 ctx.fillRect(box.x + box.w - 152, box.y + 14, 138, 40);
                 ctx.font = 'bold 16px Arial, sans-serif';
-                ctx.fillStyle = '#00ffff';
+                ctx.fillStyle = '#ffb700';
                 ctx.fillText('SELECTED ✓', box.x + box.w - 140, box.y + 40);
               }
             });
@@ -912,10 +912,10 @@ export function ControlRoomScene({
             const isBtnHovered = isActiveDesk && hoveredLockIn && !isConfirmed;
 
             ctx.fillStyle = isConfirmed
-              ? '#10b981'
+              ? '#00ffaa'
               : isBtnHovered
               ? '#ffffff'
-              : '#00ffff';
+              : '#00ffaa';
             ctx.fillRect(btnX, btnY, btnW, btnH);
 
             ctx.strokeStyle = '#ffffff';
@@ -923,12 +923,12 @@ export function ControlRoomScene({
             ctx.strokeRect(btnX, btnY, btnW, btnH);
 
             ctx.font = 'bold 30px Arial, sans-serif';
-            ctx.fillStyle = isConfirmed ? '#ffffff' : '#020617';
+            ctx.fillStyle = '#020617';
             ctx.textAlign = 'center';
             ctx.fillText(isConfirmed ? '✔ ANSWER TRANSMITTED' : '🔒 LOCK-IN ANSWER', btnX + btnW / 2, btnY + 58);
 
             ctx.font = 'bold 18px Arial, sans-serif';
-            ctx.fillStyle = isConfirmed ? '#ffffff' : '#020617';
+            ctx.fillStyle = '#020617';
             ctx.fillText(isConfirmed ? 'CHOICE LOCKED IN' : '[CLICK OR PRESS ENTER]', btnX + btnW / 2, btnY + 96);
             ctx.textAlign = 'left';
           }
@@ -966,20 +966,20 @@ export function ControlRoomScene({
         let foundHoverVote = null;
 
         if (phase === 'question') {
-          if (px >= 400 && px <= 880 && py >= 635 && py <= 760) foundHoverLockIn = true;
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
           const optBoxes = [
-            { x: 40, y: 318, w: 585, h: 145, idx: 0 },
-            { x: 655, y: 318, w: 585, h: 145, idx: 1 },
-            { x: 40, y: 475, w: 585, h: 145, idx: 2 },
-            { x: 655, y: 475, w: 585, h: 145, idx: 3 },
+            { x: 40, y: 310, w: 585, h: 135, idx: 0 },
+            { x: 655, y: 310, w: 585, h: 135, idx: 1 },
+            { x: 40, y: 460, w: 585, h: 135, idx: 2 },
+            { x: 655, y: 460, w: 585, h: 135, idx: 3 },
           ];
           optBoxes.forEach(b => {
             if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) foundHoverOption = b.idx;
           });
         } else if (phase === 'discussion') {
-          if (px >= 400 && px <= 880 && py >= 625 && py <= 755) foundHoverLockIn = true;
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
         } else if (phase === 'voting') {
-          if (px >= 400 && px <= 880 && py >= 625 && py <= 755) foundHoverLockIn = true;
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) foundHoverLockIn = true;
           for (let pIdx = 0; pIdx < 6; pIdx++) {
             const col = pIdx % 3;
             const row = Math.floor(pIdx / 3);
@@ -1035,16 +1035,16 @@ export function ControlRoomScene({
         const py = (1 - uv.y) * 800;
 
         if (phase === 'question') {
-          if (px >= 400 && px <= 880 && py >= 635 && py <= 760) {
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
             playVoteCast();
             confirmCb?.();
             return;
           }
           const optBoxes = [
-            { x: 40, y: 318, w: 585, h: 145, idx: 0 },
-            { x: 655, y: 318, w: 585, h: 145, idx: 1 },
-            { x: 40, y: 475, w: 585, h: 145, idx: 2 },
-            { x: 655, y: 475, w: 585, h: 145, idx: 3 },
+            { x: 40, y: 310, w: 585, h: 135, idx: 0 },
+            { x: 655, y: 310, w: 585, h: 135, idx: 1 },
+            { x: 40, y: 460, w: 585, h: 135, idx: 2 },
+            { x: 655, y: 460, w: 585, h: 135, idx: 3 },
           ];
           optBoxes.forEach(b => {
             if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
@@ -1053,12 +1053,12 @@ export function ControlRoomScene({
             }
           });
         } else if (phase === 'discussion') {
-          if (px >= 400 && px <= 880 && py >= 625 && py <= 755) {
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
             playTerminalPowerOn();
             proceedVoteCb?.();
           }
         } else if (phase === 'voting') {
-          if (px >= 400 && px <= 880 && py >= 625 && py <= 755) {
+          if (px >= 360 && px <= 920 && py >= 615 && py <= 740) {
             playTerminalPowerOn();
             resolveCb?.();
             return;
@@ -1119,9 +1119,8 @@ export function ControlRoomScene({
     const clock = new THREE.Clock();
     let animationFrameId;
 
-    const cyanColor = new THREE.Color(0x00f3ff);
-    const amberColor = new THREE.Color(0xff9900);
-    const redColor = new THREE.Color(0xff0055);
+    const emeraldColor = new THREE.Color(0x00ffaa);
+    const goldColor = new THREE.Color(0xffb700);
 
     const targetCamPos = new THREE.Vector3(0, 10, 18);
     const targetLookAt = new THREE.Vector3(0, 0, 0);
@@ -1161,18 +1160,18 @@ export function ControlRoomScene({
         const ringMat = consoleStatusRings[i];
         const light = consoleLightMeshList[i];
         const bezelMat = consoleBezelMaterials[i];
-        let targetColor = cyanColor;
+        let targetColor = emeraldColor;
 
         const player = state?.players?.[i];
 
         if (phase === 'voting') {
-          targetColor = amberColor;
+          targetColor = goldColor;
         } else if (player?.isSuspicious || player?.accused) {
-          targetColor = redColor;
+          targetColor = goldColor;
         } else if (i === activeIdx) {
-          targetColor = phase === 'question' ? amberColor : cyanColor;
+          targetColor = phase === 'question' ? goldColor : emeraldColor;
         } else if (player?.isReady || player?.hasAnswered) {
-          targetColor = cyanColor;
+          targetColor = emeraldColor;
         }
 
         if (i === activeIdx) {
@@ -1191,10 +1190,10 @@ export function ControlRoomScene({
       // Overhead room light pulse based on phase
       if (phase === 'voting' || phase === 'suspicious') {
         overheadLight.intensity = 2.0 + Math.sin(elapsedTime * 6) * 1.5;
-        overheadLight.color.lerp(redColor, 0.1);
+        overheadLight.color.lerp(goldColor, 0.1);
       } else {
         overheadLight.intensity = 0.3;
-        overheadLight.color.lerp(amberColor, 0.05);
+        overheadLight.color.lerp(goldColor, 0.05);
       }
 
       // Camera choreography per currentPhase
@@ -1282,16 +1281,16 @@ export function ControlRoomScene({
         <button
           onClick={() => setShowCalibration(!showCalibration)}
           style={{
-            background: 'rgba(0, 240, 255, 0.2)',
-            border: '2px solid #00f0ff',
+            background: 'rgba(0, 255, 170, 0.15)',
+            border: '2px solid #00ffaa',
             borderRadius: '8px',
-            color: '#00f0ff',
+            color: '#00ffaa',
             padding: '8px 16px',
             fontFamily: 'Orbitron, sans-serif',
             fontSize: '12px',
             fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
+            boxShadow: '0 0 15px rgba(0, 255, 170, 0.3)',
             backdropFilter: 'blur(8px)',
           }}
         >
@@ -1301,16 +1300,16 @@ export function ControlRoomScene({
         {showCalibration && (
           <div style={{
             background: 'rgba(10, 16, 28, 0.95)',
-            border: '2px solid #00f0ff',
+            border: '2px solid #00ffaa',
             borderRadius: '12px',
             padding: '16px 20px',
             width: '320px',
-            boxShadow: '0 0 30px rgba(0, 240, 255, 0.3)',
+            boxShadow: '0 0 30px rgba(0, 255, 170, 0.3)',
             color: '#e2e8f0',
             fontFamily: 'Rajdhani, sans-serif',
             backdropFilter: 'blur(12px)',
           }}>
-            <div style={{ fontFamily: 'Orbitron', color: '#00f0ff', fontWeight: 700, fontSize: '14px', marginBottom: '12px' }}>
+            <div style={{ fontFamily: 'Orbitron', color: '#00ffaa', fontWeight: 700, fontSize: '14px', marginBottom: '12px' }}>
               🎥 LIVE 3D CAMERA PIPELINE
             </div>
 
@@ -1318,7 +1317,7 @@ export function ControlRoomScene({
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                 <span>DISTANCE RATIO:</span>
-                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camDist.toFixed(2)}x</span>
+                <span style={{ color: '#00ffaa', fontWeight: 700 }}>{camDist.toFixed(2)}x</span>
               </div>
               <input
                 type="range"
@@ -1327,7 +1326,7 @@ export function ControlRoomScene({
                 step="0.05"
                 value={camDist}
                 onChange={(e) => setCamDist(parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: '#00ffaa', cursor: 'pointer' }}
               />
             </div>
 
@@ -1335,7 +1334,7 @@ export function ControlRoomScene({
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                 <span>CAMERA HEIGHT (Y):</span>
-                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camHeight.toFixed(2)}m</span>
+                <span style={{ color: '#00ffaa', fontWeight: 700 }}>{camHeight.toFixed(2)}m</span>
               </div>
               <input
                 type="range"
@@ -1344,7 +1343,7 @@ export function ControlRoomScene({
                 step="0.05"
                 value={camHeight}
                 onChange={(e) => setCamHeight(parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: '#00ffaa', cursor: 'pointer' }}
               />
             </div>
 
@@ -1352,7 +1351,7 @@ export function ControlRoomScene({
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                 <span>LOOKAT OFFSET:</span>
-                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camLookOffset.toFixed(2)}</span>
+                <span style={{ color: '#00ffaa', fontWeight: 700 }}>{camLookOffset.toFixed(2)}</span>
               </div>
               <input
                 type="range"
@@ -1361,7 +1360,7 @@ export function ControlRoomScene({
                 step="0.05"
                 value={camLookOffset}
                 onChange={(e) => setCamLookOffset(parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: '#00ffaa', cursor: 'pointer' }}
               />
             </div>
 
@@ -1369,7 +1368,7 @@ export function ControlRoomScene({
             <div style={{ marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                 <span>FIELD OF VIEW (FOV):</span>
-                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camFov}°</span>
+                <span style={{ color: '#00ffaa', fontWeight: 700 }}>{camFov}°</span>
               </div>
               <input
                 type="range"
@@ -1378,7 +1377,7 @@ export function ControlRoomScene({
                 step="1"
                 value={camFov}
                 onChange={(e) => setCamFov(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: '#00ffaa', cursor: 'pointer' }}
               />
             </div>
 
@@ -1387,9 +1386,9 @@ export function ControlRoomScene({
               <button
                 onClick={() => { setCamDist(1.38); setCamHeight(1.85); setCamLookOffset(0.85); setCamFov(52); }}
                 style={{
-                  background: 'rgba(0, 240, 255, 0.15)',
-                  border: '1px solid #00f0ff',
-                  color: '#00f0ff',
+                  background: 'rgba(0, 255, 170, 0.15)',
+                  border: '1px solid #00ffaa',
+                  color: '#00ffaa',
                   padding: '6px',
                   borderRadius: '6px',
                   fontFamily: 'Orbitron',
@@ -1402,9 +1401,9 @@ export function ControlRoomScene({
               <button
                 onClick={() => { setCamDist(1.65); setCamHeight(2.40); setCamLookOffset(0.70); setCamFov(52); }}
                 style={{
-                  background: 'rgba(255, 170, 0, 0.15)',
-                  border: '1px solid #ffaa00',
-                  color: '#ffaa00',
+                  background: 'rgba(255, 183, 0, 0.15)',
+                  border: '1px solid #ffb700',
+                  color: '#ffb700',
                   padding: '6px',
                   borderRadius: '6px',
                   fontFamily: 'Orbitron',
