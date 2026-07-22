@@ -5,6 +5,7 @@ import * as THREE from 'three';
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center background built with Three.js.
+ * Renders dynamic 3D PC/Laptop Monitor screens for each player workstation!
  * 
  * @param {Object} props
  * @param {Object} [props.gameState] - State object containing game & player data
@@ -177,7 +178,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     coreRing.position.y = 3.0;
     holoGroup.add(coreRing);
 
-    // Holographic Particle Cloud (Rising particles inside cylinder)
+    // Holographic Particle Cloud
     const holoParticleCount = 220;
     const holoParticleGeo = new THREE.BufferGeometry();
     const holoPositions = new Float32Array(holoParticleCount * 3);
@@ -205,22 +206,32 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
     scene.add(holoGroup);
 
-    // --- 5. 6 PLAYER CONSOLES & STATUS LIGHT RINGS ---
+    // --- 5. 6 PLAYER WORKSTATIONS WITH DYNAMIC DUAL-SIDE 3D PC MONITORS ---
     const consoleCount = 6;
     const consoleRadius = 7.5;
     const consoleGroup = new THREE.Group();
     const consoleStatusRings = [];
     const consoleLightMeshList = [];
 
-    const deskGeo = new THREE.BoxGeometry(1.8, 0.9, 1.2);
+    const screenCanvasList = [];
+    const screenTextureList = [];
+
+    const deskGeo = new THREE.BoxGeometry(2.2, 0.9, 1.4);
     const deskMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
       roughness: 0.4,
       metalness: 0.7,
     });
 
-    const screenGeo = new THREE.PlaneGeometry(1.2, 0.7);
-    const ringStatusGeo = new THREE.TorusGeometry(1.3, 0.06, 16, 32);
+    const monitorFrameGeo = new THREE.BoxGeometry(1.6, 1.0, 0.08);
+    const monitorFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.2,
+      metalness: 0.9,
+    });
+
+    const screenGeo = new THREE.PlaneGeometry(1.52, 0.92);
+    const ringStatusGeo = new THREE.TorusGeometry(1.4, 0.06, 16, 32);
 
     for (let i = 0; i < consoleCount; i++) {
       const angle = (i / consoleCount) * Math.PI * 2 + Math.PI / 6;
@@ -234,16 +245,37 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       const deskMesh = new THREE.Mesh(deskGeo, deskMat);
       pDeskGroup.add(deskMesh);
 
-      // Slanted Screen
+      // PC Monitor Stand
+      const standGeo = new THREE.CylinderGeometry(0.08, 0.12, 0.4, 16);
+      const standMesh = new THREE.Mesh(standGeo, monitorFrameMat);
+      standMesh.position.set(0, 0.65, 0.1);
+      pDeskGroup.add(standMesh);
+
+      // PC Monitor Outer Frame
+      const frameMesh = new THREE.Mesh(monitorFrameGeo, monitorFrameMat);
+      frameMesh.position.set(0, 1.15, 0.1);
+      frameMesh.rotation.x = -Math.PI / 16;
+      pDeskGroup.add(frameMesh);
+
+      // Dynamic HTML5 Canvas Texture for 3D PC Monitor Screen
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 320;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+
+      screenCanvasList.push(canvas);
+      screenTextureList.push(texture);
+
       const screenMat = new THREE.MeshBasicMaterial({
-        color: 0x00f3ff,
+        map: texture,
         transparent: true,
-        opacity: 0.75,
-        side: THREE.DoubleSide,
       });
+
       const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-      screenMesh.position.set(0, 0.65, 0.1);
-      screenMesh.rotation.x = -Math.PI / 6;
+      screenMesh.position.set(0, 1.15, 0.056);
+      screenMesh.rotation.x = -Math.PI / 16;
       pDeskGroup.add(screenMesh);
 
       // Console status ring on ground around desk base
@@ -259,11 +291,11 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
       // Point light per console
       const cLight = new THREE.PointLight(0x00f3ff, 0.8, 4);
-      cLight.position.set(0, 0.8, 0);
+      cLight.position.set(0, 1.2, 0);
       pDeskGroup.add(cLight);
 
-      // Orient desk facing the central holographic projector
-      pDeskGroup.lookAt(0, 0.45, 0);
+      // Orient desk facing outward from center towards player camera
+      pDeskGroup.lookAt(x * 2, 0.45, z * 2);
 
       consoleGroup.add(pDeskGroup);
       consoleStatusRings.push(ringMat);
@@ -278,42 +310,132 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
     for (let i = 0; i < starCount; i++) {
       starPositions[i * 3] = (Math.random() - 0.5) * 50;
-      starPositions[i * 3 + 1] = Math.random() * 22;
+      starPositions[i * 3 + 1] = Math.random() * 25;
       starPositions[i * 3 + 2] = (Math.random() - 0.5) * 50;
     }
 
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMat = new THREE.PointsMaterial({
-      color: 0x38bdf8,
+      color: 0x00f3ff,
       size: 0.08,
       transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.4,
     });
     const starParticles = new THREE.Points(starGeo, starMat);
     scene.add(starParticles);
 
-    // Outer Room Sci-Fi Pillars for Depth
-    const pillarGeo = new THREE.CylinderGeometry(0.4, 0.6, 14, 8);
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.8 });
-    for (let i = 0; i < 8; i++) {
-      const pAngle = (i / 8) * Math.PI * 2;
-      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-      pillar.position.set(Math.cos(pAngle) * 19, 7, Math.sin(pAngle) * 19);
-      scene.add(pillar);
-    }
+    // --- 7. HELPER TO DRAW DYNAMIC 3D PC SCREEN CONTENT ---
+    const update3DScreenTextures = (state, phase, activeIdx) => {
+      const players = state?.players || [];
+      const questionObj = state?.currentQuestion || state?.question;
+      const qText = questionObj?.question || questionObj?.text || 'SECURITY CHECK PROMPT';
+      const options = questionObj?.options || [];
 
-    // --- 7. ANIMATION LOOP & DYNAMIC CAMERA STATE ---
+      screenCanvasList.forEach((canvas, idx) => {
+        const ctx = canvas.getContext('2d');
+        const texture = screenTextureList[idx];
+        const player = players[idx];
+        const isSpy = idx === state?.spyIndex;
+        const isQuestionPhase = phase === 'question';
+        const isRevealed = phase === 'discussion' || phase === 'voting' || phase === 'victory';
+
+        // Clear & Dark Cyber Background
+        ctx.fillStyle = '#060913';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Grid scanline texture
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.03)';
+        for (let y = 0; y < canvas.height; y += 8) {
+          ctx.fillRect(0, y, canvas.width, 4);
+        }
+
+        // Screen Bezel Border Glow
+        ctx.strokeStyle = isSpy && isQuestionPhase ? '#ff0055' : idx === activeIdx ? '#ffaa00' : '#00f0ff';
+        ctx.lineWidth = 8;
+        ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+        // Header Title Bar
+        ctx.fillStyle = isSpy && isQuestionPhase ? 'rgba(255, 0, 85, 0.25)' : 'rgba(0, 240, 255, 0.18)';
+        ctx.fillRect(8, 8, canvas.width - 16, 44);
+
+        ctx.font = 'bold 20px Orbitron, sans-serif';
+        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00f0ff';
+        ctx.fillText(`OPERATIVE: ${player?.name ? player.name.toUpperCase() : `STATION 0${idx + 1}`}`, 20, 38);
+
+        // Status Indicator Right
+        ctx.font = 'bold 14px Orbitron, sans-serif';
+        ctx.fillStyle = isSpy && isQuestionPhase ? '#ff0055' : '#00ffaa';
+        ctx.fillText(isSpy && isQuestionPhase ? '⚠️ SPY ENCRYPTED' : 'ONLINE', canvas.width - 160, 38);
+
+        // Security Prompt Display
+        if (isSpy && isQuestionPhase) {
+          ctx.fillStyle = '#ff0055';
+          ctx.font = 'bold 24px Orbitron, sans-serif';
+          ctx.fillText('🔒 SECURITY PROMPT ENCRYPTED', 20, 96);
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.font = '16px Rajdhani, sans-serif';
+          ctx.fillText('Deduce prompt from operative choices below...', 20, 126);
+        } else {
+          ctx.fillStyle = isRevealed ? '#00ffaa' : '#ffffff';
+          ctx.font = 'bold 18px Rajdhani, sans-serif';
+
+          // Word Wrap Question Text on 3D Screen
+          const words = qText.split(' ');
+          let line = '';
+          let yPos = 92;
+          for (let w of words) {
+            const testLine = line + w + ' ';
+            if (ctx.measureText(testLine).width > canvas.width - 40) {
+              ctx.fillText(line, 20, yPos);
+              line = w + ' ';
+              yPos += 24;
+            } else {
+              line = testLine;
+            }
+          }
+          ctx.fillText(line, 20, yPos);
+        }
+
+        // Render 4 Options Grid on 3D Monitor
+        const optYStart = 168;
+        options.slice(0, 4).forEach((opt, oIdx) => {
+          const col = oIdx % 2;
+          const row = Math.floor(oIdx / 2);
+          const boxX = 20 + col * 238;
+          const boxY = optYStart + row * 64;
+
+          const playerAns = state?.playerAnswers?.[idx];
+          const isSelected = playerAns === opt || playerAns === oIdx;
+
+          ctx.fillStyle = isSelected ? 'rgba(0, 240, 255, 0.35)' : 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(boxX, boxY, 226, 54);
+
+          ctx.strokeStyle = isSelected ? '#00f0ff' : 'rgba(0, 240, 255, 0.3)';
+          ctx.lineWidth = isSelected ? 2 : 1;
+          ctx.strokeRect(boxX, boxY, 226, 54);
+
+          ctx.font = 'bold 14px Rajdhani, sans-serif';
+          ctx.fillStyle = isSelected ? '#ffffff' : '#00f0ff';
+          const optText = typeof opt === 'string' ? opt : (opt.text || opt.label || '');
+          ctx.fillText(optText.length > 24 ? optText.substring(0, 22) + '...' : optText, boxX + 10, boxY + 32);
+        });
+
+        texture.needsUpdate = true;
+      });
+    };
+
+    // --- 8. ANIMATION LOOP & CAMERA CHOREOGRAPHY ---
+    const clock = new THREE.Clock();
     let animationFrameId;
-    let clock = new THREE.Clock();
-
-    const targetCamPos = new THREE.Vector3();
-    const targetLookAt = new THREE.Vector3();
-    const currentLookAt = new THREE.Vector3(0, 1.5, 0);
 
     const cyanColor = new THREE.Color(0x00f3ff);
-    const amberColor = new THREE.Color(0xffaa00);
+    const amberColor = new THREE.Color(0xff9900);
     const redColor = new THREE.Color(0xff0055);
+
+    const targetCamPos = new THREE.Vector3(0, 10, 18);
+    const targetLookAt = new THREE.Vector3(0, 0, 0);
+    const currentLookAt = new THREE.Vector3(0, 0, 0);
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
@@ -321,14 +443,17 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       const elapsedTime = clock.getElapsedTime();
       const { currentPhase: phase, activePlayerIndex: activeIdx, gameState: state } = sceneStateRef.current;
 
-      // 7a. Rotate central hologram core and rings
+      // Update 3D PC monitor screens
+      update3DScreenTextures(state, phase, activeIdx);
+
+      // Rotate central hologram core and rings
       holoCore.rotation.x = elapsedTime * 0.4;
       holoCore.rotation.y = elapsedTime * 0.6;
       coreRing.rotation.z = elapsedTime * -0.5;
       coreRing.rotation.x = Math.sin(elapsedTime) * 0.3;
       holoCyl.rotation.y = elapsedTime * -0.15;
 
-      // 7b. Animate rising holographic particles
+      // Animate rising holographic particles
       const posAttr = holoParticleGeo.attributes.position;
       for (let i = 0; i < holoParticleCount; i++) {
         let y = posAttr.getY(i);
@@ -341,7 +466,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
       // Slowly rotate star dust field
       starParticles.rotation.y = elapsedTime * 0.02;
 
-      // 7c. Dynamic Status Lights on 6 Player Consoles
+      // Dynamic Status Lights on 6 Player Consoles
       for (let i = 0; i < consoleCount; i++) {
         const ringMat = consoleStatusRings[i];
         const light = consoleLightMeshList[i];
@@ -379,7 +504,7 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
         overheadLight.color.lerp(amberColor, 0.05);
       }
 
-      // 7d. Camera choreography per currentPhase
+      // Camera choreography per currentPhase
       const validActiveIdx = Math.max(0, Math.min(consoleCount - 1, activeIdx || 0));
       const activeAngle = (validActiveIdx / consoleCount) * Math.PI * 2 + Math.PI / 6;
       const activeX = Math.cos(activeAngle) * consoleRadius;
@@ -387,10 +512,10 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
 
       switch (phase) {
         case 'question': {
-          // Focused view looking directly at active player console
-          const camDist = 1.35;
-          targetCamPos.set(activeX * camDist, 3.8, activeZ * camDist);
-          targetLookAt.set(activeX * 0.45, 1.2, activeZ * 0.45);
+          // Focused view looking directly at active player workstation monitor
+          const deskDist = 1.28;
+          targetCamPos.set(activeX * deskDist, 2.6, activeZ * deskDist);
+          targetLookAt.set(activeX, 1.4, activeZ);
           break;
         }
         case 'discussion': {
@@ -420,85 +545,48 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
             5.5 + Math.cos(elapsedTime * 1.2) * 1.8,
             Math.sin(fastOrbit) * r
           );
-          targetLookAt.set(0, 2.0, 0);
+          targetLookAt.set(0, 2.8, 0);
           break;
         }
-        case 'lobby':
         default: {
-          // Slow orbiting camera overview
-          const orbit = elapsedTime * 0.18;
-          targetCamPos.set(Math.cos(orbit) * 17.5, 9.5, Math.sin(orbit) * 17.5);
-          targetLookAt.set(0, 1.5, 0);
+          // 'lobby': Slow orbiting camera overview
+          const orbitTime = elapsedTime * 0.15;
+          targetCamPos.set(Math.cos(orbitTime) * 16, 8.5, Math.sin(orbitTime) * 16);
+          targetLookAt.set(0, 1.8, 0);
           break;
         }
       }
 
-      // Smoothly interpolate camera position & lookAt target
-      camera.position.lerp(targetCamPos, 0.045);
+      // Smooth lerp camera movement
+      camera.position.lerp(targetCamPos, 0.05);
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Render scene
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // --- 8. RESIZE HANDLER ---
+    // --- 9. RESIZE HANDLER ---
     const handleResize = () => {
-      if (!containerRef.current) return;
-      const newW = containerRef.current.clientWidth || window.innerWidth;
-      const newH = containerRef.current.clientHeight || window.innerHeight;
-      camera.aspect = newW / newH;
+      if (!container) return;
+      const newWidth = container.clientWidth || window.innerWidth;
+      const newHeight = container.clientHeight || window.innerHeight;
+      camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(newW, newH);
+      renderer.setSize(newWidth, newHeight);
     };
 
     window.addEventListener('resize', handleResize);
-    const resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(container);
 
-    // --- 9. CLEANUP ON UNMOUNT ---
+    // --- 10. CLEANUP ON UNMOUNT ---
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
-      resizeObserver.disconnect();
-
-      // Dispose scene objects & renderer
-      floorGeo.dispose();
-      floorMat.dispose();
-      ringGeo1.dispose();
-      ringMat1.dispose();
-      ringGeo2.dispose();
-      ringMat2.dispose();
-
-      podBaseGeo.dispose();
-      podBaseMat.dispose();
-      emitterRingGeo.dispose();
-      emitterRingMat.dispose();
-      holoCylGeo.dispose();
-      holoCylMat.dispose();
-      holoCoreGeo.dispose();
-      holoCoreMat.dispose();
-      coreRingGeo.dispose();
-      coreRingMat.dispose();
-      holoParticleGeo.dispose();
-      holoParticleMat.dispose();
-
-      deskGeo.dispose();
-      deskMat.dispose();
-      screenGeo.dispose();
-      ringStatusGeo.dispose();
-
-      starGeo.dispose();
-      starMat.dispose();
-      pillarGeo.dispose();
-      pillarMat.dispose();
-
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) {
+      if (container && renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      renderer.dispose();
     };
   }, []);
 
@@ -506,17 +594,14 @@ export function ControlRoomScene({ gameState, currentPhase = 'lobby', activePlay
     <div
       ref={containerRef}
       style={{
-        width: '100%',
-        height: '100%',
         position: 'absolute',
         top: 0,
         left: 0,
-        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
         zIndex: 0,
         pointerEvents: 'none',
       }}
     />
   );
 }
-
-export default ControlRoomScene;
