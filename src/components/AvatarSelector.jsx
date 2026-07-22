@@ -18,10 +18,10 @@ export const AVATAR_OPTIONS = [
 ];
 
 export const FRAME_COLORS = [
-  { id: 'cyan', name: 'Neon Cyan', hex: '#00f0ff', glow: 'rgba(0, 240, 255, 0.5)' },
-  { id: 'crimson', name: 'Crimson Red', hex: '#ff0055', glow: 'rgba(255, 0, 85, 0.5)' },
+  { id: 'cyan', name: 'Neon Cyan', hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+  { id: 'crimson', name: 'Crimson Red', hex: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
   { id: 'amber', name: 'Amber Gold', hex: '#ffaa00', glow: 'rgba(255, 170, 0, 0.5)' },
-  { id: 'matrix', name: 'Matrix Green', hex: '#00ffaa', glow: 'rgba(0, 255, 170, 0.5)' },
+  { id: 'matrix', name: 'Matrix Green', hex: '#3b82f6', glow: 'rgba(0, 255, 170, 0.5)' },
   { id: 'purple', name: 'Electric Purple', hex: '#b026ff', glow: 'rgba(176, 38, 255, 0.5)' },
   { id: 'pink', name: 'Plasma Pink', hex: '#ff00aa', glow: 'rgba(255, 0, 170, 0.5)' },
 ];
@@ -41,7 +41,7 @@ export default function AvatarSelector({
 }) {
   const [name, setName] = useState(initialData.name || 'Operative-1');
   const [avatarId, setAvatarId] = useState(initialData.avatarId || 'hacker');
-  const [frameColor, setFrameColor] = useState(initialData.frameColor || '#00f0ff');
+  const [frameColor, setFrameColor] = useState(initialData.frameColor || '#3b82f6');
 
   useEffect(() => {
     if (initialData.name) setName(initialData.name);
@@ -119,7 +119,7 @@ export default function AvatarSelector({
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: '1.5rem',
-          borderBottom: '1px solid rgba(0, 240, 255, 0.15)',
+          borderBottom: '1px solid rgba(59, 130, 246, 0.15)',
           paddingBottom: '1rem'
         }}>
           <div>
@@ -148,7 +148,7 @@ export default function AvatarSelector({
               style={{
                 background: 'transparent',
                 border: '1px solid rgba(255,255,255,0.2)',
-                color: '#8096a7',
+                color: '#94a3b8',
                 cursor: 'pointer',
                 padding: '0.4rem',
                 borderRadius: '4px',
@@ -157,7 +157,7 @@ export default function AvatarSelector({
                 justifyContent: 'center',
                 transition: 'all 0.2s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#ff0055'}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#ef4444'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}
             >
               <X size={18} />
@@ -244,7 +244,7 @@ export default function AvatarSelector({
             {/* Callsign Input */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <label style={{ fontSize: '0.8rem', color: '#8096a7', fontWeight: 600, letterSpacing: '0.05em' }}>
+                <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em' }}>
                   CALLSIGN / AGENT NAME
                 </label>
                 <button
@@ -252,7 +252,7 @@ export default function AvatarSelector({
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#00f0ff',
+                    color: '#3b82f6',
                     cursor: 'pointer',
                     fontSize: '0.75rem',
                     display: 'flex',
@@ -281,7 +281,7 @@ export default function AvatarSelector({
 
             {/* Avatar Icon Selection */}
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#8096a7', fontWeight: 600, letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>
+              <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>
                 AVATAR EMBLEM
               </label>
               <div style={{
@@ -301,9 +301,9 @@ export default function AvatarSelector({
                       style={{
                         height: '44px',
                         backgroundColor: isSelected ? `${frameColor}25` : 'rgba(18, 24, 36, 0.6)',
-                        border: isSelected ? `2px solid ${frameColor}` : '1px solid rgba(0, 240, 255, 0.15)',
+                        border: isSelected ? `2px solid ${frameColor}` : '1px solid rgba(59, 130, 246, 0.15)',
                         borderRadius: '6px',
-                        color: isSelected ? frameColor : '#8096a7',
+                        color: isSelected ? frameColor : '#94a3b8',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -321,7 +321,7 @@ export default function AvatarSelector({
 
             {/* Frame Color Selection */}
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#8096a7', fontWeight: 600, letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>
+              <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.05em', display: 'block', marginBottom: '0.5rem' }}>
                 CYBER FRAME MATRIX COLOR
               </label>
               <div style={{
@@ -367,7 +367,7 @@ export default function AvatarSelector({
           gap: '1rem',
           marginTop: '2rem',
           paddingTop: '1.25rem',
-          borderTop: '1px solid rgba(0, 240, 255, 0.15)'
+          borderTop: '1px solid rgba(59, 130, 246, 0.15)'
         }}>
           {onClose && (
             <button

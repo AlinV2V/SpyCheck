@@ -62,10 +62,10 @@ export function ComputerScreenTerminal({
           margin: 0 auto;
           padding: 16px;
           background: rgba(10, 16, 28, 0.88);
-          border: 2px solid rgba(0, 240, 255, 0.4);
+          border: 2px solid rgba(59, 130, 246, 0.4);
           border-radius: 16px;
           box-shadow: 
-            0 0 40px rgba(0, 240, 255, 0.25),
+            0 0 40px rgba(59, 130, 246, 0.25),
             0 20px 50px rgba(0, 0, 0, 0.85);
           font-family: 'Rajdhani', 'Orbitron', sans-serif;
           box-sizing: border-box;
@@ -82,7 +82,7 @@ export function ComputerScreenTerminal({
           background: rgba(12, 18, 30, 0.6);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
-          border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+          border-bottom: 1px solid rgba(59, 130, 246, 0.3);
           color: #94a3b8;
           font-size: 0.85rem;
           letter-spacing: 1.5px;
@@ -95,8 +95,8 @@ export function ComputerScreenTerminal({
           gap: 10px;
           font-family: 'Orbitron', sans-serif;
           font-weight: 700;
-          color: #00f0ff;
-          text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+          color: #3b82f6;
+          text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
         }
 
         .pc-terminal-status-dots {
@@ -112,19 +112,19 @@ export function ComputerScreenTerminal({
         }
 
         .pc-led-green {
-          background: #00ffaa;
-          box-shadow: 0 0 8px #00ffaa;
+          background: #10b981;
+          box-shadow: 0 0 8px #10b981;
         }
 
         .pc-led-amber {
-          background: #ffaa00;
-          box-shadow: 0 0 8px #ffaa00;
+          background: #f59e0b;
+          box-shadow: 0 0 8px #f59e0b;
           animation: pc-pulse 1.5s infinite;
         }
 
         .pc-led-red {
-          background: #ff0055;
-          box-shadow: 0 0 8px #ff0055;
+          background: #ef4444;
+          box-shadow: 0 0 8px #ef4444;
           animation: pc-pulse 1s infinite;
         }
 
@@ -143,7 +143,7 @@ export function ComputerScreenTerminal({
           inset: 0;
           background: linear-gradient(
             rgba(18, 16, 16, 0) 50%, 
-            rgba(0, 240, 255, 0.03) 50%
+            rgba(59, 130, 246, 0.03) 50%
           );
           background-size: 100% 4px;
           pointer-events: none;
@@ -156,12 +156,12 @@ export function ComputerScreenTerminal({
           position: absolute;
           width: 16px;
           height: 16px;
-          border-color: #00f0ff;
+          border-color: #3b82f6;
           border-style: solid;
           pointer-events: none;
           z-index: 25;
           opacity: 0.85;
-          filter: drop-shadow(0 0 4px #00f0ff);
+          filter: drop-shadow(0 0 4px #3b82f6);
         }
         .pc-cb-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
         .pc-cb-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; }
@@ -179,7 +179,7 @@ export function ComputerScreenTerminal({
           background: rgba(12, 18, 30, 0.6);
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
-          border-top: 1px solid rgba(0, 240, 255, 0.25);
+          border-top: 1px solid rgba(59, 130, 246, 0.25);
           color: #e2e8f0;
           font-size: 0.85rem;
         }
@@ -198,20 +198,20 @@ export function ComputerScreenTerminal({
           min-width: 26px;
           height: 26px;
           padding: 0 6px;
-          background: rgba(0, 240, 255, 0.15);
-          border: 1px solid #00f0ff;
+          background: rgba(59, 130, 246, 0.15);
+          border: 1px solid #3b82f6;
           border-radius: 4px;
-          color: #00f0ff;
+          color: #3b82f6;
           font-family: 'Orbitron', monospace;
           font-weight: 800;
           font-size: 0.75rem;
-          box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+          box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
         }
 
         .pc-key-badge-action {
           background: rgba(0, 255, 170, 0.15);
-          border-color: #00ffaa;
-          color: #00ffaa;
+          border-color: #10b981;
+          color: #10b981;
           box-shadow: 0 0 6px rgba(0, 255, 170, 0.3);
         }
 
@@ -233,7 +233,7 @@ export function ComputerScreenTerminal({
       {/* Monitor Hardware Bezel Header */}
       <div className="pc-terminal-bezel-bar">
         <div className="pc-terminal-bezel-title">
-          <Terminal size={18} color="#00f0ff" />
+          <Terminal size={18} color="#3b82f6" />
           <span>STATION 0{activePlayerIndex + 1} // OPERATIVE: {playerName.toUpperCase()}</span>
         </div>
         <div className="pc-terminal-status-dots">
@@ -256,7 +256,7 @@ export function ComputerScreenTerminal({
 
       {/* Keyboard Shortcuts Hint Bar */}
       <div className="pc-terminal-keyboard-bar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#00f0ff', fontWeight: '700' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#3b82f6', fontWeight: '700' }}>
           <Keyboard size={18} />
           <span>TERMINAL CONTROLS:</span>
         </div>
@@ -281,7 +281,7 @@ export function ComputerScreenTerminal({
           <div className="pc-key-item" style={{ marginLeft: '10px' }}>
             <span className="pc-key-badge pc-key-badge-action">ENTER</span>
             <span className="pc-key-badge pc-key-badge-action">SPACE</span>
-            <span style={{ color: '#00ffaa' }}>Lock-In Answer</span>
+            <span style={{ color: '#10b981' }}>Lock-In Answer</span>
           </div>
         </div>
       </div>

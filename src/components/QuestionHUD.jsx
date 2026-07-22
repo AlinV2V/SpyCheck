@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { playClick, playLaserLock, playVoteCast, playTerminalPowerOn } from '../services/audio';
 
 /**
  * QuestionHUD Component
@@ -20,101 +21,7 @@ import React, { useState, useEffect, useRef } from 'react';
  * - onConfirmAnswer: (optionIndex) => void
  */
 
-// Procedural Web Audio API Sound Synthesizer
-const playSoundEffect = (type) => {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const now = ctx.currentTime;
 
-    if (type === 'hover') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(900, now);
-      osc.frequency.exponentialRampToValueAtTime(350, now + 0.04);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.04);
-    } else if (type === 'select' || type === 'key') {
-      // Tactile key press / option selection blip
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'triangle';
-      osc2.type = 'sine';
-
-      osc1.frequency.setValueAtTime(520, now);
-      osc1.frequency.exponentialRampToValueAtTime(1040, now + 0.07);
-      osc2.frequency.setValueAtTime(1040, now);
-      osc2.frequency.exponentialRampToValueAtTime(2080, now + 0.07);
-
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 0.07);
-    } else if (type === 'confirm') {
-      // Multi-tone terminal lock-in burst
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const sub = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc1.type = 'sawtooth';
-      osc2.type = 'square';
-      sub.type = 'sine';
-      
-      osc1.frequency.setValueAtTime(440, now);
-      osc1.frequency.linearRampToValueAtTime(880, now + 0.16);
-      
-      osc2.frequency.setValueAtTime(880, now);
-      osc2.frequency.linearRampToValueAtTime(1760, now + 0.16);
-
-      sub.frequency.setValueAtTime(120, now);
-      sub.frequency.exponentialRampToValueAtTime(40, now + 0.2);
-      
-      gain.gain.setValueAtTime(0.22, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-      
-      osc1.connect(gain);
-      osc2.connect(gain);
-      sub.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc1.start(now);
-      osc2.start(now);
-      sub.start(now);
-      osc1.stop(now + 0.22);
-      osc2.stop(now + 0.22);
-      sub.stop(now + 0.22);
-    } else if (type === 'reveal') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, now);
-      osc.frequency.exponentialRampToValueAtTime(640, now + 0.18);
-      gain.gain.setValueAtTime(0.1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.18);
-    }
-  } catch (e) {
-    // Audio Context restricted before user gesture
-  }
-};
 
 export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption, onConfirmAnswer }) {
   // Pass & Play Privacy Shield state
@@ -200,25 +107,25 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
   const isLowTime = timeRemaining <= 10;
 
   // Option selection handler
-  const handleSelect = (idx) => {
+  const handleSelect = useCallback((idx) => {
     if (isConfirmedLocal || isShieldActive) return;
     if (idx < 0 || idx >= rawOptions.length) return;
     setSelectedIdx(idx);
-    playSoundEffect('select');
+    playLaserLock();
     if (onSelectOption) {
       onSelectOption(idx);
     }
-  };
+  }, [isConfirmedLocal, isShieldActive, rawOptions.length, onSelectOption]);
 
   // Lock-in confirmation handler
-  const handleLockIn = () => {
+  const handleLockIn = useCallback(() => {
     if (selectedIdx === null || isConfirmedLocal || isShieldActive) return;
     setIsConfirmedLocal(true);
-    playSoundEffect('confirm');
+    playVoteCast();
     if (onConfirmAnswer) {
       onConfirmAnswer(selectedIdx);
     }
-  };
+  }, [selectedIdx, isConfirmedLocal, isShieldActive, onConfirmAnswer]);
 
   // Physical Keyboard Shortcut Listener (A, B, C, D / 1, 2, 3, 4 / Enter)
   useEffect(() => {
@@ -247,11 +154,11 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isShieldActive, isConfirmedLocal, selectedIdx, rawOptions.length]);
+  }, [isShieldActive, isConfirmedLocal, selectedIdx, rawOptions.length, handleSelect, handleLockIn]);
 
   // Unlock privacy shield
   const handleRevealScreen = () => {
-    playSoundEffect('reveal');
+    playTerminalPowerOn();
     setIsShieldActive(false);
   };
 
@@ -295,7 +202,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           justify-content: space-between;
           padding: 2px 4px 8px 4px;
           margin-bottom: 10px;
-          border-bottom: 1px dashed rgba(0, 240, 255, 0.2);
+          border-bottom: 1px dashed rgba(59, 130, 246, 0.2);
           font-size: 11px;
           letter-spacing: 1.5px;
           color: #64748b;
@@ -332,8 +239,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-led-power {
-          background: #00f0ff;
-          box-shadow: 0 0 8px #00f0ff, 0 0 12px #00f0ff;
+          background: #3b82f6;
+          box-shadow: 0 0 8px #3b82f6, 0 0 12px #3b82f6;
           animation: qhud-led-glow 2s infinite ease-in-out;
         }
 
@@ -363,8 +270,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
             0deg,
             rgba(0, 0, 0, 0) 0px,
             rgba(0, 0, 0, 0) 2px,
-            rgba(0, 240, 255, 0.02) 3px,
-            rgba(0, 240, 255, 0.02) 4px
+            rgba(59, 130, 246, 0.02) 3px,
+            rgba(59, 130, 246, 0.02) 4px
           );
           pointer-events: none;
           z-index: 1;
@@ -380,7 +287,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           gap: 16px;
           margin-bottom: 14px;
           padding-bottom: 12px;
-          border-bottom: 1px dashed rgba(0, 240, 255, 0.25);
+          border-bottom: 1px dashed rgba(59, 130, 246, 0.25);
         }
 
         .qhud-sys-meta {
@@ -399,7 +306,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-meta-val {
-          color: #00f0ff;
+          color: #3b82f6;
           font-weight: 700;
         }
 
@@ -420,9 +327,9 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         .qhud-power-pip {
           width: 8px;
           height: 10px;
-          background: #00f0ff;
+          background: #3b82f6;
           border-radius: 1px;
-          box-shadow: 0 0 6px rgba(0, 240, 255, 0.6);
+          box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
         }
 
         .qhud-power-pip.dim {
@@ -485,7 +392,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         .qhud-clock-val {
           font-size: 13px;
           font-weight: 700;
-          color: #00ff66;
+          color: #3b82f6;
           letter-spacing: 1px;
           text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
         }
@@ -505,18 +412,18 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-role-agent {
-          background: rgba(0, 240, 255, 0.12);
-          border: 1px solid rgba(0, 240, 255, 0.5);
-          color: #00f0ff;
-          box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.5);
+          color: #3b82f6;
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
           backdrop-filter: blur(4px);
         }
 
         .qhud-role-intruder {
-          background: rgba(255, 42, 95, 0.18);
-          border: 1px solid rgba(255, 42, 95, 0.7);
-          color: #ff2a5f;
-          box-shadow: 0 0 15px rgba(255, 42, 95, 0.3);
+          background: rgba(239, 68, 68, 0.18);
+          border: 1px solid rgba(239, 68, 68, 0.7);
+          color: #ef4444;
+          box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
           backdrop-filter: blur(4px);
           animation: qhud-glitch-border 1.5s infinite alternate;
         }
@@ -528,19 +435,19 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           background: rgba(8, 14, 28, 0.45);
           backdrop-filter: blur(6px);
           -webkit-backdrop-filter: blur(6px);
-          border: 1px solid rgba(0, 240, 255, 0.35);
-          border-left: 4px solid #00f0ff;
+          border: 1px solid rgba(59, 130, 246, 0.35);
+          border-left: 4px solid #3b82f6;
           border-radius: 6px;
           padding: 14px 18px;
           margin-bottom: 16px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.08);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.08);
         }
 
         .qhud-question-box.encrypted {
-          border-left-color: #ff2a5f;
-          border-color: rgba(255, 42, 95, 0.45);
+          border-left-color: #ef4444;
+          border-color: rgba(239, 68, 68, 0.45);
           background: rgba(28, 10, 22, 0.55);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(255, 42, 95, 0.1);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(239, 68, 68, 0.1);
         }
 
         .qhud-terminal-prompt-header {
@@ -549,28 +456,28 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           gap: 8px;
           font-size: 11px;
           font-weight: 700;
-          color: #00f0ff;
+          color: #3b82f6;
           letter-spacing: 1.5px;
           margin-bottom: 8px;
           text-transform: uppercase;
         }
 
         .qhud-question-box.encrypted .qhud-terminal-prompt-header {
-          color: #ff2a5f;
+          color: #ef4444;
         }
 
         .qhud-cursor {
           display: inline-block;
           width: 8px;
           height: 14px;
-          background: #00f0ff;
+          background: #3b82f6;
           margin-left: 4px;
           vertical-align: middle;
           animation: qhud-blink 1s infinite steps(2, start);
         }
 
         .qhud-question-box.encrypted .qhud-cursor {
-          background: #ff2a5f;
+          background: #ef4444;
         }
 
         .qhud-question-title {
@@ -586,7 +493,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           display: flex;
           align-items: center;
           gap: 10px;
-          color: #ff2a5f;
+          color: #ef4444;
           font-size: 16px;
           font-weight: 800;
           letter-spacing: 1.5px;
@@ -621,7 +528,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           background: rgba(10, 18, 34, 0.5);
           backdrop-filter: blur(6px);
           -webkit-backdrop-filter: blur(6px);
-          border: 1px solid rgba(0, 240, 255, 0.3);
+          border: 1px solid rgba(59, 130, 246, 0.3);
           border-radius: 6px;
           padding: 12px 16px;
           display: flex;
@@ -631,20 +538,20 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
           user-select: none;
           overflow: hidden;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(0, 240, 255, 0.05);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 0 8px rgba(59, 130, 246, 0.05);
         }
 
         .qhud-option-card:hover {
-          border-color: #00f0ff;
-          background: rgba(0, 240, 255, 0.2);
+          border-color: #3b82f6;
+          background: rgba(59, 130, 246, 0.2);
           transform: translateY(-2px);
-          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.2);
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 12px rgba(59, 130, 246, 0.2);
         }
 
         .qhud-option-card.selected {
-          border-color: #00f0ff;
-          background: linear-gradient(90deg, rgba(0, 240, 255, 0.32) 0%, rgba(0, 119, 255, 0.22) 100%);
-          box-shadow: 0 0 25px rgba(0, 240, 255, 0.55), inset 0 0 15px rgba(0, 240, 255, 0.3);
+          border-color: #3b82f6;
+          background: linear-gradient(90deg, rgba(59, 130, 246, 0.32) 0%, rgba(0, 119, 255, 0.22) 100%);
+          box-shadow: 0 0 25px rgba(59, 130, 246, 0.55), inset 0 0 15px rgba(59, 130, 246, 0.3);
         }
 
         .qhud-option-card.locked {
@@ -665,30 +572,30 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           width: 32px;
           height: 32px;
           border-radius: 4px;
-          background: rgba(0, 240, 255, 0.12);
-          border: 1px solid rgba(0, 240, 255, 0.4);
+          background: rgba(59, 130, 246, 0.12);
+          border: 1px solid rgba(59, 130, 246, 0.4);
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 800;
           font-size: 14px;
-          color: #00f0ff;
+          color: #3b82f6;
           transition: all 0.15s ease;
-          box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
         }
 
         .qhud-option-card:hover .qhud-option-badge {
-          border-color: #00f0ff;
+          border-color: #3b82f6;
           color: #ffffff;
-          background: rgba(0, 240, 255, 0.35);
-          box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+          background: rgba(59, 130, 246, 0.35);
+          box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
         }
 
         .qhud-option-card.selected .qhud-option-badge {
-          background: #00f0ff;
+          background: #3b82f6;
           color: #020617;
-          border-color: #00f0ff;
-          box-shadow: 0 0 14px rgba(0, 240, 255, 0.9);
+          border-color: #3b82f6;
+          box-shadow: 0 0 14px rgba(59, 130, 246, 0.9);
         }
 
         .qhud-key-tag {
@@ -700,7 +607,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
         .qhud-option-card:hover .qhud-key-tag,
         .qhud-option-card.selected .qhud-key-tag {
-          color: #00f0ff;
+          color: #3b82f6;
         }
 
         .qhud-option-text {
@@ -722,16 +629,16 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           align-items: center;
           justify-content: flex-end;
           padding-right: 14px;
-          border: 1px dashed rgba(0, 240, 255, 0.8);
-          background: radial-gradient(circle at center, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
+          border: 1px dashed rgba(59, 130, 246, 0.8);
+          background: radial-gradient(circle at center, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
         }
 
         .qhud-laser-dot {
           width: 8px;
           height: 8px;
-          background: #00f0ff;
+          background: #3b82f6;
           border-radius: 50%;
-          box-shadow: 0 0 10px #00f0ff, 0 0 15px #00f0ff;
+          box-shadow: 0 0 10px #3b82f6, 0 0 15px #3b82f6;
           animation: qhud-laser-ping 0.8s infinite;
         }
 
@@ -756,7 +663,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-confirm-btn {
-          background: linear-gradient(135deg, rgba(0, 240, 255, 0.85) 0%, rgba(0, 119, 255, 0.85) 100%);
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.85) 0%, rgba(0, 119, 255, 0.85) 100%);
           backdrop-filter: blur(4px);
           -webkit-backdrop-filter: blur(4px);
           color: #020617;
@@ -764,11 +671,11 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           font-weight: 800;
           letter-spacing: 1.5px;
           padding: 12px 28px;
-          border: 1px solid rgba(0, 240, 255, 0.5);
+          border: 1px solid rgba(59, 130, 246, 0.5);
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
           text-transform: uppercase;
           display: flex;
           align-items: center;
@@ -778,7 +685,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
         .qhud-confirm-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 0 28px rgba(0, 240, 255, 0.7);
+          box-shadow: 0 0 28px rgba(59, 130, 246, 0.7);
         }
 
         .qhud-confirm-btn:disabled {
@@ -804,8 +711,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           border-radius: 8px;
-          border: 1px solid rgba(255, 42, 95, 0.4);
-          box-shadow: 0 0 30px rgba(255, 42, 95, 0.25);
+          border: 1px solid rgba(239, 68, 68, 0.4);
+          box-shadow: 0 0 30px rgba(239, 68, 68, 0.25);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -819,8 +726,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           width: 60px;
           height: 60px;
           margin-bottom: 16px;
-          color: #ff2a5f;
-          filter: drop-shadow(0 0 16px rgba(255, 42, 95, 0.6));
+          color: #ef4444;
+          filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.6));
           animation: qhud-pulse 2s infinite ease-in-out;
         }
 
@@ -828,9 +735,9 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           font-size: 20px;
           font-weight: 800;
           letter-spacing: 2.5px;
-          color: #ff2a5f;
+          color: #ef4444;
           margin-bottom: 10px;
-          text-shadow: 0 0 10px rgba(255, 42, 95, 0.5);
+          text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
         }
 
         .qhud-shield-desc {
@@ -843,13 +750,13 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         .qhud-shield-player {
-          color: #00f0ff;
+          color: #3b82f6;
           font-weight: 700;
-          text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+          text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
         }
 
         .qhud-reveal-btn {
-          background: linear-gradient(135deg, #00f0ff 0%, #0077ff 100%);
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
           color: #020617;
           font-size: 13px;
           font-weight: 800;
@@ -859,14 +766,14 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
           border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
           text-transform: uppercase;
           font-family: inherit;
         }
 
         .qhud-reveal-btn:hover {
           transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 0 30px rgba(0, 240, 255, 0.7);
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.7);
           background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
         }
 
@@ -887,8 +794,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         @keyframes qhud-led-glow {
-          0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #00f0ff); }
-          50% { opacity: 0.5; filter: drop-shadow(0 0 1px #00f0ff); }
+          0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px #3b82f6); }
+          50% { opacity: 0.5; filter: drop-shadow(0 0 1px #3b82f6); }
         }
 
         @keyframes qhud-led-blink {
@@ -903,8 +810,8 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
         }
 
         @keyframes qhud-glitch-border {
-          0% { box-shadow: 0 0 10px rgba(255, 42, 95, 0.3); }
-          100% { box-shadow: 0 0 22px rgba(255, 42, 95, 0.7); }
+          0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+          100% { box-shadow: 0 0 22px rgba(239, 68, 68, 0.7); }
         }
       `}</style>
 
@@ -994,11 +901,11 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
                     style={{
                       strokeDasharray: '113.097',
                       strokeDashoffset: `${113.097 * (1 - timePercent / 100)}`,
-                      stroke: isLowTime ? '#ff2a5f' : timeRemaining <= 15 ? '#ffb700' : '#00f0ff'
+                      stroke: isLowTime ? '#ef4444' : timeRemaining <= 15 ? '#f59e0b' : '#3b82f6'
                     }}
                   />
                 </svg>
-                <div className="qhud-timer-text" style={{ color: isLowTime ? '#ff2a5f' : '#ffffff' }}>
+                <div className="qhud-timer-text" style={{ color: isLowTime ? '#ef4444' : '#ffffff' }}>
                   {timeRemaining}s
                 </div>
               </div>
@@ -1008,7 +915,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
             <div className="qhud-header-right">
               <div style={{ fontSize: '10px', color: '#64748b', letterSpacing: '1px' }}>SYS CLOCK</div>
               <div className="qhud-clock-val">{sysClock}</div>
-              <div style={{ fontSize: '10px', color: isLowTime ? '#ff2a5f' : '#00f0ff', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '10px', color: isLowTime ? '#ef4444' : '#3b82f6', letterSpacing: '1px' }}>
                 {formatTime(timeRemaining)} REMAINING
               </div>
             </div>
@@ -1071,12 +978,12 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
 
               return (
                 <div
-                  key={idx}
+                  key={`${String.fromCharCode(65 + idx)}-${idx}`}
                   className={`qhud-option-card ${isSelected ? 'selected' : ''} ${isConfirmedLocal ? 'locked' : ''}`}
                   onClick={() => handleSelect(idx)}
                   onMouseEnter={() => {
                     setHoveredIdx(idx);
-                    if (!isConfirmedLocal && !isShieldActive) playSoundEffect('hover');
+                    if (!isConfirmedLocal && !isShieldActive) playClick();
                   }}
                   onMouseLeave={() => setHoveredIdx(null)}
                   data-testid={`option-card-${idx}`}
@@ -1114,7 +1021,7 @@ export function QuestionHUD({ gameState = {}, activePlayer = {}, onSelectOption,
                   TRANSMITTED - CHOICE LOCKED IN
                 </span>
               ) : selectedIdx !== null ? (
-                <span style={{ color: '#00f0ff' }}>
+                <span style={{ color: '#3b82f6' }}>
                   Option [{String.fromCharCode(65 + selectedIdx)}] Selected. Press [ENTER] or Lock-In to transmit.
                 </span>
               ) : (

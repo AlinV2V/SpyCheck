@@ -40,19 +40,22 @@ export function App() {
   const handleStartGame = (config) => {
     playTerminalPowerOn();
 
-    // 1. Initialize player roster first
-    const players = Array.from({ length: config.playerCount }, (_, i) => ({
-      id: `p${i + 1}`,
-      name: i === 0 ? 'Agent Alpha' : `Agent 0${i + 1}`,
-      isAI: i > 0 && config.mode === 'solo_ai',
-      isReady: true,
-      hasAnswered: false,
-    }));
+    let players;
+    if (config.players && config.players.length > 0) {
+      players = config.players;
+    } else {
+      players = Array.from({ length: config.playerCount }, (_, i) => ({
+        id: `p${i + 1}`,
+        name: i === 0 ? 'Agent Alpha' : `Agent 0${i + 1}`,
+        isAI: i > 0 && config.mode === 'solo_ai',
+        isReady: true,
+        hasAnswered: false,
+      }));
+    }
 
-    // 2. Pass players roster into getRandomQuestions so player-name options populate correctly
     const qList = getRandomQuestions(3, players);
     const randomQuestion = qList[0];
-    const spyIdx = Math.floor(Math.random() * config.playerCount);
+    const spyIdx = Math.floor(Math.random() * players.length);
 
     setGameState({
       mode: config.mode,
@@ -93,7 +96,7 @@ export function App() {
         const answers = { ...(prev.playerAnswers || {}) };
         prev.players.forEach((p, idx) => {
           if (p.isAI && answers[idx] === undefined) {
-            answers[idx] = Math.floor(Math.random() * Math.min(4, prev.players.length));
+            answers[idx] = Math.floor(Math.random() * prev.players.length);
           }
         });
         return {
@@ -109,7 +112,7 @@ export function App() {
   };
 
   const handleProceedToVote = () => {
-    if (!gameState) return;
+    if (!gameState || gameState.currentPhase !== 'discussion') return;
     playTerminalPowerOn();
     setGameState(prev => ({
       ...prev,
@@ -131,6 +134,9 @@ export function App() {
   const handleProceedToResolution = () => {
     if (!gameState) return;
     playTerminalPowerOn();
+
+    const fallbackQuestion = getRandomQuestions(1, gameState.players)[0];
+
     setGameState(prev => {
       const votes = { ...(prev.playerVotes || {}) };
       
@@ -158,28 +164,36 @@ export function App() {
       const isSpyCaught = accusedIdx === prev.spyIndex;
       const currentRound = prev.currentRound || 1;
 
-      // Rule 1: If Intruder is accused -> Agents Win immediately!
+      const roundEntry = {
+        roundNumber: currentRound,
+        question: prev.currentQuestion,
+        answers: prev.playerAnswers,
+        votes,
+        accusedIndex: accusedIdx,
+        isSpyCaught,
+      };
+
       if (isSpyCaught) {
         return {
           ...prev,
           accusedPlayerIndex: accusedIdx,
           winner: 'agents',
           currentPhase: 'victory',
+          roundHistory: [...(prev.roundHistory || []), roundEntry],
         };
       }
-      // Rule 2: If Round 3 ends and Intruder survived -> Intruder Wins!
       else if (currentRound >= 3) {
         return {
           ...prev,
           accusedPlayerIndex: accusedIdx,
           winner: 'spy',
           currentPhase: 'victory',
+          roundHistory: [...(prev.roundHistory || []), roundEntry],
         };
       }
-      // Rule 3: Wrong vote on Round 1 or 2 -> Advance to Next Round (Round 2 or 3)!
       else {
         const nextRound = currentRound + 1;
-        const nextQ = prev.questionPool?.[nextRound - 1] || getRandomQuestions(1, prev.players)[0];
+        const nextQ = prev.questionPool?.[nextRound - 1] || fallbackQuestion;
 
         return {
           ...prev,
@@ -190,6 +204,7 @@ export function App() {
           playerAnswers: {},
           playerVotes: {},
           timerSeconds: 45,
+          roundHistory: [...(prev.roundHistory || []), roundEntry],
         };
       }
     });
@@ -234,20 +249,20 @@ export function App() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'linear-gradient(180deg, rgba(4,7,17,0.95) 0%, rgba(4,7,17,0) 100%)',
+        background: 'linear-gradient(180deg, rgba(6,11,26,0.95) 0%, rgba(6,11,26,0) 100%)',
         zIndex: 100,
         pointerEvents: 'auto'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Shield color="#00ffaa" size={24} />
-          <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#00ffaa', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
+          <Shield color="#3b82f6" size={24} />
+          <span style={{ fontFamily: 'Orbitron', fontWeight: 900, color: '#3b82f6', fontSize: '1.2rem', letterSpacing: '1.5px' }}>
             INTRUDER CHECK
           </span>
-          <span style={{ fontSize: '0.7rem', background: '#00ff66', color: '#000000', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
+          <span style={{ fontSize: '0.7rem', background: '#3b82f6', color: '#000000', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
             v1.0.30
           </span>
           {gameState && (
-            <span className="badge-agent" style={{ marginLeft: '10px', background: 'rgba(0,255,170,0.15)', border: '1px solid #00ffaa', color: '#00ffaa' }}>
+            <span className="badge-agent" style={{ marginLeft: '10px', background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', color: '#3b82f6' }}>
               ROUND {gameState.currentRound} / 3
             </span>
           )}
@@ -259,28 +274,28 @@ export function App() {
             onClick={handlePurgeCache}
             title="Purge Browser Cache & Hard Reload"
             style={{
-              background: 'rgba(0, 255, 170, 0.1)',
-              border: '1px solid #00ffaa',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid #3b82f6',
               borderRadius: '6px',
               padding: '6px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              color: '#00ffaa',
+              color: '#3b82f6',
               fontFamily: 'Orbitron, sans-serif',
               fontSize: '11px',
               fontWeight: 800,
               cursor: 'pointer',
-              boxShadow: '0 0 10px rgba(0, 255, 170, 0.25)',
+              boxShadow: '0 0 10px rgba(59, 130, 246, 0.25)',
               transition: 'all 0.2s ease'
             }}
           >
-            <RefreshCw size={14} color="#ffb700" /> PURGE CACHE & RELOAD
+            <RefreshCw size={14} color="#f59e0b" /> PURGE CACHE & RELOAD
           </button>
 
           {gameState && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#ffb700', fontFamily: 'Rajdhani', fontWeight: 700 }}>
-              <Radio color="#00ffaa" size={16} /> MODE: {gameState.mode.toUpperCase()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#06b6d4', fontFamily: 'Rajdhani', fontWeight: 700 }}>
+              <Radio color="#3b82f6" size={16} /> MODE: {gameState.mode.toUpperCase()}
             </div>
           )}
 
@@ -288,14 +303,14 @@ export function App() {
             onClick={toggleMute}
             style={{
               background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(0,255,170,0.3)',
+              border: '1px solid rgba(59,130,246,0.3)',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: audioMuted ? '#ffb700' : '#00ffaa',
+              color: audioMuted ? '#f59e0b' : '#3b82f6',
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}

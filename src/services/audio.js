@@ -213,50 +213,6 @@ export const playAlertSiren = () => {
 };
 
 /**
- * Play high-tech countdown tick.
- * @param {boolean} isUrgent - whether the timer is in urgent mode (e.g. final 5 seconds)
- */
-export const playTimerTick = (isUrgent = false) => {
-  const ctx = getContext();
-  if (!ctx) return;
-
-  const now = ctx.currentTime;
-
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  if (isUrgent) {
-    // Urgent tick: double pitch synth alert
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(1600, now);
-    osc.frequency.exponentialRampToValueAtTime(2400, now + 0.04);
-
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.06);
-  } else {
-    // Standard cyber tick
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(900, now);
-    osc.frequency.exponentialRampToValueAtTime(400, now + 0.03);
-
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.035);
-  }
-};
-
-/**
  * Play a futuristic vote confirmation pulse.
  */
 export const playVoteCast = () => {
@@ -660,19 +616,10 @@ export const playTransmissionSent = () => {
   subOsc.stop(now + 0.18);
 };
 
-export default {
-  initAudio,
-  setMuted,
-  isMuted,
-  playClick,
-  playLaserLock,
-  playAlertSiren,
-  playTimerTick,
-  playVoteCast,
-  playRevealSting,
-  playVictory,
-  playDefeat,
-  playTerminalPowerOn,
-  playKeypress,
-  playTransmissionSent
-};
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (audioCtx && audioCtx.state !== 'closed') {
+      audioCtx.close();
+    }
+  });
+}

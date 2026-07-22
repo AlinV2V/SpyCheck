@@ -165,6 +165,21 @@ function resolvePersona(bot) {
   return bot;
 }
 
+function normalizeAnswers(raw, players) {
+  if (Array.isArray(raw)) return raw;
+  const entries = Object.entries(raw || {});
+  return entries.map(([playerId, answer]) => {
+    const player = players?.find(p => String(p.id) === String(playerId)) || {};
+    return {
+      playerId: playerId,
+      id: playerId,
+      playerName: player.name || player.playerName || `Player ${playerId}`,
+      name: player.name || player.playerName || `Player ${playerId}`,
+      answer: answer
+    };
+  });
+}
+
 /**
  * Selects an answer for a bot player based on their role and traits.
  */
@@ -183,20 +198,25 @@ export function selectBotAnswer({ bot, question, options, isSpy = false }) {
 
   let preferredOption = null;
 
-  if (qId === "ls_01" || qId === "fd_02") preferredOption = persona.traits.diet;
-  else if (qId === "hgy_01") preferredOption = persona.traits.shower;
-  else if (qId === "fd_01") preferredOption = persona.traits.pizza;
-  else if (qId === "ls_02" || qId === "fd_10") preferredOption = persona.traits.caffeine;
-  else if (qId === "ls_03") preferredOption = persona.traits.sleep;
-  else if (qId === "ls_04" || qId === "hgy_20") preferredOption = persona.traits.tabs;
-  else if (qId?.startsWith("grp_")) {
+  if (qId === "fd_01") preferredOption = persona.traits.pizza;
+  else if (qId === "fd_02") preferredOption = persona.traits.diet;
+  else if (qId === "fd_03") preferredOption = persona.traits.shower;
+  else if (qId === "fd_04") preferredOption = persona.traits.caffeine;
+  else if (qId === "fd_05") preferredOption = persona.traits.tabs;
+  else if (qId === "fd_06") preferredOption = persona.traits.shower;
+  else if (qId === "life_01") preferredOption = persona.traits.sleep;
+  else if (qId === "life_02") preferredOption = persona.traits.caffeine;
+  else if (qId === "life_03") preferredOption = persona.traits.tabs;
+  else if (qId === "life_04") preferredOption = persona.traits.diet;
+  else if (qId?.startsWith("pname_")) {
     const targetName = persona.traits.smartest;
     const match = options.find(opt => String(opt).includes(targetName));
     if (match) return match;
   }
 
   if (preferredOption) {
-    const exactMatch = options.find(opt => String(opt) === preferredOption || String(opt).includes(preferredOption.substring(0, 12)));
+    const safeSub = preferredOption.length >= 12 ? preferredOption.substring(0, 12) : preferredOption;
+    const exactMatch = options.find(opt => String(opt) === preferredOption || String(opt).includes(safeSub));
     if (exactMatch) return exactMatch;
   }
 
@@ -206,7 +226,7 @@ export function selectBotAnswer({ bot, question, options, isSpy = false }) {
 /**
  * Generates an in-character comment during Discussion phase.
  */
-export function generateBotBanter({ bot, playerAnswers = [], currentQuestion = "", isSpy = false, round = 1 }) {
+export function generateBotBanter({ bot, playerAnswers = [], currentQuestion = "", isSpy = false, round = 1, players }) {
   const persona = resolvePersona(bot);
 
   if (isSpy) {
@@ -218,7 +238,9 @@ export function generateBotBanter({ bot, playerAnswers = [], currentQuestion = "
     return spyDeflections[Math.floor(Math.random() * spyDeflections.length)];
   }
 
-  for (const pa of playerAnswers) {
+  const answersList = normalizeAnswers(playerAnswers, players);
+
+  for (const pa of answersList) {
     const pName = pa.playerName || pa.name || "Subject";
     const pAns = typeof pa.answer === 'object' ? pa.answer.text : String(pa.answer);
 
@@ -242,11 +264,12 @@ export function generateBotBanter({ bot, playerAnswers = [], currentQuestion = "
 /**
  * Calculates bot vote based on answer discrepancies and personality contradictions
  */
-export function calculateBotVote({ bot, allAnswers = [], previousVotes = {}, isSpy = false }) {
+export function calculateBotVote({ bot, allAnswers = [], previousVotes = {}, isSpy = false, players }) {
   const persona = resolvePersona(bot);
   const botId = bot?.id || bot?.name || persona.id;
 
-  const eligibleTargets = allAnswers.filter(pa => pa.playerId !== botId && pa.id !== botId);
+  const answersList = normalizeAnswers(allAnswers, players);
+  const eligibleTargets = answersList.filter(pa => String(pa.playerId || pa.id) !== String(botId));
   if (eligibleTargets.length === 0) return null;
 
   if (isSpy) {

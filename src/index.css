@@ -1,41 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
 
 /* ==========================================================================
-   INTRUDER CHECK - CYBERPUNK / SCI-FI DESIGN SYSTEM
+   INTRUDER CHECK — ELECTRIC BLUE TACTICAL COMMAND CENTER
    ========================================================================== */
 
 :root {
   /* --- Color Palette --- */
-  --bg-obsidian: #0a0d14;
-  --bg-obsidian-alt: #06080d;
-  --bg-obsidian-light: #121824;
-  --bg-obsidian-glass: rgba(10, 13, 20, 0.85);
+  --bg-navy: #060b1a;
+  --bg-navy-alt: #030712;
+  --bg-navy-light: #0f1830;
+  --bg-glass: rgba(6, 11, 26, 0.85);
 
-  --color-cyan: #00f0ff;
-  --color-cyan-glow: rgba(0, 240, 255, 0.4);
-  --color-cyan-dim: rgba(0, 240, 255, 0.15);
+  --color-blue: #3b82f6;
+  --color-blue-glow: rgba(59, 130, 246, 0.4);
+  --color-blue-dim: rgba(59, 130, 246, 0.15);
 
-  --color-crimson: #ff0055;
-  --color-crimson-glow: rgba(255, 0, 85, 0.4);
-  --color-crimson-dim: rgba(255, 0, 85, 0.15);
+  --color-accent: #06b6d4;
+  --color-accent-glow: rgba(6, 182, 212, 0.4);
+  --color-accent-dim: rgba(6, 182, 212, 0.15);
 
-  --color-amber: #ffaa00;
-  --color-amber-glow: rgba(255, 170, 0, 0.4);
-  --color-amber-dim: rgba(255, 170, 0, 0.15);
+  --color-danger: #ef4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.4);
+  --color-danger-dim: rgba(239, 68, 68, 0.15);
 
-  --color-matrix: #00ffaa;
-  --color-matrix-glow: rgba(0, 255, 170, 0.4);
-  --color-matrix-dim: rgba(0, 255, 170, 0.15);
+  --color-amber: #f59e0b;
+  --color-amber-glow: rgba(245, 158, 11, 0.4);
+  --color-amber-dim: rgba(245, 158, 11, 0.15);
 
-  --color-text-main: #e2f1f8;
-  --color-text-muted: #8096a7;
-  --color-text-dim: #485b6c;
+  --color-success: #10b981;
+  --color-success-glow: rgba(16, 185, 129, 0.4);
+  --color-success-dim: rgba(16, 185, 129, 0.15);
+
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #475569;
 
   /* --- Glassmorphism & Borders --- */
-  --glass-bg-card: rgba(18, 24, 36, 0.65);
-  --glass-border: rgba(0, 240, 255, 0.15);
-  --glass-border-hover: rgba(0, 240, 255, 0.45);
-  --glass-border-crimson: rgba(255, 0, 85, 0.35);
+  --glass-bg-card: rgba(15, 24, 48, 0.65);
+  --glass-border: rgba(59, 130, 246, 0.15);
+  --glass-border-hover: rgba(59, 130, 246, 0.45);
+  --glass-border-danger: rgba(239, 68, 68, 0.35);
+  --glass-border-accent: rgba(6, 182, 212, 0.3);
   --glass-blur: blur(12px);
 
   /* --- Typography --- */
@@ -44,8 +49,8 @@
   --font-body: 'Inter', sans-serif;
 
   /* --- Shadows & Glows --- */
-  --shadow-cyan-glow: 0 0 20px rgba(0, 240, 255, 0.25), 0 0 40px rgba(0, 240, 255, 0.1);
-  --shadow-crimson-glow: 0 0 20px rgba(255, 0, 85, 0.3), 0 0 40px rgba(255, 0, 85, 0.15);
+  --shadow-blue-glow: 0 0 20px rgba(59, 130, 246, 0.25), 0 0 40px rgba(59, 130, 246, 0.1);
+  --shadow-danger-glow: 0 0 20px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.15);
   --shadow-card-depth: 0 10px 30px rgba(0, 0, 0, 0.6);
 
   /* --- Clip Paths / Cyber Cut Corners --- */
@@ -68,7 +73,7 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--bg-obsidian);
+  background-color: var(--bg-navy);
   color: var(--color-text-main);
   font-family: var(--font-ui);
   font-size: 16px;
@@ -77,7 +82,6 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background grid & scanline ambiance */
 body::before {
   content: '';
   position: fixed;
@@ -85,10 +89,10 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: 
-    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    radial-gradient(circle at 50% 30%, rgba(0, 240, 255, 0.07) 0%, rgba(10, 13, 20, 0.95) 75%);
+  background:
+    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.08) 0%, rgba(6, 11, 26, 0.95) 75%);
   background-size: 40px 40px, 40px 40px, 100% 100%;
   pointer-events: none;
   z-index: -2;
@@ -114,7 +118,6 @@ body::after {
   opacity: 0.6;
 }
 
-/* Headings */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
   letter-spacing: 0.05em;
@@ -132,20 +135,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-obsidian-alt);
+  background: var(--bg-navy-alt);
   border-left: 1px solid var(--glass-border);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.25);
+  background: rgba(59, 130, 246, 0.25);
   border-radius: 2px;
-  box-shadow: inset 0 0 6px var(--color-cyan-glow);
+  box-shadow: inset 0 0 6px var(--color-blue-glow);
   transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-cyan);
-  box-shadow: 0 0 10px var(--color-cyan-glow);
+  background: var(--color-blue);
+  box-shadow: 0 0 10px var(--color-blue-glow);
 }
 
 /* ==========================================================================
@@ -154,25 +157,25 @@ h1, h2, h3, h4, h5, h6 {
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 10px var(--color-cyan-dim), 0 0 20px rgba(0, 240, 255, 0.1);
-    border-color: rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 10px var(--color-blue-dim), 0 0 20px rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
   }
   50% {
-    box-shadow: 0 0 25px var(--color-cyan-glow), 0 0 45px rgba(0, 240, 255, 0.35);
-    border-color: var(--color-cyan);
+    box-shadow: 0 0 25px var(--color-blue-glow), 0 0 45px rgba(59, 130, 246, 0.35);
+    border-color: var(--color-blue);
   }
 }
 
 @keyframes alert-flash {
   0%, 100% {
-    background-color: rgba(255, 0, 85, 0.08);
-    border-color: rgba(255, 0, 85, 0.3);
-    box-shadow: 0 0 15px rgba(255, 0, 85, 0.2);
+    background-color: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
   }
   50% {
-    background-color: rgba(255, 0, 85, 0.25);
-    border-color: var(--color-crimson);
-    box-shadow: 0 0 35px var(--color-crimson-glow);
+    background-color: rgba(239, 68, 68, 0.25);
+    border-color: var(--color-danger);
+    box-shadow: 0 0 35px var(--color-danger-glow);
   }
 }
 
@@ -216,23 +219,23 @@ h1, h2, h3, h4, h5, h6 {
 
 @keyframes text-glitch {
   0% {
-    text-shadow: 2px 0 0 var(--color-crimson), -2px 0 0 var(--color-cyan);
+    text-shadow: 2px 0 0 var(--color-danger), -2px 0 0 var(--color-blue);
     transform: translate(0);
   }
   20% {
-    text-shadow: -2px 0 0 var(--color-crimson), 2px 0 0 var(--color-cyan);
+    text-shadow: -2px 0 0 var(--color-danger), 2px 0 0 var(--color-blue);
     transform: translate(-2px, 1px);
   }
   40% {
-    text-shadow: 2px 0 0 var(--color-amber), -2px 0 0 var(--color-matrix);
+    text-shadow: 2px 0 0 var(--color-amber), -2px 0 0 var(--color-success);
     transform: translate(1px, -1px);
   }
   60% {
-    text-shadow: -1px 0 0 var(--color-crimson), 1px 0 0 var(--color-cyan);
+    text-shadow: -1px 0 0 var(--color-danger), 1px 0 0 var(--color-blue);
     transform: translate(-1px, 2px);
   }
   80% {
-    text-shadow: 2px 0 0 var(--color-cyan), -2px 0 0 var(--color-crimson);
+    text-shadow: 2px 0 0 var(--color-blue), -2px 0 0 var(--color-danger);
     transform: translate(2px, 0px);
   }
   100% {
@@ -256,9 +259,8 @@ h1, h2, h3, h4, h5, h6 {
    CUSTOM STYLED COMPONENTS
    ========================================================================== */
 
-/* --- .glass-panel --- */
 .glass-panel {
-  background: var(--bg-obsidian-glass);
+  background: var(--bg-glass);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
@@ -268,7 +270,6 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
-/* --- .cyber-card --- */
 .cyber-card {
   background: var(--glass-bg-card);
   backdrop-filter: var(--glass-blur);
@@ -288,26 +289,25 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-cyan), transparent);
+  background: linear-gradient(90deg, var(--color-blue), var(--color-accent), transparent);
   opacity: 0.7;
 }
 
 .cyber-card:hover {
   border-color: var(--glass-border-hover);
   transform: translateY(-4px);
-  box-shadow: var(--shadow-cyan-glow), var(--shadow-card-depth);
+  box-shadow: var(--shadow-blue-glow), var(--shadow-card-depth);
 }
 
 .cyber-card.alert-mode {
-  border-color: var(--glass-border-crimson);
+  border-color: var(--glass-border-danger);
   animation: alert-flash 2s infinite ease-in-out;
 }
 
 .cyber-card.alert-mode::before {
-  background: linear-gradient(90deg, var(--color-crimson), transparent);
+  background: linear-gradient(90deg, var(--color-danger), transparent);
 }
 
-/* --- .cyber-button --- */
 .cyber-button {
   position: relative;
   display: inline-flex;
@@ -320,14 +320,14 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--bg-obsidian);
-  background: var(--color-cyan);
+  color: var(--bg-navy);
+  background: var(--color-blue);
   border: none;
   clip-path: var(--clip-corner-sm);
   cursor: pointer;
   outline: none;
   transition: all 0.25s ease;
-  box-shadow: 0 0 15px var(--color-cyan-glow);
+  box-shadow: 0 0 15px var(--color-blue-glow);
 }
 
 .cyber-button::after {
@@ -348,9 +348,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cyber-button:hover {
-  background: #ffffff;
-  color: var(--bg-obsidian);
-  box-shadow: 0 0 25px var(--color-cyan), 0 0 45px rgba(0, 240, 255, 0.6);
+  background: #60a5fa;
+  color: var(--bg-navy);
+  box-shadow: 0 0 25px var(--color-blue), 0 0 45px rgba(59, 130, 246, 0.6);
   transform: scale(1.02);
 }
 
@@ -362,37 +362,36 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(0.98);
 }
 
-.cyber-button.variant-crimson {
-  background: var(--color-crimson);
+.cyber-button.variant-danger {
+  background: var(--color-danger);
   color: #ffffff;
-  box-shadow: 0 0 15px var(--color-crimson-glow);
+  box-shadow: 0 0 15px var(--color-danger-glow);
 }
 
-.cyber-button.variant-crimson:hover {
-  background: #ff3377;
-  box-shadow: 0 0 25px var(--color-crimson), 0 0 45px rgba(255, 0, 85, 0.6);
+.cyber-button.variant-danger:hover {
+  background: #f87171;
+  box-shadow: 0 0 25px var(--color-danger), 0 0 45px rgba(239, 68, 68, 0.6);
 }
 
 .cyber-button.variant-outline {
   background: transparent;
-  color: var(--color-cyan);
-  border: 1px solid var(--color-cyan);
-  box-shadow: inset 0 0 10px var(--color-cyan-dim);
+  color: var(--color-blue);
+  border: 1px solid var(--color-blue);
+  box-shadow: inset 0 0 10px var(--color-blue-dim);
 }
 
 .cyber-button.variant-outline:hover {
-  background: var(--color-cyan-dim);
-  box-shadow: 0 0 20px var(--color-cyan-glow), inset 0 0 15px var(--color-cyan-glow);
+  background: var(--color-blue-dim);
+  box-shadow: 0 0 20px var(--color-blue-glow), inset 0 0 15px var(--color-blue-glow);
 }
 
-/* --- .cyber-input --- */
 .cyber-input {
   width: 100%;
   padding: 0.85rem 1.2rem;
   font-family: var(--font-ui);
   font-size: 1rem;
   color: var(--color-text-main);
-  background: rgba(6, 8, 13, 0.8);
+  background: rgba(3, 7, 18, 0.8);
   border: 1px solid var(--glass-border);
   border-radius: 4px;
   outline: none;
@@ -407,28 +406,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cyber-input:focus {
-  border-color: var(--color-cyan);
-  box-shadow: 0 0 12px var(--color-cyan-glow), inset 0 0 8px rgba(0, 240, 255, 0.1);
-  background: rgba(10, 13, 20, 0.95);
+  border-color: var(--color-blue);
+  box-shadow: 0 0 12px var(--color-blue-glow), inset 0 0 8px rgba(59, 130, 246, 0.1);
+  background: rgba(6, 11, 26, 0.95);
 }
 
-/* --- .hud-overlay --- */
 .hud-overlay {
   position: relative;
   width: 100%;
   padding: 1rem;
   border: 1px solid var(--glass-border);
-  background: rgba(10, 13, 20, 0.4);
+  background: rgba(6, 11, 26, 0.4);
 }
 
-/* Tech corner markers for HUD overlay */
 .hud-overlay::before,
 .hud-overlay::after {
   content: '';
   position: absolute;
   width: 12px;
   height: 12px;
-  border: 2px solid var(--color-cyan);
+  border: 2px solid var(--color-blue);
   pointer-events: none;
 }
 
@@ -446,7 +443,6 @@ h1, h2, h3, h4, h5, h6 {
   border-top: none;
 }
 
-/* --- .laser-pointer --- */
 .laser-pointer {
   position: relative;
   width: 32px;
@@ -461,7 +457,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 1px dashed var(--color-crimson);
+  border: 1px dashed var(--color-danger);
   border-radius: 50%;
   animation: laser-reticle 6s linear infinite;
 }
@@ -470,13 +466,12 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   width: 6px;
   height: 6px;
-  background-color: var(--color-crimson);
+  background-color: var(--color-danger);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--color-crimson), 0 0 20px var(--color-crimson);
+  box-shadow: 0 0 10px var(--color-danger), 0 0 20px var(--color-danger);
   animation: pulse-glow 1.5s infinite alternate;
 }
 
-/* --- Badges --- */
 .badge-spy, .badge-agent {
   display: inline-flex;
   align-items: center;
@@ -491,24 +486,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .badge-spy {
-  background: rgba(255, 0, 85, 0.15);
-  color: var(--color-crimson);
-  border: 1px solid var(--color-crimson);
-  box-shadow: 0 0 10px rgba(255, 0, 85, 0.25);
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
 }
 
 .badge-agent {
-  background: rgba(0, 255, 170, 0.15);
-  color: var(--color-matrix);
-  border: 1px solid var(--color-matrix);
-  box-shadow: 0 0 10px rgba(0, 255, 170, 0.25);
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
 }
 
-/* --- .progress-bar-cyan --- */
 .progress-bar-cyan {
   width: 100%;
   height: 10px;
-  background: var(--bg-obsidian-alt);
+  background: var(--bg-navy-alt);
   border: 1px solid var(--glass-border);
   border-radius: 4px;
   overflow: hidden;
@@ -517,8 +511,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .progress-bar-cyan .fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-cyan-dim), var(--color-cyan));
-  box-shadow: 0 0 12px var(--color-cyan);
+  background: linear-gradient(90deg, var(--color-blue-dim), var(--color-blue));
+  box-shadow: 0 0 12px var(--color-blue);
   transition: width 0.4s ease;
   position: relative;
 }
@@ -539,13 +533,12 @@ h1, h2, h3, h4, h5, h6 {
   animation: scanner-beam 2s linear infinite;
 }
 
-/* --- .stat-pill --- */
 .stat-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.9rem;
-  background: rgba(18, 24, 36, 0.8);
+  background: rgba(15, 24, 48, 0.8);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
   font-family: var(--font-ui);
@@ -554,12 +547,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-pill .value {
-  color: var(--color-cyan);
+  color: var(--color-blue);
   font-family: var(--font-title);
   font-weight: 700;
 }
 
-/* --- .glitch-text --- */
 .glitch-text {
   position: relative;
   display: inline-block;
@@ -579,7 +571,6 @@ h1, h2, h3, h4, h5, h6 {
   padding: 2rem 1.5rem;
 }
 
-/* Responsive Grid for 3-6 Player Stations */
 .player-stations-grid {
   display: grid;
   gap: 1.5rem;
@@ -587,7 +578,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 1.5rem;
 }
 
-/* Dynamic Grid Layouts depending on player counts */
 .player-stations-grid.stations-3 {
   grid-template-columns: repeat(3, 1fr);
 }
@@ -601,7 +591,6 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: repeat(3, 1fr);
 }
 
-/* Default responsive fallback when count class isn't explicitly set */
 .player-stations-grid:not([class*="stations-"]) {
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
@@ -610,7 +599,6 @@ h1, h2, h3, h4, h5, h6 {
   animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Media Queries for Mobile & Tablet Responsiveness */
 @media (max-width: 1024px) {
   .player-stations-grid.stations-5,
   .player-stations-grid.stations-6 {
@@ -630,7 +618,7 @@ h1, h2, h3, h4, h5, h6 {
   .hud-container {
     padding: 1rem;
   }
-  
+
   .cyber-button {
     width: 100%;
   }

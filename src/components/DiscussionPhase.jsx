@@ -104,6 +104,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
   const [userChatInput, setUserChatInput] = useState('');
 
   const chatContainerRef = useRef(null);
+  const speakTextRef = useRef(speakText);
+  speakTextRef.current = speakText;
 
   // ---------------------------------------------------------------------------
   // 4. Web Speech API Initialization
@@ -119,9 +121,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
       };
 
       updateVoices();
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = updateVoices;
-      }
+      window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+      return () => window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
     }
   }, []);
 
@@ -243,11 +244,11 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
       };
 
       setChatMessages((prev) => [...prev, newMsg]);
-      speakText(`${speaker.name} says: ${chosenBanter}`);
+      speakTextRef.current(`${speaker.name} says: ${chosenBanter}`);
     }, 12000);
 
     return () => clearInterval(interval);
-  }, [timeLeft, isTimerPaused, playersList, discrepancies, getPlayerChoice, speakText]);
+  }, [timeLeft, isTimerPaused, playersList, discrepancies, getPlayerChoice]);
 
   // Auto-scroll chat window on new message
   useEffect(() => {
@@ -384,7 +385,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
         }
         .btn-proceed:hover {
           transform: translateY(-2px);
-          box-shadow: 0 0 25px rgba(168, 85, 247, 0.8) !important;
+          box-shadow: 0 0 25px rgba(59, 130, 246, 0.8) !important;
         }
         .seat-card:hover {
           transform: translateY(-3px);
@@ -439,7 +440,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
               </span>
             </div>
             <h2 style={styles.intelQuestion}>"{questionTitle}"</h2>
-            <div style={{ fontSize: '0.85rem', color: '#00ffaa', margin: '4px 0 10px 0', fontFamily: 'Rajdhani', fontWeight: 600 }}>
+            <div style={{ fontSize: '0.85rem', color: '#3b82f6', margin: '4px 0 10px 0', fontFamily: 'Rajdhani', fontWeight: 600 }}>
               💡 <strong>Spy Defense Rule:</strong> The prompt is now revealed! Spies can see what the question was and try to bluff/explain their answer choice to blend in!
             </div>
             <div style={styles.breakdownBar}>
@@ -453,7 +454,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                     style={{
                       ...styles.choiceChip,
                       borderColor: isMajority ? '#06b6d4' : '#f59e0b',
-                      color: isMajority ? '#22d3ee' : '#fbbf24',
+                      color: isMajority ? '#3b82f6' : '#06b6d4',
                     }}
                   >
                     {choice}: <strong>{count}</strong> ({percent}%)
@@ -523,7 +524,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                     <span style={styles.choiceLabel}>SELECTED CHOICE</span>
                     <span style={{
                       ...styles.choiceValue,
-                      color: isDiscrepancy ? '#fbbf24' : isMajority ? '#22d3ee' : '#f8fafc',
+                      color: isDiscrepancy ? '#06b6d4' : isMajority ? '#3b82f6' : '#f8fafc',
                     }}>
                       {choice}
                     </span>
@@ -597,7 +598,7 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                     transform: speechEnabled ? 'translateX(18px)' : 'translateX(2px)',
                   }} />
                 </span>
-                <span style={{ fontSize: '0.85rem', color: speechEnabled ? '#22d3ee' : '#94a3b8', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.85rem', color: speechEnabled ? '#3b82f6' : '#94a3b8', fontWeight: 600 }}>
                   {speechEnabled ? 'VOICE ON' : 'VOICE OFF'}
                 </span>
               </label>
@@ -662,8 +663,8 @@ export function DiscussionPhase({ gameState, onProceedToVote }) {
                   style={{
                     ...styles.chatBubble,
                     alignSelf: msg.isUser ? 'flex-end' : 'flex-start',
-                    backgroundColor: msg.isUser ? 'rgba(168, 85, 247, 0.15)' : 'rgba(30, 41, 59, 0.8)',
-                    borderColor: msg.isUser ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.08)',
+                    backgroundColor: msg.isUser ? 'rgba(59, 130, 246, 0.15)' : 'rgba(30, 41, 59, 0.8)',
+                    borderColor: msg.isUser ? 'rgba(59, 130, 246, 0.4)' : 'rgba(255, 255, 255, 0.08)',
                   }}
                 >
                   <div style={styles.chatBubbleHeader}>
@@ -718,7 +719,7 @@ const styles = {
   container: {
     width: '100%',
     minHeight: '100vh',
-    backgroundColor: '#090d16',
+    backgroundColor: '#0a1020',
     color: '#f8fafc',
     fontFamily: '"Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     padding: '24px',
@@ -755,7 +756,7 @@ const styles = {
     fontSize: '1.4rem',
     fontWeight: 800,
     letterSpacing: '0.05em',
-    background: 'linear-gradient(90deg, #38bdf8, #818cf8)',
+    background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   },
@@ -836,7 +837,7 @@ const styles = {
     padding: '4px 10px',
     borderRadius: '20px',
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    color: '#fbbf24',
+    color: '#06b6d4',
     border: '1px solid rgba(245, 158, 11, 0.3)',
   },
   intelQuestion: {
@@ -989,12 +990,12 @@ const styles = {
   discrepancyBadge: {
     fontSize: '0.7rem',
     fontWeight: 800,
-    color: '#fbbf24',
+    color: '#06b6d4',
   },
   majorityBadge: {
     fontSize: '0.7rem',
     fontWeight: 700,
-    color: '#22d3ee',
+    color: '#3b82f6',
   },
   neutralBadge: {
     fontSize: '0.7rem',
@@ -1020,11 +1021,11 @@ const styles = {
     fontWeight: 800,
     letterSpacing: '0.08em',
     color: '#ffffff',
-    background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
-    boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)',
+    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
     transition: 'all 0.25s ease',
   },
   chatSection: {
@@ -1056,7 +1057,7 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: 800,
     letterSpacing: '0.05em',
-    color: '#38bdf8',
+    color: '#60a5fa',
   },
   toggleLabel: {
     display: 'flex',
@@ -1129,7 +1130,7 @@ const styles = {
   liveIndicator: {
     fontSize: '0.7rem',
     fontWeight: 700,
-    color: '#4ade80',
+    color: '#3b82f6',
   },
   chatFeedContainer: {
     flex: 1,
@@ -1142,7 +1143,7 @@ const styles = {
   systemMsgBox: {
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
     border: '1px dashed rgba(245, 158, 11, 0.4)',
-    color: '#fbbf24',
+    color: '#06b6d4',
     padding: '8px 12px',
     borderRadius: '8px',
     fontSize: '0.78rem',
