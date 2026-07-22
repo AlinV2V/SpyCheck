@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { playClick, playLaserLock, playVoteCast } from '../services/audio';
 
@@ -44,7 +44,7 @@ export function getDeskScreenTransform(playerIndex = 0, consoleCount = 6, radius
  * ControlRoomScene Component
  * 
  * 3D Sci-Fi Command Center built with Three.js.
- * Players sit at their 3D workstation desk and play on the 3D VIRTUAL COMPUTER MONITOR!
+ * Features an Advanced Live 3D Camera Calibration Pipeline Tool for real-time camera tuning!
  * 
  * @param {Object} props
  * @param {Object} [props.gameState] - State object containing game & player data
@@ -62,6 +62,13 @@ export function ControlRoomScene({
 }) {
   const containerRef = useRef(null);
 
+  // --- LIVE 3D CAMERA CALIBRATION PIPELINE STATE ---
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [camDist, setCamDist] = useState(1.65); // Distance ratio from desk center (1.0 to 3.0)
+  const [camHeight, setCamHeight] = useState(2.40); // Height Y (1.0 to 4.5)
+  const [camLookOffset, setCamLookOffset] = useState(0.70); // LookAt ratio (0.0 to 1.0)
+  const [camFov, setCamFov] = useState(52); // Field of View (35 to 80)
+
   // Store mutable refs for animation loop & interaction state
   const sceneStateRef = useRef({
     currentPhase,
@@ -71,16 +78,24 @@ export function ControlRoomScene({
     onConfirmAnswer,
     hoveredOptionIdx: null,
     hoveredLockIn: false,
+    camDist: 1.65,
+    camHeight: 2.40,
+    camLookOffset: 0.70,
+    camFov: 52,
   });
 
-  // Keep refs synchronized with props
+  // Keep refs synchronized with state & props
   useEffect(() => {
     sceneStateRef.current.currentPhase = currentPhase;
     sceneStateRef.current.activePlayerIndex = activePlayerIndex;
     sceneStateRef.current.gameState = gameState;
     sceneStateRef.current.onSelectOption = onSelectOption;
     sceneStateRef.current.onConfirmAnswer = onConfirmAnswer;
-  }, [currentPhase, activePlayerIndex, gameState, onSelectOption, onConfirmAnswer]);
+    sceneStateRef.current.camDist = camDist;
+    sceneStateRef.current.camHeight = camHeight;
+    sceneStateRef.current.camLookOffset = camLookOffset;
+    sceneStateRef.current.camFov = camFov;
+  }, [currentPhase, activePlayerIndex, gameState, onSelectOption, onConfirmAnswer, camDist, camHeight, camLookOffset, camFov]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -776,7 +791,7 @@ export function ControlRoomScene({
       animationFrameId = requestAnimationFrame(animate);
 
       const elapsedTime = clock.getElapsedTime();
-      const { currentPhase: phase, activePlayerIndex: activeIdx, gameState: state } = sceneStateRef.current;
+      const { currentPhase: phase, activePlayerIndex: activeIdx, gameState: state, camDist: distRatio, camHeight: hVal, camLookOffset: lookRatio, camFov: fovVal } = sceneStateRef.current;
 
       // Update interactive 3D PC monitor screen textures
       update3DScreenTextures(state, phase, activeIdx);
@@ -851,10 +866,9 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // PERFECT SEATED DESK POV: Seated in workstation chair at eye level facing 3D PC monitor (fills 80% of screen height)
-          const chairDist = 1.10;
-          targetCamPos.set(activeX * chairDist, 1.38, activeZ * chairDist);
-          targetLookAt.set(activeX, 1.38, activeZ);
+          // LIVE 3D CAMERA CALIBRATION VECTOR POSITIONING
+          targetCamPos.set(activeX * distRatio, hVal, activeZ * distRatio);
+          targetLookAt.set(activeX * lookRatio, 1.45, activeZ * lookRatio);
           break;
         }
         case 'discussion': {
@@ -901,8 +915,8 @@ export function ControlRoomScene({
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Smoothly update Field of View (FOV) for seated PC monitor view (46)
-      const targetFov = phase === 'question' ? 46 : 55;
+      // Smoothly update Field of View (FOV)
+      const targetFov = phase === 'question' ? fovVal : 55;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
@@ -942,18 +956,166 @@ export function ControlRoomScene({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'auto' }}>
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+        }}
+      />
+
+      {/* --- LIVE 3D CAMERA CALIBRATION PIPELINE TOOL --- */}
+      <div style={{
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        pointerEvents: 'auto',
-      }}
-    />
+        top: '75px',
+        right: '20px',
+        zIndex: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '10px'
+      }}>
+        <button
+          onClick={() => setShowCalibration(!showCalibration)}
+          style={{
+            background: 'rgba(0, 240, 255, 0.2)',
+            border: '2px solid #00f0ff',
+            borderRadius: '8px',
+            color: '#00f0ff',
+            padding: '8px 16px',
+            fontFamily: 'Orbitron, sans-serif',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          {showCalibration ? '✖ HIDE CALIBRATION TOOL' : '🎥 CALIBRATE CAMERA LIVE'}
+        </button>
+
+        {showCalibration && (
+          <div style={{
+            background: 'rgba(10, 16, 28, 0.95)',
+            border: '2px solid #00f0ff',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            width: '320px',
+            boxShadow: '0 0 30px rgba(0, 240, 255, 0.3)',
+            color: '#e2e8f0',
+            fontFamily: 'Rajdhani, sans-serif',
+            backdropFilter: 'blur(12px)',
+          }}>
+            <div style={{ fontFamily: 'Orbitron', color: '#00f0ff', fontWeight: 700, fontSize: '14px', marginBottom: '12px' }}>
+              🎥 LIVE 3D CAMERA PIPELINE
+            </div>
+
+            {/* Distance Slider */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                <span>DISTANCE RATIO:</span>
+                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camDist.toFixed(2)}x</span>
+              </div>
+              <input
+                type="range"
+                min="1.0"
+                max="3.0"
+                step="0.05"
+                value={camDist}
+                onChange={(e) => setCamDist(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Height Slider */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                <span>CAMERA HEIGHT (Y):</span>
+                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camHeight.toFixed(2)}m</span>
+              </div>
+              <input
+                type="range"
+                min="1.0"
+                max="4.5"
+                step="0.05"
+                value={camHeight}
+                onChange={(e) => setCamHeight(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* LookAt Offset Slider */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                <span>LOOKAT OFFSET:</span>
+                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camLookOffset.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.0"
+                max="1.2"
+                step="0.05"
+                value={camLookOffset}
+                onChange={(e) => setCamLookOffset(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* FOV Slider */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                <span>FIELD OF VIEW (FOV):</span>
+                <span style={{ color: '#00f0ff', fontWeight: 700 }}>{camFov}°</span>
+              </div>
+              <input
+                type="range"
+                min="35"
+                max="80"
+                step="1"
+                value={camFov}
+                onChange={(e) => setCamFov(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#00f0ff', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Preset Buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <button
+                onClick={() => { setCamDist(1.65); setCamHeight(2.40); setCamLookOffset(0.70); setCamFov(52); }}
+                style={{
+                  background: 'rgba(0, 240, 255, 0.15)',
+                  border: '1px solid #00f0ff',
+                  color: '#00f0ff',
+                  padding: '6px',
+                  borderRadius: '6px',
+                  fontFamily: 'Orbitron',
+                  fontSize: '10px',
+                  cursor: 'pointer'
+                }}
+              >
+                🎯 MEDIUM DESK
+              </button>
+              <button
+                onClick={() => { setCamDist(2.20); setCamHeight(3.40); setCamLookOffset(0.20); setCamFov(55); }}
+                style={{
+                  background: 'rgba(255, 170, 0, 0.15)',
+                  border: '1px solid #ffaa00',
+                  color: '#ffaa00',
+                  padding: '6px',
+                  borderRadius: '6px',
+                  fontFamily: 'Orbitron',
+                  fontSize: '10px',
+                  cursor: 'pointer'
+                }}
+              >
+                🌐 WIDE ROOM
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
