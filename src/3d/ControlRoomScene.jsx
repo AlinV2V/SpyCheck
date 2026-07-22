@@ -851,10 +851,10 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // PERFECT DESK POV: Camera at chairDist = 1.45 so 3D PC monitor fills 60% of screen height with hologram room visible
-          const chairDist = 1.45;
-          targetCamPos.set(activeX * chairDist, 2.10, activeZ * chairDist);
-          targetLookAt.set(activeX * 0.70, 1.45, activeZ * 0.70);
+          // PERFECT SEATED DESK POV: Seated in workstation chair at eye level facing 3D PC monitor (fills 80% of screen height)
+          const chairDist = 1.10;
+          targetCamPos.set(activeX * chairDist, 1.38, activeZ * chairDist);
+          targetLookAt.set(activeX, 1.38, activeZ);
           break;
         }
         case 'discussion': {
@@ -901,8 +901,8 @@ export function ControlRoomScene({
       currentLookAt.lerp(targetLookAt, 0.05);
       camera.lookAt(currentLookAt);
 
-      // Smoothly update Field of View (FOV) for room overview (55)
-      const targetFov = 55;
+      // Smoothly update Field of View (FOV) for seated PC monitor view (46)
+      const targetFov = phase === 'question' ? 46 : 55;
       if (Math.abs(camera.fov - targetFov) > 0.001) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.05);
         camera.updateProjectionMatrix();
