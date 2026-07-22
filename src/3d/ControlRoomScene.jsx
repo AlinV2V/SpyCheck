@@ -851,10 +851,10 @@ export function ControlRoomScene({
 
       switch (phase) {
         case 'question': {
-          // PERFECT SEATED DESK POV: Camera behind workstation chair looking towards room center & desk PC
-          const chairDist = 2.25;
-          targetCamPos.set(activeX * chairDist, 3.60, activeZ * chairDist);
-          targetLookAt.set(0, 2.0, 0);
+          // PERFECT DESK POV: Camera at chairDist = 1.45 so 3D PC monitor fills 60% of screen height with hologram room visible
+          const chairDist = 1.45;
+          targetCamPos.set(activeX * chairDist, 2.10, activeZ * chairDist);
+          targetLookAt.set(activeX * 0.70, 1.45, activeZ * 0.70);
           break;
         }
         case 'discussion': {
