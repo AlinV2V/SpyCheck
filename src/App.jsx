@@ -17,7 +17,6 @@ export function App() {
     setMuted(next);
   };
 
-  // Explicit Purge Cache & Hard Reload Handler
   const handlePurgeCache = () => {
     try {
       localStorage.clear();
@@ -40,10 +39,8 @@ export function App() {
 
   const handleStartGame = (config) => {
     playTerminalPowerOn();
-    const qList = getRandomQuestions(3);
-    const randomQuestion = qList[0];
-    const spyIdx = Math.floor(Math.random() * config.playerCount);
 
+    // 1. Initialize player roster first
     const players = Array.from({ length: config.playerCount }, (_, i) => ({
       id: `p${i + 1}`,
       name: i === 0 ? 'Agent Alpha' : `Agent 0${i + 1}`,
@@ -51,6 +48,11 @@ export function App() {
       isReady: true,
       hasAnswered: false,
     }));
+
+    // 2. Pass players roster into getRandomQuestions so player-name options populate correctly
+    const qList = getRandomQuestions(3, players);
+    const randomQuestion = qList[0];
+    const spyIdx = Math.floor(Math.random() * config.playerCount);
 
     setGameState({
       mode: config.mode,
@@ -91,7 +93,7 @@ export function App() {
         const answers = { ...(prev.playerAnswers || {}) };
         prev.players.forEach((p, idx) => {
           if (p.isAI && answers[idx] === undefined) {
-            answers[idx] = Math.floor(Math.random() * 4);
+            answers[idx] = Math.floor(Math.random() * Math.min(4, prev.players.length));
           }
         });
         return {
@@ -206,7 +208,7 @@ export function App() {
             INTRUDER CHECK
           </span>
           <span style={{ fontSize: '0.7rem', background: '#00ffff', color: '#020617', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, fontFamily: 'Orbitron', marginLeft: '8px' }}>
-            v1.0.23
+            v1.0.24
           </span>
           {gameState && (
             <span className="badge-agent" style={{ marginLeft: '10px' }}>

@@ -448,18 +448,24 @@ export function ControlRoomScene({
         }
 
         let rawOptions = [];
-        if (questionObj && Array.isArray(questionObj.options) && questionObj.options.length > 0) {
-          rawOptions = questionObj.options;
-        } else if (state && Array.isArray(state.options) && state.options.length > 0) {
-          rawOptions = state.options;
+        if (questionObj?.isPlayerNameQuestion || !questionObj?.options || questionObj.options.length === 0) {
+          if (players && players.length > 0) {
+            rawOptions = players.slice(0, 4).map((p, pIdx) => `${['A', 'B', 'C', 'D'][pIdx]}) ${p.name}`);
+          }
         }
-
+        if (!rawOptions || rawOptions.length === 0) {
+          if (questionObj && Array.isArray(questionObj.options) && questionObj.options.length > 0) {
+            rawOptions = questionObj.options;
+          } else if (state && Array.isArray(state.options) && state.options.length > 0) {
+            rawOptions = state.options;
+          }
+        }
         if (!rawOptions || rawOptions.length === 0) {
           rawOptions = [
-            'A) Twice a day — Hyper clean',
-            'B) Once a day like normal',
-            'C) Every 2-3 days unless I sweat',
-            'D) Once a week',
+            'A) Option 1',
+            'B) Option 2',
+            'C) Option 3',
+            'D) Option 4',
           ];
         }
 
