@@ -1,132 +1,97 @@
-# 🕵️ SpyCheck (Intruder Check)
+# SpyCheck (Intruder Check)
 
-> An immersive 3D Sci-Fi Social Deduction browser game set inside an orbital cyberpunk command pod, powered by **React 19**, **Three.js**, and **WebGL**.
+A 3D sci-fi social deduction browser game set in a virtual command center, built with React 19, Three.js, and WebGL.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Play%20Now-00ffaa?style=for-the-badge&logo=githubpages)](https://alinv2v.github.io/SpyCheck/)
-[![Build Version](https://img.shields.io/badge/Build-v1.0.30-ffb700?style=for-the-badge)](https://github.com/AlinV2V/SpyCheck)
-[![License](https://img.shields.io/badge/License-MIT-blue.style=for-the-badge)](LICENSE)
+Live Demo: https://alinv2v.github.io/SpyCheck/
 
----
+## Overview
 
-## 🌟 Overview
+SpyCheck is a web-based social deduction game where players sit at computer workstations inside a command pod.
 
-**SpyCheck (Intruder Check)** is a web-based 3D multiplayer social deduction game. Players are stationed at futuristic computer workstations inside a high-tech orbital command room. 
+- Operative Agents receive security questions to verify their identity.
+- The Intruder receives encrypted prompt text and must deduce the question from other players' choices.
+- Players review submitted answers on debriefing matrix displays and vote to eject suspected intruders.
 
-- **Operative Agents** are issued security question prompts to verify their identity.
-- An **Intruder / Spy** has infiltrated the facility! The Intruder's security prompt is encrypted, forcing them to blend in by deducing the prompt from other agents' choices.
-- Work together during **Debriefing Matrix** sessions to spot suspicious answers, cast votes in the **Accusation Matrix**, and eject the Intruder before security is compromised!
+## Key Features
 
----
+- In-World 3D Screen Interface: All menus (questions, choices, debriefing, voting, victory screens) render dynamically onto 2D canvas textures mapped to 3D workstation screens using Three.js raycasting.
+- Sci-Fi Command Center Environment: 6 radial workstation pods, dual monitor stands, central holographic cylinder, particle effects, and dynamic room lighting.
+- Independent Workstation Displays: Each desk screen renders dedicated status information for its assigned player.
+- 3D Camera Calibration Pipeline: Floating control panel for live adjustments to camera distance, height, look target, and field of view.
+- Multi-Round Match System: Multi-round progression (Rounds 1–3) with victory checks for agents and intruders.
+- Cache Management: Automatic version checking to purge stale ServiceWorkers and browser caches.
 
-## ✨ Key Features
+## Gameplay Flow
 
-- **🖥️ 100% In-World 3D PC Monitor UI**: All interactive gameplay menus (Questions, Option tiles `[A] [B] [C] [D]`, Discussion Debriefing, Voting Matrix, Victory Banners) render dynamically on 1280x800 HTML5 2D canvas textures mapped to 3D workstation screens with Three.js Raycaster clicking.
-- **🛸 Sci-Fi Command Center Scene**: Futuristic 3D room with 6 radial workstation pods, glowing LED trims, dual monitor stands, central holographic cylinder projector, rotating particle clouds, starfield, and dynamic status lighting.
-- **🖥️ Per-Desk Individual Displays**: Each desk in the 3D room renders its own dedicated operative status console (`STATION 02 // OPERATIVE: AGENT 02`).
-- **🎥 Live 3D Camera Calibration**: Built-in floating live camera pipeline allowing real-time adjustment of Distance Ratio, Height, LookAt Offset, and Field of View (FOV).
-- **🔄 Multi-Round Progression Logic**: Multi-round gameplay (Rounds 1–3) with instant Agent victory on catching the Intruder, or advancing rounds on innocent votes.
-- **🧹 Automated & Manual Cache Purger**: Built-in build version checker (`v1.0.30`) that unregisters stale ServiceWorkers/caches automatically, plus a top HUD **`[🧹 PURGE CACHE & RELOAD]`** button.
-- **🎨 Tactical Hardware Aesthetic**: High-contrast **Tactical Emerald (`#00ff66`)**, **Cyber Gold (`#ffc800`)**, **Obsidian Black (`#050912`)**, and **Pure White (`#ffffff`)** typography.
+1. Lobby: Configure player count (3–6 players or AI bots) and start the session.
+2. Question Phase: View security prompt on the 3D monitor, select a response (A, B, C, or D), and lock in.
+3. Debriefing: Review all player responses on the 3D matrix and discuss suspicious choices.
+4. Voting: Select a suspect on the 3D accusation screen and submit your vote.
 
----
-
-## 🕹️ How to Play
-
-1. **Lobby & Setup**: Configure player count (3–6 players or AI bots) and enter the orbital command center.
-2. **Question Phase**: Review your security prompt at your 3D workstation monitor. Choose option **A, B, C, or D** and lock in your answer.
-   - *If you are an Agent*: Answer the prompt accurately.
-   - *If you are the Intruder*: Your prompt is encrypted! Infer what the question might be based on option choices and blend in.
-3. **Intel Debriefing**: Review all submitted answers on the **3D Debriefing Matrix** and debate who gave a suspicious response.
-4. **Security Voting**: Select a suspect on the **3D Accusation Matrix** and transmit your vote to eject the Intruder!
-
----
-
-## 🚀 Quick Start & Local Setup
+## Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+ (Node 20 recommended)
-- **npm** 9+
+- Node.js 18+
+- npm 9+
 
-### 1. Clone the repository
+### Setup and Running
 
-```bash
-git clone https://github.com/AlinV2V/SpyCheck.git
-cd SpyCheck
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/AlinV2V/SpyCheck.git
+   cd SpyCheck
+   ```
 
-### 2. Install dependencies
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm install
-```
+3. Start development server:
+   ```bash
+   npm run dev
+   ```
 
-### 3. Start development server
+4. Build for production:
+   ```bash
+   npm run build
+   ```
 
-```bash
-npm run dev
-# App runs at http://localhost:5173
-```
+5. Deploy to GitHub Pages:
+   ```bash
+   npm run deploy
+   ```
 
-### 4. Build for production
+## Tech Stack
 
-```bash
-npm run build
-```
+- React 19
+- Three.js
+- Vite 8
+- Lucide React & Canvas Confetti
+- Oxlint
+- GitHub Pages
 
-### 5. Deploy to GitHub Pages
-
-```bash
-npm run deploy
-```
-
----
-
-## 🛠️ Tech Stack
-
-- **Framework**: [React 19](https://react.dev/)
-- **3D Graphics & WebGL**: [Three.js](https://threejs.org/)
-- **Build Tool**: [Vite 8](https://vitejs.dev/)
-- **Icons & Effects**: [Lucide React](https://lucide.dev/), [Canvas Confetti](https://github.com/catdad/canvas-confetti)
-- **Linter**: [Oxlint](https://oxc.rs/)
-- **Deployment**: [GitHub Pages](https://pages.github.com/) (`gh-pages`)
-
----
-
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 SpyCheck/
-├── public/                # Favicon, sound effects, and static assets
+├── public/                # Static assets, sound effects, icons
 ├── src/
 │   ├── 3d/
-│   │   └── ControlRoomScene.jsx  # Three.js 3D scene, lighting, 2D screen canvas renderer & Raycaster
-│   ├── components/        # React UI components (Lobby, AvatarSelector, QuestionHUD, VotingPhase)
+│   │   └── ControlRoomScene.jsx  # Three.js 3D scene, screen canvas renderer, and raycaster
+│   ├── components/        # React interface components
 │   ├── data/
-│   │   └── questionBank.js       # Security questions dataset & prompt alignment generator
+│   │   └── questionBank.js       # Security questions dataset and prompt generator
 │   ├── services/
-│   │   └── audio.js              # Sound effects & audio manager
-│   ├── App.jsx            # Main state manager, multi-round game engine & HUD header
-│   ├── index.css          # Master design system tokens & styles
-│   └── main.jsx           # Entry point with build version cache purging (v1.0.30)
-├── LICENSE                # MIT Open Source License
-└── package.json           # Scripts & project manifest
+│   │   └── audio.js              # Sound effects player
+│   ├── App.jsx            # State management, game rules, and header
+│   ├── index.css          # Design system styles
+│   └── main.jsx           # Entry point and cache purger
+├── LICENSE                # License file
+└── package.json           # Build scripts and dependencies
 ```
 
----
+## License
 
-## 🤝 Contributing
-
-Contributions, bug reports, and feature requests are welcome!
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📜 License
-
-Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
